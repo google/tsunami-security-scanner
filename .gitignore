@@ -1,0 +1,28 @@
+# Gradle
+build
+gradle.properties
+.gradle
+local.properties
+out
+
+# IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+classes
+
+# Eclipse
+.classpath
+.factorypath
+.project
+.settings
+bin
+eclipsebin
+
+# OS X
+.DS_Store
+
+# Emacs
+*~
+\#*\#
