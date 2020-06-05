@@ -1,0 +1,98 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Data models for describing a software.
+syntax = "proto3";
+
+package tsunami.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "SoftwareProtos";
+option java_package = "com.google.tsunami.proto";
+
+// The exact version of a software.
+message Version {
+  // Type of the Version message, identifying an ordinary software version or a
+  // sentinel MINIMUM/MAXIMUM version. See comments below for what is a sentinel
+  // version.
+  enum VersionType {
+    VERSION_TYPE_UNSPECIFIED = 0;
+
+    // A normal software version.
+    NORMAL = 1;
+    // A sentinel version representing negative infinity, i.e. MINIMUM version
+    // is less than any NORMAL and MAXIMUM versions.
+    MINIMUM = 2;
+    // A sentinel version representing positive infinity, i.e. MAXIMUM version
+    // is greater than any NORMAL and MINIMUM versions.
+    MAXIMUM = 3;
+  }
+
+  // Distinguishes between sentinel MIN/MAX versions and normal versions.
+  VersionType type = 1;
+
+  // Human readable version number, e.g. 1.0.3. This is set only when type is
+  // NORMAL. Tsunami uses raw string to represent a version number instead of
+  // any structured messages in order to handle different kinds of version
+  // schemes. Tsunami will tokenize this version string and store tokens
+  // internally. When performing version comparisons, Tsunami follows the
+  // precedence defined by Semantic Versioning (semver.org). More details can be
+  // found in Tsunami's internal Version class.
+  string full_version_string = 2;
+}
+
+// An inclusive range of versions for a software.
+message VersionRange {
+  // Whether the range endpoint is inclusive or exclusive.
+  enum Inclusiveness {
+    INCLUSIVENESS_UNSPECIFIED = 0;
+    INCLUSIVE = 1;
+    EXCLUSIVE = 2;
+  }
+
+  // Minimum version that belongs in the range.
+  Version min_version = 1;
+
+  // Inclusiveness of the min_version. When min_version points to negative
+  // infinity, this value will always be EXCLUSIVE to matching the
+  // representation of (-inf, 1.0]. Note that negative infinity version should
+  // ***NOT*** be compared with a version range as it is just a bogus sentinel
+  // version without any meaning.
+  Inclusiveness min_version_inclusiveness = 2;
+
+  // Maximum version that belongs in the range.
+  Version max_version = 3;
+
+  // Inclusiveness of the max_version. When max_version points to positive
+  // infinity, this value will always be EXCLUSIVE to matching the
+  // representation of [1.0, inf). Note that positive infinity version should
+  // ***NOT*** be compared with a version range as it is just a bogus sentinel
+  // version without any meaning.
+  Inclusiveness max_version_inclusiveness = 4;
+}
+
+// A set of Versions and VersionRanges that completely describes a set of
+// software releases, e.g. {3.9.1, 3.9.3, [4.7.1, 4.7.8], 4.8}
+message VersionSet {
+  repeated Version versions = 1;
+  repeated VersionRange version_ranges = 2;
+}
+
+// A structured description about a software.
+message Software {
+  // The name of this software.
+  string name = 1;
+}

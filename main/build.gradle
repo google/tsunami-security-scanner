@@ -1,0 +1,29 @@
+plugins {
+    id 'application'
+    id 'com.github.johnrengelman.shadow'
+}
+
+description = 'Tsunami: main'
+
+dependencies {
+    compile project(':tsunami-common')
+    compile project(':tsunami-plugin')
+    compile project(':tsunami-proto')
+    compile project(':tsunami-workflow')
+    compile deps.flogger
+    compile deps.flogger_google_ext
+    compile deps.guava
+
+    testCompile deps.junit
+    testCompile deps.mockito
+    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+}
+
+application {
+    mainClassName = 'com.google.tsunami.main.cli.TsunamiCli'
+}
+
+shadowJar {
+    baseName = 'tsunami-cli'
+    exclude '*.proto'
+}

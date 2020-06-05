@@ -1,0 +1,13 @@
+description = 'Tsunami: Workflow'
+
+dependencies {
+    compile project(':tsunami-plugin')
+    compile project(':tsunami-proto')
+    compile deps.flogger
+    compile deps.flogger_google_ext
+    compile deps.guava
+
+    testCompile deps.guava_testlib
+    testCompile deps.junit
+    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+}

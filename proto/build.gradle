@@ -1,0 +1,41 @@
+plugins {
+    id 'com.google.protobuf'
+}
+
+description = 'Tsunami: Protobuf Data'
+
+sourceSets {
+    main {
+        proto {
+            srcDir "${projectDir}"
+            exclude "build/**"
+        }
+    }
+}
+
+protobuf {
+    generatedFilesBaseDir = "${projectDir}/build/generated"
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protocVersion}"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("${projectDir}/build/generated/main/java");
+        sourceDirs += file("${projectDir}/build/generated/main/grpc");
+    }
+}
+
+dependencies {
+    compile deps.protobuf
+    compile deps.grpc_protobuf
+}

@@ -1,0 +1,85 @@
+/*
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Data models for describing scanning results.
+syntax = "proto3";
+
+package tsunami.proto;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "detection.proto";
+import "network_service.proto";
+import "reconnaissance.proto";
+import "vulnerability.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "ScanResultsProtos";
+option java_package = "com.google.tsunami.proto";
+
+// Execution status of the scan.
+// NEXT ID: 5
+enum ScanStatus {
+  // Unspecified status.
+  SCAN_STATUS_UNSPECIFIED = 0;
+  // Scan finished successfully.
+  SUCCEEDED = 1;
+  // Scan finished with only a small set of selected detectors succeeded.
+  PARTIALLY_SUCCEEDED = 4;
+  // Scan failed.
+  FAILED = 2;
+  // Scan cancelled.
+  CANCELLED = 3;
+}
+
+// A single vulnerability finding for a specific service.
+message ScanFinding {
+  // Information about the scanned target.
+  TargetInfo target_info = 1;
+
+  // Information about the scanned network service.
+  NetworkService network_service = 2;
+
+  // Details about the detected vulnerability.
+  Vulnerability vulnerability = 3;
+}
+
+// Full scanning results.
+// NEXT ID: 7
+message ScanResults {
+  // Status of this scan.
+  ScanStatus scan_status = 1;
+
+  // Detailed message for the scan status.
+  string status_message = 6;
+
+  // All findings from this scan.
+  repeated ScanFinding scan_findings = 2;
+
+  // Time when this scan was started.
+  google.protobuf.Timestamp scan_start_timestamp = 3;
+
+  // Duration of the full scan.
+  google.protobuf.Duration scan_duration = 4;
+
+  // Detection reports from all triggered Tsunami detection plugins.
+  FullDetectionReports full_detection_reports = 5;
+}
+
+// Full detection reports from all triggered Tsunami detection plugins.
+message FullDetectionReports {
+  repeated DetectionReport detection_reports = 1;
+}

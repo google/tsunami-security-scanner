@@ -1,0 +1,60 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Data models for all the reconnaissance information gathered by Tsunami.
+syntax = "proto3";
+
+package tsunami.proto;
+
+import "network.proto";
+import "network_service.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "ReconnaissanceProtos";
+option java_package = "com.google.tsunami.proto";
+
+// Detailed information about the scanning target.
+message TargetInfo {
+  // All the known network endpoints of the scanning target.
+  repeated NetworkEndpoint network_endpoints = 1;
+
+  // TODO(magl): add more information about the scanning target, like OSes,
+  // architectures, firewalls etc.
+}
+
+// Report from a port scanner.
+message PortScanningReport {
+  // Information about the scanning target.
+  TargetInfo target_info = 1;
+
+  // List of all the exposed network services.
+  repeated NetworkService network_services = 2;
+}
+
+// Report from a service fingerprinter.
+message FingerprintingReport {
+  // List of all the identified network services after fingerprinting.
+  repeated NetworkService network_services = 3;
+}
+
+// Full reconnaissance report about a single scanning target.
+message ReconnaissanceReport {
+  // Information about the scanning target.
+  TargetInfo target_info = 1;
+
+  // All exposed network services of the scanning target.
+  repeated NetworkService network_services = 2;
+}

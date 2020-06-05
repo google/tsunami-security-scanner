@@ -1,0 +1,133 @@
+plugins {
+    id 'net.ltgt.errorprone' apply false
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'idea'
+
+    apply plugin: 'net.ltgt.errorprone'
+
+    group = 'com.google.tsunami'
+    version = '0.0.1-SNAPSHOT' // Current Tsunami version
+
+    repositories {
+        maven { // The google mirror is less flaky than mavenCentral()
+            url 'https://maven-central.storage-download.googleapis.com/repos/central/data/'
+        }
+        mavenCentral()
+        mavenLocal()
+    }
+
+    ext {
+        // All dependency versions.
+        autoValueVersion = '1.7'
+        classGraphVersion = '4.8.65'
+        errorproneVersion = '2.3.4'
+        floggerVersion = '0.5.1'
+        googleCloudStorageVersion = '1.103.1'
+        guavaVersion = '28.2-jre'
+        guiceVersion = '4.2.3'
+        grpcVersion = '1.29.0'
+        gsonVersion = '2.8.5'
+        javaxInjectVersion = '1'
+        jcommanderVersion = '1.48'
+        jsoupVersion = '1.9.2'
+        okhttpVersion = '3.12.0'
+        protobufVersion = '3.11.4'
+        protocVersion = protobufVersion
+        snameyamlVersion = '1.26'
+        junitVersion = '4.13'
+        mockitoVersion = '2.28.2'
+        truthVersion = '1.0.1'
+
+        // All Tsunami dependencies.
+        deps = [
+                autovalue: "com.google.auto.value:auto-value-annotations:${autoValueVersion}",
+                autovalue_annotation_processor: "com.google.auto.value:auto-value:${autoValueVersion}",
+                classgraph: "io.github.classgraph:classgraph:${classGraphVersion}",
+                errorprone: "com.google.errorprone:error_prone_annotations:${errorproneVersion}",
+                flogger: "com.google.flogger:flogger:${floggerVersion}",
+                flogger_google_ext: "com.google.flogger:google-extensions:${floggerVersion}",
+                flogger_backend: "com.google.flogger:flogger-system-backend:${floggerVersion}",
+                google_cloud_storage: "com.google.cloud:google-cloud-storage:${googleCloudStorageVersion}",
+                guava: "com.google.guava:guava:${guavaVersion}",
+                guice: "com.google.inject:guice:${guiceVersion}",
+                guice_assisted: "com.google.inject.extensions:guice-assistedinject:${guiceVersion}",
+                grpc_protobuf: "io.grpc:grpc-protobuf:${grpcVersion}",
+                gson: "com.google.code.gson:gson:${gsonVersion}",
+                javax_inject: "javax.inject:javax.inject:${javaxInjectVersion}",
+                jcommander: "com.beust:jcommander:${jcommanderVersion}",
+                jsoup: "org.jsoup:jsoup:${jsoupVersion}",
+                okhttp: "com.squareup.okhttp3:okhttp:${okhttpVersion}",
+                protobuf: "com.google.protobuf:protobuf-java:${protobufVersion}",
+                protobuf_lite: "com.google.protobuf:protobuf-javalite:${protobufVersion}",
+                protobuf_util: "com.google.protobuf:protobuf-java-util:${protobufVersion}",
+                snakeyaml: "org.yaml:snakeyaml:${snameyamlVersion}",
+
+                // Test dependencies.
+                guava_testlib: "com.google.guava:guava-testlib:${guavaVersion}",
+                junit: "junit:junit:${junitVersion}",
+                mockito: "org.mockito:mockito-core:${mockitoVersion}",
+                mock_web_server: "com.squareup.okhttp3:mockwebserver:${okhttpVersion}",
+                truth: "com.google.truth:truth:${truthVersion}",
+                truth8: "com.google.truth.extensions:truth-java8-extension:${truthVersion}",
+                truth_protobuf: "com.google.truth.extensions:truth-proto-extension:${truthVersion}",
+        ]
+    }
+
+    if (rootProject.properties.get('errorProne', true)) {
+        dependencies {
+            errorprone "com.google.errorprone:error_prone_core:${errorproneVersion}"
+            errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
+        }
+
+        // Disable ErrorProne for all generated codes.
+        tasks.withType(JavaCompile).configureEach {
+            options.errorprone.disableWarningsInGeneratedCode = false
+            options.errorprone.excludedPaths = '.*/build/generated/.*'
+        }
+    } else {
+        // Disable Error Prone
+        allprojects {
+            afterEvaluate { project ->
+                project.tasks.withType(JavaCompile) {
+                    options.errorprone.enabled = false
+                }
+            }
+        }
+    }
+
+    plugins.withId('java') {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+
+        jar.manifest {
+            attributes('Implementation-Title': name,
+                    'Implementation-Version': version,
+                    'Built-By': System.getProperty('user.name'),
+                    'Built-JDK': System.getProperty('java.version'),
+                    'Source-Compatibility': sourceCompatibility,
+                    'Target-Compatibility': targetCompatibility)
+        }
+
+        javadoc.options {
+            encoding = 'UTF-8'
+            use = true
+            links 'https://docs.oracle.com/javase/8/docs/api/'
+            source = '8'
+        }
+
+        // Log stacktrace to console when test fails.
+        test {
+            testLogging {
+                exceptionFormat = 'full'
+                showExceptions true
+                showCauses true
+                showStackTraces true
+            }
+            maxHeapSize = '1500m'
+        }
+    }
+}

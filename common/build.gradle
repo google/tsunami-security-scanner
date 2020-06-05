@@ -1,0 +1,24 @@
+description = 'Tsunami: Common'
+
+dependencies {
+    compile project(':tsunami-proto')
+    compile deps.autovalue
+    compile deps.classgraph
+    compile deps.flogger, deps.flogger_google_ext, deps.flogger_backend
+    compile deps.google_cloud_storage
+    compile deps.guava
+    compile deps.guice, deps.guice_assisted
+    compile deps.gson
+    compile deps.jcommander
+    compile deps.okhttp
+    compile deps.snakeyaml
+    compile deps.truth
+    annotationProcessor deps.autovalue_annotation_processor
+
+    testCompile deps.guava_testlib
+    testCompile deps.junit
+    testCompile deps.mockito
+    testCompile deps.mock_web_server
+    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+    testAnnotationProcessor deps.autovalue_annotation_processor
+}

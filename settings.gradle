@@ -1,0 +1,23 @@
+pluginManagement {
+    plugins {
+        id 'com.github.johnrengelman.shadow' version '5.2.0'
+        id 'com.google.protobuf' version '0.8.12'
+        id 'net.ltgt.errorprone' version '1.1.1'
+    }
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'tsunami'
+include ':tsunami-common'
+include ':tsunami-main'
+include ':tsunami-plugin'
+include ':tsunami-proto'
+include ':tsunami-workflow'
+
+project(':tsunami-common').projectDir = "$rootDir/common" as File
+project(':tsunami-main').projectDir = "$rootDir/main" as File
+project(':tsunami-plugin').projectDir = "$rootDir/plugin" as File
+project(':tsunami-proto').projectDir = "$rootDir/proto" as File
+project(':tsunami-workflow').projectDir = "$rootDir/workflow" as File
