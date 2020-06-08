@@ -24,7 +24,7 @@ following command:
 ```
 
 When the command finishes, the generated scanner `jar` file is located in the
-`main/build/libs` folder with the name of `tsunami-cli-[version]-all.jar`. This
+`main/build/libs` folder with the name of `tsunami-main-[version]-cli.jar`. This
 is a fat jar file so can be treated as a standalone binary.
 
 To execute the scanner, first you need to install plugins into a chosen folder.
@@ -36,7 +36,7 @@ the following command to execute a Tsunami scan:
 ```shell
 java \
     # Tsunami classpath, as of now plugins must be installed into classpath.
-    -cp "tsunami-cli.jar:~/tsunami-plugins/*" \
+    -cp "tsunami-main-[version]-cli.jar:~/tsunami-plugins/*" \
     # Specify the config file of Tsunami, by default Tsunami loads a tsunami.yaml
     # file from there the command is executed.
     -Dtsunami.config.location=/path/to/config/tsunami.yaml \

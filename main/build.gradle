@@ -24,6 +24,6 @@ application {
 }
 
 shadowJar {
-    baseName = 'tsunami-cli'
+    classifier = 'cli'
     exclude '*.proto'
 }

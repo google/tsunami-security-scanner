@@ -4,8 +4,9 @@ plugins {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
     apply plugin: 'idea'
+    apply plugin: "signing"
 
     apply plugin: 'net.ltgt.errorprone'
 
@@ -103,6 +104,9 @@ subprojects {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
 
+        java.withJavadocJar()
+        java.withSourcesJar()
+
         jar.manifest {
             attributes('Implementation-Title': name,
                     'Implementation-Version': version,
@@ -128,6 +132,80 @@ subprojects {
                 showStackTraces true
             }
             maxHeapSize = '1500m'
+        }
+    }
+
+    plugins.withId('maven-publish') {
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    from components.java
+
+                    pom {
+                        name = project.group + ':' + project.name
+                        url = 'https://github.com/google/tsunami-security-scanner'
+                        afterEvaluate {
+                            // description is not available until evaluated.
+                            description = project.description
+                        }
+
+                        licenses {
+                            license {
+                                name = 'Apache 2.0'
+                                url = 'https://opensource.org/licenses/Apache-2.0'
+                            }
+                        }
+
+                        scm {
+                            connection = 'scm:git:https://github.com/google/tsunami-security-scanner.git'
+                            developerConnection = 'scm:git:git@github.com:google/tsunami-security-scanner.git'
+                            url = 'https://github.com/google/tsunami-security-scanner'
+                        }
+
+                        developers {
+                            developer {
+                                id = 'com.google.tsunami'
+                                name = 'Tsunami Contributors'
+                                email = 'tsunami-security-scanner@googlegroups.com'
+                                url = 'https://github.com/google/tsunami-security-scanner'
+                                organization = 'Tsunami Authors'
+                                organizationUrl = 'https://www.google.com'
+                            }
+                        }
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    def stagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                    def releaseUrl = stagingUrl
+                    def snapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+                    url = version.endsWith('SNAPSHOT') ? snapshotUrl : releaseUrl
+                    credentials {
+                        if (rootProject.hasProperty('ossrhUsername')
+                                && rootProject.hasProperty('ossrhPassword')) {
+                            username = rootProject.ossrhUsername
+                            password = rootProject.ossrhPassword
+                        }
+                    }
+                }
+                mavenLocal()
+            }
+        }
+
+        signing {
+            required false
+            sign publishing.publications.maven
+        }
+
+        plugins.withId('com.github.johnrengelman.shadow') {
+            publishing {
+                publications {
+                    maven {
+                        artifact project.tasks.shadowJar
+                    }
+                }
+            }
         }
     }
 }
