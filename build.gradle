@@ -11,7 +11,7 @@ subprojects {
     apply plugin: 'net.ltgt.errorprone'
 
     group = 'com.google.tsunami'
-    version = '0.0.1-SNAPSHOT' // Current Tsunami version
+    version = '0.0.2-SNAPSHOT' // Current Tsunami version
 
     repositories {
         maven { // The google mirror is less flaky than mavenCentral()
