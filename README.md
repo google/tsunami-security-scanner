@@ -6,6 +6,11 @@ system for detecting high severity vulnerabilities with high confidence.
 To learn more about Tsunami, visit our
 [documentations](https://github.com/google/tsunami-security-scanner/blob/master/docs/index.md).
 
+Tsunami relies heavily on its plugin system to provide basic scanning
+capabilities. All publicly available Tsunami plugins are hosted in a separate
+[google/tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins)
+repository.
+
 ## Current Status
 
 *   Currently Tsunami is in 'pre-alpha' release for developer preview.
