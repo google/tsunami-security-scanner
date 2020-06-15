@@ -1,3 +1,5 @@
+// Current gradle version 6.5.
+
 plugins {
     id 'net.ltgt.errorprone' apply false
 }
