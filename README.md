@@ -17,6 +17,30 @@ repository.
 *   Tsunami project is currently under active development. Do expect major API
     changes in the future.
 
+## Quick Start
+
+To quickly get started with Tsunami scans, execute the following command.
+
+```shell
+sh -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
+```
+
+The `quick_start.sh` script performs the following tasks:
+
+1.  Clone the
+    [google/tsunami-security-scanner](https://github.com/google/tsunami-security-scanner)
+    and
+    [google/tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins)
+    repos into `$HOME/tsunami/repos` directory.
+1.  Compile all
+    [Google Tsunami plugins](https://github.com/google/tsunami-security-scanner-plugins/tree/master/google)
+    and move all plugin `jar` files into `$HOME/tsunami/plugins` directory.
+1.  Compile the Tsunami scanner Fat Jar file and move it into `$HOME/tsunami`
+    directory.
+1.  Move the `tsunami.yaml` example config into `$HOME/tsunami` directory.
+1.  Print example Tsunami command for scanning `127.0.0.1` using the previously
+    generated artifacts.
+
 ## Contributing
 
 Read how to [contribute to Tsunami](docs/contributing.md).
