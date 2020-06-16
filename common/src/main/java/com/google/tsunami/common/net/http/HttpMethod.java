@@ -19,6 +19,7 @@ package com.google.tsunami.common.net.http;
 public enum HttpMethod {
   // Add more http methods here if necessary.
   GET("GET"),
+  HEAD("HEAD"),
   POST("POST");
 
   private final String string;

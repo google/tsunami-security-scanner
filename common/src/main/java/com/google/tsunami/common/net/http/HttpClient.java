@@ -115,6 +115,9 @@ public final class HttpClient {
       case GET:
         okRequestBuilder.get();
         break;
+      case HEAD:
+        okRequestBuilder.head();
+        break;
       case POST:
         okRequestBuilder.post(buildRequestBody(httpRequest));
         break;
@@ -140,7 +143,8 @@ public final class HttpClient {
         HttpResponse.builder()
             .setStatus(HttpStatus.fromCode(okResponse.code()))
             .setHeaders(convertHeaders(okResponse.headers()));
-    if (okResponse.body() != null) {
+    if (!okResponse.request().method().equals(HttpMethod.HEAD.name())
+        && okResponse.body() != null) {
       httpResponseBuilder.setBodyBytes(ByteString.copyFrom(okResponse.body().bytes()));
     }
     return httpResponseBuilder.build();

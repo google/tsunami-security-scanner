@@ -25,6 +25,7 @@ import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 import static com.google.tsunami.common.net.http.HttpRequest.get;
+import static com.google.tsunami.common.net.http.HttpRequest.head;
 import static com.google.tsunami.common.net.http.HttpRequest.post;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThrows;
@@ -34,6 +35,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Guice;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import okhttp3.mockwebserver.Dispatcher;
@@ -117,6 +119,64 @@ public final class HttpClientTest {
                         .addHeader(CONTENT_LENGTH, String.valueOf(responseBody.length()))
                         .build())
                 .setBodyBytes(ByteString.copyFrom(responseBody, UTF_8))
+                .build());
+  }
+
+  @Test
+  public void send_whenHeadRequest_returnsHttpResponseWithoutBody() throws IOException {
+    String responseBody = "test response";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpResponse response =
+        httpClient.send(
+            head(mockWebServer.url("/test/head").toString()).withEmptyHeaders().build());
+
+    assertThat(response)
+        .isEqualTo(
+            HttpResponse.builder()
+                .setStatus(HttpStatus.OK)
+                .setHeaders(
+                    HttpHeaders.builder()
+                        .addHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+                        // MockWebServer always adds this response header.
+                        .addHeader(CONTENT_LENGTH, String.valueOf(responseBody.length()))
+                        .build())
+                .setBodyBytes(Optional.empty())
+                .build());
+  }
+
+  @Test
+  public void sendAsync_whenHeadRequest_returnsHttpResponseWithoutBody()
+      throws IOException, ExecutionException, InterruptedException {
+    String responseBody = "test response";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpResponse response =
+        httpClient
+            .sendAsync(head(mockWebServer.url("/test/head").toString()).withEmptyHeaders().build())
+            .get();
+
+    assertThat(response)
+        .isEqualTo(
+            HttpResponse.builder()
+                .setStatus(HttpStatus.OK)
+                .setHeaders(
+                    HttpHeaders.builder()
+                        .addHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+                        // MockWebServer always adds this response header.
+                        .addHeader(CONTENT_LENGTH, String.valueOf(responseBody.length()))
+                        .build())
+                .setBodyBytes(Optional.empty())
                 .build());
   }
 

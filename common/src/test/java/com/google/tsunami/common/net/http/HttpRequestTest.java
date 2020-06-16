@@ -37,6 +37,14 @@ public class HttpRequestTest {
   }
 
   @Test
+  public void head_always_buildsHttpHeadRequest() {
+    HttpRequest httpRequest = HttpRequest.head("http://localhost/url").withEmptyHeaders().build();
+
+    assertThat(httpRequest.method()).isEqualTo(HttpMethod.HEAD);
+    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+  }
+
+  @Test
   public void post_always_buildsHttpPostRequest() {
     HttpRequest httpRequest = HttpRequest.post("http://localhost/url").withEmptyHeaders().build();
 

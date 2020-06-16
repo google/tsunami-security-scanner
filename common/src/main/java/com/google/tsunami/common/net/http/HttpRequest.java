@@ -71,6 +71,28 @@ public abstract class HttpRequest {
   }
 
   /**
+   * Create a new HTTP HEAD request with the given {@code url}.
+   *
+   * @param url the url of the HEAD request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder head(String url) {
+    checkArgument(!Strings.isNullOrEmpty(url));
+    return head(HttpUrl.parse(url));
+  }
+
+  /**
+   * Create a new HTTP HEAD request with the given {@code uri}.
+   *
+   * @param uri the url of the HEAD request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder head(HttpUrl uri) {
+    checkNotNull(uri);
+    return builder().setMethod(HttpMethod.HEAD).setUrl(uri);
+  }
+
+  /**
    * Create a new HTTP POST request with the given {@code url}.
    *
    * @param url the url of the POST request.
@@ -112,9 +134,10 @@ public abstract class HttpRequest {
 
       switch (httpRequest.method()) {
         case GET:
+        case HEAD:
           checkState(
               !httpRequest.requestBody().isPresent(),
-              "An request body is not allowed for HTTP GET request");
+              "An request body is not allowed for HTTP GET/HEAD request");
           break;
         case POST:
           break;
