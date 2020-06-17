@@ -47,6 +47,14 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isWebService_whenHttpProxyService_returnsTrue() {
+    assertThat(
+        NetworkServiceUtils.isWebService(
+            NetworkService.newBuilder().setServiceName("http-proxy").build()))
+        .isTrue();
+  }
+
+  @Test
   public void isWebService_whenHttpsService_returnsTrue() {
     assertThat(
             NetworkServiceUtils.isWebService(

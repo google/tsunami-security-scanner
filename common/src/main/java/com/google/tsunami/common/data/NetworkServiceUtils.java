@@ -29,6 +29,7 @@ public final class NetworkServiceUtils {
       ImmutableMap.<String, Boolean>builder()
           .put("http", true)
           .put("http-alt", true) // Some http server are identified as this rather than "http".
+          .put("http-proxy", true)
           .put("https", false)
           .put("radan-http", true) // Port 8088, Hadoop Yarn web UI identified as this.
           .put("ssl/http", false)
