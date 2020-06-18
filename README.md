@@ -19,19 +19,28 @@ repository.
 
 ## Quick Start
 
-To quickly get started with Tsunami scans, first install the following required
-dependencies:
+To quickly get started with Tsunami scans,
 
-```
-nmap >= 7.80
-ncrack >= 0.7
-```
+1.  install the following required dependencies:
 
-then execute the following command.
+    ```
+    nmap >= 7.80
+    ncrack >= 0.7
+    ```
 
-```shell
-bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
-```
+1.  start a vulnerable application that can be identified by Tsunami, e.g. an
+    unauthenticated Jupyter Notebook server. The easiest way is to use a docker
+    image:
+
+    ```shell
+    docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
+    ```
+
+1.  execute the following command:
+
+    ```
+    shell bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
+    ```
 
 The `quick_start.sh` script performs the following tasks:
 
