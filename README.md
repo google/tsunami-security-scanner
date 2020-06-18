@@ -19,7 +19,15 @@ repository.
 
 ## Quick Start
 
-To quickly get started with Tsunami scans, execute the following command.
+To quickly get started with Tsunami scans, first install the following required
+dependencies:
+
+```
+nmap >= 7.80
+ncrack >= 0.7
+```
+
+then execute the following command.
 
 ```shell
 bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"

@@ -34,6 +34,7 @@ subprojects {
         guiceVersion = '4.2.3'
         grpcVersion = '1.29.0'
         gsonVersion = '2.8.5'
+        jaxbVersion = '2.3.1'
         javaxInjectVersion = '1'
         jcommanderVersion = '1.48'
         jsoupVersion = '1.9.2'
@@ -60,6 +61,7 @@ subprojects {
                 guice_assisted: "com.google.inject.extensions:guice-assistedinject:${guiceVersion}",
                 grpc_protobuf: "io.grpc:grpc-protobuf:${grpcVersion}",
                 gson: "com.google.code.gson:gson:${gsonVersion}",
+                jaxb_runtime: "org.glassfish.jaxb:jaxb-runtime:${jaxbVersion}",
                 javax_inject: "javax.inject:javax.inject:${javaxInjectVersion}",
                 jcommander: "com.beust:jcommander:${jcommanderVersion}",
                 jsoup: "org.jsoup:jsoup:${jsoupVersion}",

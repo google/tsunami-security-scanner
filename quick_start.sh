@@ -28,10 +28,18 @@ pushd "${REPOS}" >/dev/null
 printf "\nFetching source code for Tsunami scanner ...\n"
 if [[ ! -d "tsunami-security-scanner" ]] ; then
   git clone https://github.com/google/tsunami-security-scanner
+else
+  pushd "tsunami-security-scanner" >/dev/null
+  git pull origin master
+  popd >/dev/null
 fi
 printf "\nFetching source code for Tsunami scanner plugins ...\n"
 if [[ ! -d "tsunami-security-scanner-plugins" ]] ; then
   git clone https://github.com/google/tsunami-security-scanner-plugins
+else
+  pushd "tsunami-security-scanner-plugins" >/dev/null
+  git pull origin master
+  popd >/dev/null
 fi
 popd >/dev/null
 
