@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * <p>This annotation is required for any config object in order for Tsunami initialization logic to
  * identify and automatically populate config properties.
  *
- * <h4>Example usage</h4>
+ * Example usage:
  *
  * <pre>{@code
  * {@literal @}ConfigProperties("example.config.location")})
@@ -58,6 +58,8 @@ public @interface ConfigProperties {
    *
    * value {@code "plugin.example.abc"} will select {@code fieldA} and {@code fieldB} for config
    * binding for the annotated class.
+   *
+   * @return the prefix of the config properties.
    */
   String value();
 }

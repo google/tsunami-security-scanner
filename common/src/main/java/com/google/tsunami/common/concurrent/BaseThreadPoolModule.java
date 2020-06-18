@@ -42,7 +42,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * corresponding {@link ExecutorService} families. Based on the intended usage, it is expected that
  * subclasses of this module should provides bindings to a concrete thread pool implementation of
  * {@link ExecutorService}. This base module wraps the actual {@link ExecutorService} implementation
- * in order to support {@link ListenableFuture} usage in the code base.
+ * in order to support {@link com.google.common.util.concurrent.ListenableFuture} usage in the code
+ * base.
  *
  * @param <ExecutorServiceT> The expected thread pool implementation, must be a subclass of {@link
  *     ListeningExecutorService}.

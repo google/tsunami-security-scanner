@@ -29,9 +29,9 @@ import java.lang.reflect.Constructor;
 /**
  * A Guice module that loads all {@link TsunamiPlugin TsunamiPlugins} at runtime.
  *
- * <p>This module relies on the {@link ClassGraph} scan results to identify all installed {@link
- * TsunamiPlugin TsunamiPlugins} and bootstrap each {@link TsunamiPlugin plugin} using the
- * corresponding {@link PluginBootstrapModule} instantiated via reflection.
+ * <p>This module relies on the {@link io.github.classgraph.ClassGraph} scan results to identify all
+ * installed {@link TsunamiPlugin TsunamiPlugins} and bootstrap each {@link TsunamiPlugin plugin}
+ * using the corresponding {@link PluginBootstrapModule} instantiated via reflection.
  */
 public final class PluginLoadingModule extends AbstractModule {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();

@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * listed service name in the annotation. Network service names should genuinely follow those listed
  * at RFC6335.
  *
- * <h4>Example usage</h4>
+ * Example usage:
  *
  * <pre>{@code
  * {@literal @}ForServiceName({"http", "https"})

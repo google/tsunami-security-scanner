@@ -47,12 +47,12 @@ public final class NetworkEndpointUtils {
    * <p>For example:
    *
    * <ul>
-   *   <li>ip_v4 = "1.2.3.4" -> uri = "1.2.3.4"
-   *   <li>ip_v6 = "3ffe::1" -> uri = "[3ffe::1]"
-   *   <li>host = "localhost" -> url = "localhost"
-   *   <li>ip_v4 = "1.2.3.4", port = 8888 -> uri = "1.2.3.4:8888"
-   *   <li>ip_v6 = "3ffe::1", port = 8888 -> uri = "[3ffe::1]:8888"
-   *   <li>host = "localhost", port = 8888 -> url = "localhost:8888"
+   *   <li>ip_v4 = "1.2.3.4" -&gt; uri = "1.2.3.4"
+   *   <li>ip_v6 = "3ffe::1" -&gt; uri = "[3ffe::1]"
+   *   <li>host = "localhost" -&gt; url = "localhost"
+   *   <li>ip_v4 = "1.2.3.4", port = 8888 -&gt; uri = "1.2.3.4:8888"
+   *   <li>ip_v6 = "3ffe::1", port = 8888 -&gt; uri = "[3ffe::1]:8888"
+   *   <li>host = "localhost", port = 8888 -&gt; url = "localhost:8888"
    * </ul>
    */
   public static String toUriAuthority(NetworkEndpoint networkEndpoint) {

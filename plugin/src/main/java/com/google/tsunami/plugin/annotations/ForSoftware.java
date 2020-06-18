@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * be executed by the scanner when the scan target is running the matching software behind a network
  * service.
  *
- * <h4>Example usage</h4>
+ * Example usage:
  *
  * <pre>{@code
  * {@literal @}ForSoftware(

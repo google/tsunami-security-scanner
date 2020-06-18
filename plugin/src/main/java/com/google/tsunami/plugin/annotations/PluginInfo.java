@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 /**
  * An annotation for adding related information about a Tsunami plugin.
  *
- * <h4>Example usage</h4>
+ * Example usage:
  *
  * <pre>{@code
  * {@literal @}PluginInfo(
