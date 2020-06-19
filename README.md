@@ -39,7 +39,7 @@ To quickly get started with Tsunami scans,
 1.  execute the following command:
 
     ```
-    shell bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
+    bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
     ```
 
 The `quick_start.sh` script performs the following tasks:
