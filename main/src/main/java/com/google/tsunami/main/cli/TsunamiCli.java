@@ -32,6 +32,7 @@ import com.google.tsunami.common.config.TsunamiConfig;
 import com.google.tsunami.common.config.YamlConfigLoader;
 import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
 import com.google.tsunami.common.net.http.HttpClientModule;
+import com.google.tsunami.common.reflection.ClassGraphModule;
 import com.google.tsunami.common.time.SystemUtcClockModule;
 import com.google.tsunami.main.cli.option.ScanTargetCliOptions;
 import com.google.tsunami.plugin.PluginExecutionModule;
@@ -107,6 +108,7 @@ public final class TsunamiCli {
 
     @Override
     protected void configure() {
+      install(new ClassGraphModule(classScanResult));
       install(new ConfigModule(classScanResult, tsunamiConfig));
       install(new CliOptionsModule(classScanResult, "TsunamiCli", args));
       install(new SystemUtcClockModule());
