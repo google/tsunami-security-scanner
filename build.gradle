@@ -27,7 +27,7 @@ subprojects {
         // All dependency versions.
         autoValueVersion = '1.7'
         classGraphVersion = '4.8.65'
-        errorproneVersion = '2.3.4'
+        errorproneVersion = '2.4.0'
         floggerVersion = '0.5.1'
         googleCloudStorageVersion = '1.103.1'
         guavaVersion = '28.2-jre'
