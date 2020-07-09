@@ -23,8 +23,7 @@ WORKDIR /usr/repos/tsunami-security-scanner
 COPY . .
 RUN ./gradlew shadowJar
 
-RUN export TSUNAMI_JAR=$(find "./" -name 'tsunami-main-*-cli.jar')
-RUN cp $TSUNAMI_JAR /usr/tsunami
+RUN cp $(find "./" -name 'tsunami-main-*-cli.jar') /usr/tsunami
 RUN cp ./tsunami.yaml /usr/tsunami
 
-CMD java -cp "${TSUNAMI_JAR}:/root/tsunami/plugins/*" -Dtsunami-config.location=/root/tsunami/tsunami.yaml com.google.tsunami.main.cli.TsunamiCli --ip-v4-target=$TARGET_IP
+CMD java -cp "/usr/tsunami/tsunami-main-0.0.2-SNAPSHOT-cli.jar:/usr/tsunami/plugins/*" -Dtsunami-config.location=/usr/tsunami/tsunami.yaml com.google.tsunami.main.cli.TsunamiCli --ip-v4-target=$TARGET_IP
