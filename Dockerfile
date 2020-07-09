@@ -7,8 +7,10 @@ RUN apt-get update \
 
 WORKDIR /usr/tsunami/repos
 
+# Clone the plugins repo
 RUN git clone --depth 1 "https://github.com/google/tsunami-security-scanner-plugins"
 
+# Build plugins
 WORKDIR /usr/tsunami/repos/tsunami-security-scanner-plugins/google
 RUN chmod +x build_all.sh \
     && ./build_all.sh
@@ -16,6 +18,7 @@ RUN chmod +x build_all.sh \
 RUN mkdir /usr/tsunami/plugins
 RUN cp build/plugins/*.jar /usr/tsunami/plugins
 
+# Compile the Tsunami scanner
 WORKDIR /usr/repos/tsunami-security-scanner
 COPY . .
 RUN ./gradlew shadowJar
