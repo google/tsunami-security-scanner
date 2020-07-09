@@ -1,0 +1,21 @@
+# Git-related files
+.gitattributes
+.gitignore
+.git/
+
+# IDE files
+.idea/
+.vscode/
+
+# Build cache
+.gradle/
+
+# Documentation
+docs/
+LICENSE
+README.md
+
+# Miscellaneous
+quick_start.sh
+Dockerfile
+.dockerignore
