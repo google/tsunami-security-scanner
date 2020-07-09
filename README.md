@@ -21,13 +21,6 @@ repository.
 
 To quickly get started with Tsunami scans,
 
-1.  install the following required dependencies:
-
-    ```
-    nmap >= 7.80
-    ncrack >= 0.7
-    ```
-
 1.  start a vulnerable application that can be identified by Tsunami, e.g. an
     unauthenticated Jupyter Notebook server. The easiest way is to use a docker
     image:
@@ -36,27 +29,17 @@ To quickly get started with Tsunami scans,
     docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
     ```
 
-1.  execute the following command:
+1.  build the docker image for Tsunami:
 
     ```
-    bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
+    docker build -t tsunami .
     ```
 
-The `quick_start.sh` script performs the following tasks:
+1. run the Tsunami image by specifying a target IP:
 
-1.  Clone the
-    [google/tsunami-security-scanner](https://github.com/google/tsunami-security-scanner)
-    and
-    [google/tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins)
-    repos into `$HOME/tsunami/repos` directory.
-1.  Compile all
-    [Google Tsunami plugins](https://github.com/google/tsunami-security-scanner-plugins/tree/master/google)
-    and move all plugin `jar` files into `$HOME/tsunami/plugins` directory.
-1.  Compile the Tsunami scanner Fat Jar file and move it into `$HOME/tsunami`
-    directory.
-1.  Move the `tsunami.yaml` example config into `$HOME/tsunami` directory.
-1.  Print example Tsunami command for scanning `127.0.0.1` using the previously
-    generated artifacts.
+    ```
+    docker run -e TARGET_IP=127.0.0.1 tsunami  
+    ```
 
 ## Contributing
 
