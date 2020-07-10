@@ -33,8 +33,8 @@ To quickly get started with Tsunami scans,
       unauthenticated Jupyter Notebook server. The easiest way is to use a docker
       image:
      ```shell
-      docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
-      ```
+     docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
+     ```
 
  1.  execute the following command:
 
