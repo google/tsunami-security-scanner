@@ -35,10 +35,10 @@ To quickly get started with Tsunami scans,
     docker build -t tsunami .
     ```
 
-1. run the Tsunami image by specifying a target IP:
+1. run the Tsunami image. The logs can be saved to the host machine by mounting a volume:
 
     ```
-    docker run -e TARGET_IP=127.0.0.1 tsunami  
+    docker run  --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
     ```
 
 ## Contributing

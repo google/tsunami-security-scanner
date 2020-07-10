@@ -26,4 +26,7 @@ RUN ./gradlew shadowJar
 RUN cp $(find "./" -name 'tsunami-main-*-cli.jar') /usr/tsunami
 RUN cp ./tsunami.yaml /usr/tsunami
 
-CMD java -cp "/usr/tsunami/tsunami-main-0.0.2-SNAPSHOT-cli.jar:/usr/tsunami/plugins/*" -Dtsunami-config.location=/usr/tsunami/tsunami.yaml com.google.tsunami.main.cli.TsunamiCli --ip-v4-target=$TARGET_IP
+WORKDIR /usr/tsunami
+
+ENTRYPOINT ["java", "-cp", "tsunami-main-0.0.2-SNAPSHOT-cli.jar:plugins/*", "-Dtsunami-config.location=tsunami.yaml", "com.google.tsunami.main.cli.TsunamiCli"]
+CMD ["--ip-v4-target=127.0.0.1", "--scan-results-local-output-format=JSON", "--scan-results-local-output-filename=logs/tsunami-output.json"]
