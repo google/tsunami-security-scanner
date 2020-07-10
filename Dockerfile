@@ -23,10 +23,12 @@ WORKDIR /usr/repos/tsunami-security-scanner
 COPY . .
 RUN ./gradlew shadowJar
 
-RUN cp $(find "./" -name 'tsunami-main-*-cli.jar') /usr/tsunami
+RUN cp $(find "./" -name 'tsunami-main-*-cli.jar') /usr/tsunami/tsunami.jar
 RUN cp ./tsunami.yaml /usr/tsunami
 
 WORKDIR /usr/tsunami
 
-ENTRYPOINT ["java", "-cp", "tsunami-main-0.0.2-SNAPSHOT-cli.jar:plugins/*", "-Dtsunami-config.location=tsunami.yaml", "com.google.tsunami.main.cli.TsunamiCli"]
+RUN mkdir logs/
+
+ENTRYPOINT ["java", "-cp", "tsunami.jar:plugins/*", "-Dtsunami-config.location=tsunami.yaml", "com.google.tsunami.main.cli.TsunamiCli"]
 CMD ["--ip-v4-target=127.0.0.1", "--scan-results-local-output-format=JSON", "--scan-results-local-output-filename=logs/tsunami-output.json"]
