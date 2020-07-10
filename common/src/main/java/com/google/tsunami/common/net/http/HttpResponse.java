@@ -27,7 +27,6 @@ import java.util.Optional;
 @Immutable
 @AutoValue
 public abstract class HttpResponse {
-  private static final JsonParser JSON_PARSER = new JsonParser();
 
   public abstract HttpStatus status();
   public abstract HttpHeaders headers();
@@ -45,7 +44,7 @@ public abstract class HttpResponse {
    */
   @Memoized
   public Optional<JsonElement> bodyJson() {
-    return bodyString().map(JSON_PARSER::parse);
+    return bodyString().map(JsonParser::parseString);
   }
 
   public static Builder builder() {
