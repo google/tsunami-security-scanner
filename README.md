@@ -4,7 +4,7 @@ Tsunami is a general purpose network security scanner with an extensible plugin
 system for detecting high severity vulnerabilities with high confidence.
 
 To learn more about Tsunami, visit our
-[documentations](https://github.com/google/tsunami-security-scanner/blob/master/docs/index.md).
+[documentation](https://github.com/google/tsunami-security-scanner/blob/master/docs/index.md).
 
 Tsunami relies heavily on its plugin system to provide basic scanning
 capabilities. All publicly available Tsunami plugins are hosted in a separate

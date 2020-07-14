@@ -40,6 +40,6 @@ See [Tsunami Scan Orchestration](orchestration.md).
 *   ... [add command line arguments for my plugin?](howto.md#command_line)
 *   ... [add configuration properties for my plugin?](howto.md#configuration)
 
-## <a name="future_work"></a>Future Works
+## <a name="future_work"></a>Future Work
 
-See [Future Works](future_works.md).
+See [Future Work](future_work.md).

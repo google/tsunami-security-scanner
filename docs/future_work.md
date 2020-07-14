@@ -1,4 +1,4 @@
-# Future Works
+# Future Work
 
 ## <a name="short_term"></a>Short Term
 
