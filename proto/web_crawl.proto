@@ -59,7 +59,7 @@ message CrawlTarget {
   string http_method = 2;
 
   // An optional HTTP request body sent to the crawl URL.
-  string http_request_body = 3;
+  bytes http_request_body = 3;
 }
 
 message CrawlResult {
