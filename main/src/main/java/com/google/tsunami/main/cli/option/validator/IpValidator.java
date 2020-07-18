@@ -26,6 +26,17 @@ public abstract class IpValidator implements IParameterValidator {
 
   @Override
   public void validate(String name, String value) {
+    if (value.contains("/")) {
+      String[] parts = value.split("/");
+      int subnetMask = Integer.parseInt(parts[1]);
+      if (subnetMask < 0 || ((ipVersion() == 4 && subnetMask > 32)  || (ipVersion() == 6 && (subnetMask > 64)))) {
+        throw new ParameterException(
+                String.format(
+                        "Parameter %s should point to an IP v%d address with a valid subnet mask, got '%s'",
+                        name, ipVersion(), value));
+      }
+      value = parts[0];
+    }
     if (Strings.isNullOrEmpty(value)
         || !InetAddresses.isInetAddress(value)
         || !shouldAccept(InetAddresses.forString(value))) {

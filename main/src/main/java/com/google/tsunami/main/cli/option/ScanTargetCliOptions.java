@@ -30,6 +30,18 @@ import java.util.List;
 public final class ScanTargetCliOptions implements CliOption {
 
   @Parameter(
+          names = "--ip-v4-subnet",
+          description = "The address of a target IP v4 subnet.",
+          validateWith = IpV4Validator.class)
+  public String ipV4SubnetTarget;
+
+  @Parameter(
+          names = "--ip-v6-subnet",
+          description = "The address of a target IP v6 subnet.",
+          validateWith = IpV6Validator.class)
+  public String ipV6SubnetTarget;
+
+  @Parameter(
       names = "--ip-v4-target",
       description = "The IP v4 address of the scanning target.",
       validateWith = IpV4Validator.class)
@@ -56,17 +68,23 @@ public final class ScanTargetCliOptions implements CliOption {
     if (hostnameTarget != null) {
       nonEmptyTargets.add("--hostname-target");
     }
+    if (ipV4SubnetTarget != null) {
+      nonEmptyTargets.add("--ip-v4-subnet");
+    }
+    if (ipV6SubnetTarget != null) {
+      nonEmptyTargets.add("--ip-v4-subnet");
+    }
 
     if (nonEmptyTargets.isEmpty()) {
       throw new ParameterException(
           "One of the following parameters is expected: --ip-v4-target, --ip-v6-target,"
-              + " --hostname-target");
+              + " --hostname-target, --ip-v4-subnet, --ip-v6-subnet");
     }
     if (nonEmptyTargets.size() != 1) {
       throw new ParameterException(
           String.format(
               "Only one of the following parameter is expected: --ip-v4-target, --ip-v6-target,"
-                  + " --hostname-target, got %d: %s",
+                  + " --hostname-target, --ip-v4-subnet, --ip-v6-subnet, got %d: %s",
               nonEmptyTargets.size(), Joiner.on(",").join(nonEmptyTargets)));
     }
   }

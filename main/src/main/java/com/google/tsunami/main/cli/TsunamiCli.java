@@ -43,9 +43,16 @@ import com.google.tsunami.workflow.DefaultScanningWorkflow;
 import com.google.tsunami.workflow.ScanningWorkflowException;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import org.apache.commons.net.util.SubnetUtils;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import javax.inject.Inject;
 
 /** Command line interface for the Tsunami Security Scanner. */
@@ -69,15 +76,34 @@ public final class TsunamiCli {
   public void run()
       throws ExecutionException, InterruptedException, ScanningWorkflowException, IOException {
     logger.atInfo().log("TsunamiCli starting...");
-    ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
+
+    int coreCount = Runtime.getRuntime().availableProcessors();
+    ExecutorService executor = Executors.newFixedThreadPool(2 * coreCount);
+
+    List<ScanTarget> scanTargets = buildScanTarget();
+    List<Future<ScanResults>> scanResults = new ArrayList<>();
+
+    for (ScanTarget target : scanTargets) {
+      scanResults.add(executor.submit(() -> scanningWorkflow.run(target)));
+    }
 
     logger.atInfo().log("Tsunami scan finished, saving results.");
-    saveResults(scanResults);
+
+    for (Future<ScanResults> scanResult : scanResults) {
+        saveResults(scanResult.get());
+    }
 
     logger.atInfo().log("TsunamiCli finished...");
   }
 
-  private ScanTarget buildScanTarget() {
+  private List<ScanTarget> buildScanTarget() {
+    if (scanTargetCliOptions.ipV4SubnetTarget != null) {
+      return buildSubnetTargets(scanTargetCliOptions.ipV4SubnetTarget);
+    }
+    if (scanTargetCliOptions.ipV6SubnetTarget != null) {
+      return buildSubnetTargets(scanTargetCliOptions.ipV6SubnetTarget);
+    }
+
     ScanTarget.Builder scanTargetBuilder = ScanTarget.newBuilder();
 
     if (scanTargetCliOptions.ipV4Target != null) {
@@ -88,7 +114,19 @@ public final class TsunamiCli {
       scanTargetBuilder.setNetworkEndpoint(forHostname(scanTargetCliOptions.hostnameTarget));
     }
 
-    return scanTargetBuilder.build();
+    return new ArrayList<>(Collections.singletonList(scanTargetBuilder.build()));
+  }
+
+  private List<ScanTarget> buildSubnetTargets(String subnetTarget) {
+    ArrayList<ScanTarget> scanTargets = new ArrayList<>();
+    SubnetUtils subnet = new SubnetUtils(subnetTarget);
+    String[] subnetAddresses = subnet.getInfo().getAllAddresses();
+    for (String address : subnetAddresses) {
+      ScanTarget.Builder scanTargetBuilder = ScanTarget.newBuilder();
+      scanTargetBuilder.setNetworkEndpoint(forIp(address));
+      scanTargets.add(scanTargetBuilder.build());
+    }
+    return scanTargets;
   }
 
   private void saveResults(ScanResults scanResults) throws IOException {
