@@ -60,7 +60,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -342,5 +341,4 @@ public final class DefaultScanningWorkflow {
                 Duration.between(scanStartTimestamp, Instant.now(clock)).toMillis()))
         .build();
   }
-
 }
