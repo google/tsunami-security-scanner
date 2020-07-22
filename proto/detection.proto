@@ -27,6 +27,7 @@ import "vulnerability.proto";
 option java_multiple_files = true;
 option java_outer_classname = "DetectionProtos";
 option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
 
 // Status of the vulnerability detection result.
 enum DetectionStatus {

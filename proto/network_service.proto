@@ -25,6 +25,7 @@ import "software.proto";
 option java_multiple_files = true;
 option java_outer_classname = "NetworkServiceProtos";
 option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
 
 // General information about a network service running on a target.
 message NetworkService {
