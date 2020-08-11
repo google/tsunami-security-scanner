@@ -22,6 +22,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.flogger.GoogleLogger;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,6 +48,7 @@ public class CommandExecutor {
   private Process process;
   @Nullable private String output;
   @Nullable private String error;
+  @Nullable private String input;
 
   public CommandExecutor(String... args) {
     this.args = checkNotNull(args);
@@ -81,6 +85,7 @@ public class CommandExecutor {
       throws IOException, InterruptedException, ExecutionException {
     logger.atInfo().log("Executing the following command: '%s'", COMMAND_ARGS_JOINER.join(args));
     process = processBuilder.start();
+    writeStream(process.getOutputStream(), this.input);
     output =
         CompletableFuture.supplyAsync(() -> collectStream(process.getInputStream()), executor)
             .get();
@@ -98,6 +103,19 @@ public class CommandExecutor {
   @Nullable
   public String getError() {
     return error;
+  }
+
+  public void setInput(String input) {
+    this.input = input;
+  }
+
+  private static void writeStream(OutputStream stream, String input)
+      throws IOException {
+    if (input != null) {
+      BufferedWriter streamWriter = new BufferedWriter(new OutputStreamWriter(stream, UTF_8));
+      streamWriter.write(input);
+      streamWriter.close();
+    }
   }
 
   private static String collectStream(InputStream stream) {
