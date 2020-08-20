@@ -305,22 +305,22 @@ public final class DefaultScanningWorkflow {
         .setStatusMessage(statusMessage)
         .addAllScanFindings(
             succeededDetectionReports.stream()
-                    .filter(
-                        detectionReport ->
-                            detectionReport
-                                    .getDetectionStatus()
-                                    .equals(DetectionStatus.VULNERABILITY_VERIFIED)
-                                || detectionReport
-                                    .getDetectionStatus()
-                                    .equals(DetectionStatus.VULNERABILITY_PRESENT))
-                    .map(
-                        detectionReport ->
-                            ScanFinding.newBuilder()
-                                .setTargetInfo(detectionReport.getTargetInfo())
-                                .setNetworkService(detectionReport.getNetworkService())
-                                .setVulnerability(detectionReport.getVulnerability())
-                                .build())
-                ::iterator)
+                .filter(
+                    detectionReport ->
+                        detectionReport
+                                .getDetectionStatus()
+                                .equals(DetectionStatus.VULNERABILITY_VERIFIED)
+                            || detectionReport
+                                .getDetectionStatus()
+                                .equals(DetectionStatus.VULNERABILITY_PRESENT))
+                .map(
+                    detectionReport ->
+                        ScanFinding.newBuilder()
+                            .setTargetInfo(detectionReport.getTargetInfo())
+                            .setNetworkService(detectionReport.getNetworkService())
+                            .setVulnerability(detectionReport.getVulnerability())
+                            .build())
+                .collect(toImmutableList()))
         .setScanStartTimestamp(Timestamps.fromMillis(scanStartTimestamp.toEpochMilli()))
         .setScanDuration(
             Durations.fromMillis(

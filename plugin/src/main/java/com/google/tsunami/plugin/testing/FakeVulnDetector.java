@@ -15,6 +15,8 @@
  */
 package com.google.tsunami.plugin.testing;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.util.Timestamps;
 import com.google.tsunami.plugin.PluginType;
@@ -61,8 +63,8 @@ public class FakeVulnDetector implements VulnDetector {
     return DetectionReportList.newBuilder()
         .addAllDetectionReports(
             matchedServices.stream()
-                    .map(networkService -> getFakeDetectionReport(targetInfo, networkService))
-                ::iterator)
+                .map(networkService -> getFakeDetectionReport(targetInfo, networkService))
+                .collect(toImmutableList()))
         .build();
   }
 }
