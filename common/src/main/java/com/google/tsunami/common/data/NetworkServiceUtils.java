@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
 import com.google.tsunami.proto.NetworkService;
+import java.util.Optional;
 
 /** Static utility methods pertaining to {@link NetworkService} proto buffer. */
 public final class NetworkServiceUtils {
@@ -38,10 +39,15 @@ public final class NetworkServiceUtils {
 
   private NetworkServiceUtils() {}
 
+  public static boolean isWebService(Optional<String> serviceName) {
+    return serviceName.isPresent()
+        && IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.containsKey(
+            Ascii.toLowerCase(serviceName.get()));
+  }
+
   public static boolean isWebService(NetworkService networkService) {
     checkNotNull(networkService);
-    return IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.containsKey(
-        Ascii.toLowerCase(networkService.getServiceName()));
+    return isWebService(Optional.of(networkService.getServiceName()));
   }
 
   public static boolean isPlainHttp(NetworkService networkService) {
