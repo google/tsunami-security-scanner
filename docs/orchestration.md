@@ -4,7 +4,7 @@
 
 As of today, Tsunami follows a hardcoded 2-step process when scanning a publicly
 exposed network endpoint (see
-[Future Works](future_works.md#dynamic_orchestration) on the potential
+[Future Work](future_work.md#dynamic_orchestration) on the potential
 improvement on the workflow):
 
 *   **Reconnaissance**: In the first step, Tsunami identifies open ports and
@@ -86,7 +86,7 @@ detection logic could either be implemented as plain Java code, or as a separate
 binary / script using a different language like python or go. External binaries
 and scripts have to be executed as separate processes outside of Tsunami using
 Tsunami's command execution util. See
-[Future Works](future_works.md#multi_lang_plugins) for our design ideas of
+[Future Work](future_work.md#multi_lang_plugins) for our design ideas of
 making Tsunami plugins language agnostic.
 
 ### Detector Selection
