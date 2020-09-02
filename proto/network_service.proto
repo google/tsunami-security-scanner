@@ -64,4 +64,10 @@ message ServiceContext {
 message WebServiceContext {
   // The root path of the hosted web application.
   string application_root = 1;
+
+  // The web application that is serving under the application root.
+  Software software = 2;
+
+  // The detected versions of the web application.
+  VersionSet version_set = 3;
 }
