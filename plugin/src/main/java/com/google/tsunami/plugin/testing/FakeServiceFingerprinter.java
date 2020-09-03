@@ -21,8 +21,10 @@ import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import com.google.tsunami.proto.FingerprintingReport;
 import com.google.tsunami.proto.NetworkService;
+import com.google.tsunami.proto.ServiceContext;
 import com.google.tsunami.proto.Software;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.WebServiceContext;
 
 /** A fake ServiceFingerprinter plugin for testing purpose only. */
 @PluginInfo(
@@ -37,10 +39,19 @@ public class FakeServiceFingerprinter implements ServiceFingerprinter {
   public static final Software IDENTIFIED_SOFTWARE =
       Software.newBuilder().setName("Jenkins").build();
 
+  public static NetworkService addWebServiceContext(NetworkService networkService) {
+    return networkService.toBuilder()
+        .setServiceContext(
+            ServiceContext.newBuilder()
+                .setWebServiceContext(
+                    WebServiceContext.newBuilder().setSoftware(IDENTIFIED_SOFTWARE)))
+        .build();
+  }
+
   @Override
   public FingerprintingReport fingerprint(TargetInfo targetInfo, NetworkService networkService) {
     return FingerprintingReport.newBuilder()
-        .addNetworkServices(networkService.toBuilder().setSoftware(IDENTIFIED_SOFTWARE))
+        .addNetworkServices(addWebServiceContext(networkService))
         .build();
   }
 }

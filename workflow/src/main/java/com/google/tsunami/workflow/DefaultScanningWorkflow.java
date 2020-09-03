@@ -267,11 +267,14 @@ public final class DefaultScanningWorkflow {
                         pluginExecutorProvider.get().executeAsync(vulnDetectorExecutorConfig))
                 .collect(toImmutableList());
     return FluentFuture.from(Futures.successfulAsList(detectionResultFutures))
-        .transform(this::generateScanResults, directExecutor());
+        .transform(
+            detectionResult -> generateScanResults(detectionResult, reconnaissanceReport),
+            directExecutor());
   }
 
   private ScanResults generateScanResults(
-      Collection<PluginExecutionResult<DetectionReportList>> detectionResults) {
+      Collection<PluginExecutionResult<DetectionReportList>> detectionResults,
+      ReconnaissanceReport reconnaissanceReport) {
     executionTracer.setDone();
     logger.atInfo().log("Tsunami scanning workflow done. Generating scan results.");
 
@@ -327,6 +330,7 @@ public final class DefaultScanningWorkflow {
                 Duration.between(scanStartTimestamp, Instant.now(clock)).toMillis()))
         .setFullDetectionReports(
             FullDetectionReports.newBuilder().addAllDetectionReports(succeededDetectionReports))
+        .setReconnaissanceReport(reconnaissanceReport)
         .build();
   }
 
