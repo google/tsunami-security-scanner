@@ -24,6 +24,7 @@ import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
 import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
+import com.google.tsunami.plugin.annotations.ForWebService;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import com.google.tsunami.plugin.testing.FakePortScanner;
 import com.google.tsunami.plugin.testing.FakePortScanner2;
@@ -113,7 +114,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void getVulnDetectors_whenFingerprinterNotAnnotated_returnsEmpty() {
+  public void getServiceFingerprinter_whenFingerprinterNotAnnotated_returnsEmpty() {
     NetworkService httpService =
         NetworkService.newBuilder()
             .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
@@ -132,7 +133,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void getVulnDetectors_whenFingerprinterHasMatch_returnsMatch() {
+  public void getServiceFingerprinter_whenFingerprinterHasMatch_returnsMatch() {
     NetworkService httpService =
         NetworkService.newBuilder()
             .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
@@ -152,7 +153,7 @@ public class PluginManagerTest {
   }
 
   @Test
-  public void getVulnDetectors_whenNoFingerprinterMatches_returnsEmpty() {
+  public void getServiceFingerprinter_whenNoFingerprinterMatches_returnsEmpty() {
     NetworkService httpsService =
         NetworkService.newBuilder()
             .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
@@ -168,6 +169,56 @@ public class PluginManagerTest {
         pluginManager.getServiceFingerprinter(httpsService);
 
     assertThat(fingerprinter).isEmpty();
+  }
+
+  @Test
+  public void getServiceFingerprinter_whenForWebServiceAnnotationAndWebService_returnsMatch() {
+    NetworkService httpProxyService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http-proxy")
+            .build();
+    NetworkService httpsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(new FakePortScannerBootstrapModule(), FakeWebFingerprinter.getModule())
+            .getInstance(PluginManager.class);
+
+    Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
+        pluginManager.getServiceFingerprinter(httpsService);
+    assertThat(fingerprinter).isPresent();
+    assertThat(fingerprinter.get().matchedServices()).containsExactly(httpsService);
+
+    fingerprinter = pluginManager.getServiceFingerprinter(httpProxyService);
+    assertThat(fingerprinter).isPresent();
+    assertThat(fingerprinter.get().matchedServices()).containsExactly(httpProxyService);
+  }
+
+  @Test
+  public void getServiceFingerprinter_whenForWebServiceAnnotationAndNonWebService_returnsEmpty() {
+    NetworkService sshService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("ssh")
+            .build();
+    NetworkService rdpService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("rdp")
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(new FakePortScannerBootstrapModule(), FakeWebFingerprinter.getModule())
+            .getInstance(PluginManager.class);
+
+    assertThat(pluginManager.getServiceFingerprinter(sshService)).isEmpty();
+    assertThat(pluginManager.getServiceFingerprinter(rdpService)).isEmpty();
   }
 
   @Test
@@ -401,6 +452,32 @@ public class PluginManagerTest {
       @Override
       protected void configurePlugin() {
         registerPlugin(NoAnnotationFingerprinter.class);
+      }
+    }
+  }
+
+  @PluginInfo(
+      type = PluginType.SERVICE_FINGERPRINT,
+      name = "FakeWebFingerprinter",
+      version = "v0.1",
+      description = "A fake ServiceFingerprinter for web services.",
+      author = "fake",
+      bootstrapModule = NoAnnotationFingerprinter.Module.class)
+  @ForWebService
+  private static final class FakeWebFingerprinter implements ServiceFingerprinter {
+    @Override
+    public FingerprintingReport fingerprint(TargetInfo targetInfo, NetworkService networkService) {
+      return null;
+    }
+
+    static Module getModule() {
+      return new Module();
+    }
+
+    private static final class Module extends PluginBootstrapModule {
+      @Override
+      protected void configurePlugin() {
+        registerPlugin(FakeWebFingerprinter.class);
       }
     }
   }

@@ -21,6 +21,7 @@ import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
 import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
+import com.google.tsunami.plugin.annotations.ForWebService;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import java.util.Optional;
 
@@ -30,6 +31,7 @@ abstract class PluginDefinition {
   abstract PluginInfo pluginInfo();
   abstract Optional<ForServiceName> targetServiceName();
   abstract Optional<ForSoftware> targetSoftware();
+  abstract boolean isForWebService();
 
   /**
    * Unique identifier for the plugin.
@@ -70,12 +72,14 @@ abstract class PluginDefinition {
         Optional.ofNullable(pluginClazz.getAnnotation(ForServiceName.class));
     Optional<ForSoftware> targetSoftware =
         Optional.ofNullable(pluginClazz.getAnnotation(ForSoftware.class));
+    boolean isForWebService = pluginClazz.isAnnotationPresent(ForWebService.class);
 
     checkState(
         pluginInfo.isPresent(),
         "A @PluginInfo annotation is required when creating a PluginDefinition for plugin: %s",
         pluginClazz);
 
-    return new AutoValue_PluginDefinition(pluginInfo.get(), targetServiceName, targetSoftware);
+    return new AutoValue_PluginDefinition(
+        pluginInfo.get(), targetServiceName, targetSoftware, isForWebService);
   }
 }

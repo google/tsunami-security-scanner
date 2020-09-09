@@ -16,6 +16,7 @@
 package com.google.tsunami.plugin;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.tsunami.common.data.NetworkServiceUtils.isWebService;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
@@ -93,7 +94,8 @@ public class PluginManager {
       ReconnaissanceReport reconnaissanceReport) {
     List<NetworkService> matchedNetworkServices;
     if (!pluginDefinition.targetServiceName().isPresent()
-        && !pluginDefinition.targetSoftware().isPresent()) {
+        && !pluginDefinition.targetSoftware().isPresent()
+        && !pluginDefinition.isForWebService()) {
       // No filtering annotation applied, just match all network services from reconnaissance.
       matchedNetworkServices = reconnaissanceReport.getNetworkServicesList();
     } else {
@@ -120,11 +122,15 @@ public class PluginManager {
   private static boolean hasMatchingServiceName(
       NetworkService networkService, PluginDefinition pluginDefinition) {
     String serviceName = networkService.getServiceName();
-    return pluginDefinition.targetServiceName().isPresent()
-        && (serviceName.isEmpty()
-            || Arrays.stream(pluginDefinition.targetServiceName().get().value())
-                .anyMatch(
-                    targetServiceName -> Ascii.equalsIgnoreCase(targetServiceName, serviceName)));
+    boolean hasServiceNameMatch =
+        pluginDefinition.targetServiceName().isPresent()
+            && (serviceName.isEmpty()
+                || Arrays.stream(pluginDefinition.targetServiceName().get().value())
+                    .anyMatch(
+                        targetServiceName ->
+                            Ascii.equalsIgnoreCase(targetServiceName, serviceName)));
+    boolean hasWebServiceMatch = pluginDefinition.isForWebService() && isWebService(networkService);
+    return hasServiceNameMatch || hasWebServiceMatch;
   }
 
   private static boolean hasMatchingSoftware(
