@@ -213,7 +213,7 @@ public final class DefaultScanningWorkflow {
                 ReconnaissanceReport.newBuilder()
                     .setTargetInfo(targetInfo)
                     .addAllNetworkServices(networkServicesToKeep)
-                    .addAllNetworkServices(successfullyFingerprintedServices(executionResults))
+                    .addAllNetworkServices(getFingerprintedServices(executionResults))
                     .build(),
             directExecutor());
   }
@@ -230,11 +230,17 @@ public final class DefaultScanningWorkflow {
         .build();
   }
 
-  private static ImmutableList<NetworkService> successfullyFingerprintedServices(
+  @SuppressWarnings("unchecked")
+  private static ImmutableList<NetworkService> getFingerprintedServices(
       Collection<PluginExecutionResult<FingerprintingReport>> executionResults) {
     return executionResults.stream()
-        .filter(PluginExecutionResult::isSucceeded)
-        .flatMap(result -> result.resultData().get().getNetworkServicesList().stream())
+        .flatMap(
+            result ->
+                result.isSucceeded()
+                    ? result.resultData().get().getNetworkServicesList().stream()
+                    : ((List<NetworkService>)
+                            result.executorConfig().matchedPlugin().matchedServices())
+                        .stream())
         .collect(toImmutableList());
   }
 

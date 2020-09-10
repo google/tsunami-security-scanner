@@ -25,6 +25,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
 import com.google.tsunami.plugin.testing.FailedPortScannerBootstrapModule;
+import com.google.tsunami.plugin.testing.FailedServiceFingerprinterBootstrapModule;
 import com.google.tsunami.plugin.testing.FailedVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePluginExecutionModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
@@ -152,6 +153,49 @@ public final class DefaultScanningWorkflowTest {
     assertThat(scanResults.getStatusMessage())
         .contains("Plugin execution error on '/fake/PORT_SCAN/FailedPortScanner/v0.1'");
     assertThat(scanResults.getScanFindingsList()).isEmpty();
+  }
+
+  @Test
+  public void run_whenServiceFingerprinterFailed_reusesNetworkServicesFromPortScan()
+      throws ExecutionException, InterruptedException {
+    Injector injector =
+        Guice.createInjector(
+            new FakeUtcClockModule(),
+            new FakePluginExecutionModule(),
+            new FakePortScannerBootstrapModule(),
+            new FailedServiceFingerprinterBootstrapModule(),
+            new FakeVulnDetectorBootstrapModule(),
+            new FakeVulnDetectorBootstrapModule2());
+    scanningWorkflow = injector.getInstance(DefaultScanningWorkflow.class);
+
+    ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
+
+    assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(scanResults.getReconnaissanceReport().getNetworkServicesList())
+        .containsExactly(
+            FakePortScanner.getFakeNetworkService(buildScanTarget().getNetworkEndpoint()));
+  }
+
+  @Test
+  public void run_whenServiceFingerprinterSucceeded_fillsReconnaissanceReportWithFingerprintResult()
+      throws ExecutionException, InterruptedException {
+    Injector injector =
+        Guice.createInjector(
+            new FakeUtcClockModule(),
+            new FakePluginExecutionModule(),
+            new FakePortScannerBootstrapModule(),
+            new FakeServiceFingerprinterBootstrapModule(),
+            new FakeVulnDetectorBootstrapModule(),
+            new FakeVulnDetectorBootstrapModule2());
+    scanningWorkflow = injector.getInstance(DefaultScanningWorkflow.class);
+
+    ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
+
+    assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(scanResults.getReconnaissanceReport().getNetworkServicesList())
+        .containsExactly(
+            FakeServiceFingerprinter.addWebServiceContext(
+                FakePortScanner.getFakeNetworkService(buildScanTarget().getNetworkEndpoint())));
   }
 
   @Test
