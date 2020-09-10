@@ -143,6 +143,7 @@ public final class SegmentTest {
         LessThanTestCase.create(Segment.fromString("2.1.1"), Segment.fromString("2.1.abc")));
   }
 
+  @Theory
   public void compareTo_lessThanTestCase_hasCorrectSymmetryResult(
       @FromDataPoints("LessThan") LessThanTestCase<Segment> testCase) {
     assertThat(testCase.smaller()).isLessThan(testCase.larger());
