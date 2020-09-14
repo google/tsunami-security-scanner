@@ -101,7 +101,9 @@ public final class FakeArchiver implements Archiver {
     assertThat(archivedCharSequenceData.keySet()).containsExactlyElementsIn(expectedNames);
   }
 
+  @SuppressWarnings("TruthIncompatibleType")
   public void assertCharSequencesStoredWithValues(Collection<byte[]> expectedValues) {
-    assertThat(archivedCharSequenceData.values()).containsExactlyElementsIn(expectedValues);
+    assertThat(archivedCharSequenceData.values())
+        .containsExactlyElementsIn(/* expected: CharSequence, actual: byte[] */ expectedValues);
   }
 }
