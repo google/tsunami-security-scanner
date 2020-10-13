@@ -18,7 +18,6 @@ package com.google.tsunami.main.cli.option;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import com.google.common.base.Joiner;
 import com.google.tsunami.common.cli.CliOption;
 import com.google.tsunami.main.cli.option.validator.IpV4Validator;
 import com.google.tsunami.main.cli.option.validator.IpV6Validator;
@@ -61,13 +60,6 @@ public final class ScanTargetCliOptions implements CliOption {
       throw new ParameterException(
           "One of the following parameters is expected: --ip-v4-target, --ip-v6-target,"
               + " --hostname-target");
-    }
-    if (nonEmptyTargets.size() != 1) {
-      throw new ParameterException(
-          String.format(
-              "Only one of the following parameter is expected: --ip-v4-target, --ip-v6-target,"
-                  + " --hostname-target, got %d: %s",
-              nonEmptyTargets.size(), Joiner.on(",").join(nonEmptyTargets)));
     }
   }
 }

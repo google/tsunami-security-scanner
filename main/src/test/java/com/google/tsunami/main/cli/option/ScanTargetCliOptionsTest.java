@@ -32,13 +32,4 @@ public class ScanTargetCliOptionsTest {
 
     assertThrows(ParameterException.class, cliOptions::validate);
   }
-
-  @Test
-  public void validate_whenMultipleScanTargets_throwsParameterException() {
-    ScanTargetCliOptions cliOptions = new ScanTargetCliOptions();
-    cliOptions.ipV4Target = "127.0.0.1";
-    cliOptions.ipV6Target = "2002:af4:9b91::";
-
-    assertThrows(ParameterException.class, cliOptions::validate);
-  }
 }
