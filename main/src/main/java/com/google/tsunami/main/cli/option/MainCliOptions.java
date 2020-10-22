@@ -24,9 +24,9 @@ import com.google.tsunami.main.cli.option.validator.IpV6Validator;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Command line arguments for Tsunami scan target. */
+/** Command line arguments for Tsunami. */
 @Parameters(separators = "=")
-public final class ScanTargetCliOptions implements CliOption {
+public final class MainCliOptions implements CliOption {
 
   @Parameter(
       names = "--ip-v4-target",
@@ -42,6 +42,9 @@ public final class ScanTargetCliOptions implements CliOption {
 
   @Parameter(names = "--hostname-target", description = "The hostname of the scanning target.")
   public String hostnameTarget;
+
+  @Parameter(names = "--log-id", description = "A log ID to print in front of the logs.")
+  public String logId;
 
   @Override
   public void validate() {

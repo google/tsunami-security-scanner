@@ -34,7 +34,7 @@ import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.reflection.ClassGraphModule;
 import com.google.tsunami.common.time.SystemUtcClockModule;
-import com.google.tsunami.main.cli.option.ScanTargetCliOptions;
+import com.google.tsunami.main.cli.option.MainCliOptions;
 import com.google.tsunami.plugin.PluginExecutionModule;
 import com.google.tsunami.plugin.PluginLoadingModule;
 import com.google.tsunami.proto.ScanResults;
@@ -54,21 +54,23 @@ public final class TsunamiCli {
 
   private final DefaultScanningWorkflow scanningWorkflow;
   private final ScanResultsArchiver scanResultsArchiver;
-  private final ScanTargetCliOptions scanTargetCliOptions;
+  private final MainCliOptions mainCliOptions;
 
   @Inject
   TsunamiCli(
       DefaultScanningWorkflow scanningWorkflow,
       ScanResultsArchiver scanResultsArchiver,
-      ScanTargetCliOptions scanTargetCliOptions) {
+      MainCliOptions mainCliOptions) {
     this.scanningWorkflow = checkNotNull(scanningWorkflow);
     this.scanResultsArchiver = checkNotNull(scanResultsArchiver);
-    this.scanTargetCliOptions = checkNotNull(scanTargetCliOptions);
+    this.mainCliOptions = checkNotNull(mainCliOptions);
   }
 
   public void run()
       throws ExecutionException, InterruptedException, ScanningWorkflowException, IOException {
-    logger.atInfo().log("TsunamiCli starting...");
+    String logId = (mainCliOptions.logId == null) ? "" : (mainCliOptions.logId + ": ");
+    // TODO(b/171405612): Find a way to print the log ID at every log line.
+    logger.atInfo().log("%sTsunamiCli starting...", logId);
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
 
     logger.atInfo().log("Tsunami scan finished, saving results.");
@@ -80,12 +82,12 @@ public final class TsunamiCli {
   private ScanTarget buildScanTarget() {
     ScanTarget.Builder scanTargetBuilder = ScanTarget.newBuilder();
 
-    if (scanTargetCliOptions.ipV4Target != null) {
-      scanTargetBuilder.setNetworkEndpoint(forIp(scanTargetCliOptions.ipV4Target));
-    } else if (scanTargetCliOptions.ipV6Target != null) {
-      scanTargetBuilder.setNetworkEndpoint(forIp(scanTargetCliOptions.ipV6Target));
+    if (mainCliOptions.ipV4Target != null) {
+      scanTargetBuilder.setNetworkEndpoint(forIp(mainCliOptions.ipV4Target));
+    } else if (mainCliOptions.ipV6Target != null) {
+      scanTargetBuilder.setNetworkEndpoint(forIp(mainCliOptions.ipV6Target));
     } else {
-      scanTargetBuilder.setNetworkEndpoint(forHostname(scanTargetCliOptions.hostnameTarget));
+      scanTargetBuilder.setNetworkEndpoint(forHostname(mainCliOptions.hostnameTarget));
     }
 
     return scanTargetBuilder.build();
