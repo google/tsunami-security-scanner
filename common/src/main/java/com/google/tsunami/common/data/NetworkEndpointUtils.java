@@ -56,20 +56,21 @@ public final class NetworkEndpointUtils {
    * </ul>
    */
   public static String toUriAuthority(NetworkEndpoint networkEndpoint) {
+    return toHostAndPort(networkEndpoint).toString();
+  }
+
+  public static HostAndPort toHostAndPort(NetworkEndpoint networkEndpoint) {
     switch (networkEndpoint.getType()) {
       case IP:
-        return HostAndPort.fromHost(networkEndpoint.getIpAddress().getAddress()).toString();
+        return HostAndPort.fromHost(networkEndpoint.getIpAddress().getAddress());
       case IP_PORT:
         return HostAndPort.fromParts(
-                networkEndpoint.getIpAddress().getAddress(),
-                networkEndpoint.getPort().getPortNumber())
-            .toString();
+            networkEndpoint.getIpAddress().getAddress(), networkEndpoint.getPort().getPortNumber());
       case HOSTNAME:
-        return HostAndPort.fromHost(networkEndpoint.getHostname().getName()).toString();
+        return HostAndPort.fromHost(networkEndpoint.getHostname().getName());
       case HOSTNAME_PORT:
         return HostAndPort.fromParts(
-                networkEndpoint.getHostname().getName(), networkEndpoint.getPort().getPortNumber())
-            .toString();
+            networkEndpoint.getHostname().getName(), networkEndpoint.getPort().getPortNumber());
       case UNRECOGNIZED:
       case TYPE_UNSPECIFIED:
         throw new AssertionError("Type for NetworkEndpoint must be specified.");

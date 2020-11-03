@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.net.HostAndPort;
 import com.google.tsunami.proto.AddressFamily;
 import com.google.tsunami.proto.Hostname;
 import com.google.tsunami.proto.IpAddress;
@@ -165,6 +166,54 @@ public class NetworkEndpointUtilsTest {
             .build();
     assertThat(NetworkEndpointUtils.toUriAuthority(hostnameAndPortEndpoint))
         .isEqualTo("localhost:8888");
+  }
+
+  @Test
+  public void toHostAndPort_withIpAddress_returnsHostWithIp() {
+    NetworkEndpoint ipV4Endpoint =
+        NetworkEndpoint.newBuilder()
+            .setType(NetworkEndpoint.Type.IP)
+            .setIpAddress(
+                IpAddress.newBuilder().setAddress("1.2.3.4").setAddressFamily(AddressFamily.IPV4))
+            .build();
+    assertThat(NetworkEndpointUtils.toHostAndPort(ipV4Endpoint))
+        .isEqualTo(HostAndPort.fromHost("1.2.3.4"));
+  }
+
+  @Test
+  public void toHostAndPort_withIpAddressAndPort_returnsHostWithIpAndPort() {
+    NetworkEndpoint ipV4AndPortEndpoint =
+        NetworkEndpoint.newBuilder()
+            .setType(NetworkEndpoint.Type.IP_PORT)
+            .setPort(Port.newBuilder().setPortNumber(8888))
+            .setIpAddress(
+                IpAddress.newBuilder().setAddress("1.2.3.4").setAddressFamily(AddressFamily.IPV4))
+            .build();
+    assertThat(NetworkEndpointUtils.toHostAndPort(ipV4AndPortEndpoint))
+        .isEqualTo(HostAndPort.fromParts("1.2.3.4", 8888));
+  }
+
+  @Test
+  public void toHostAndPort_withHostname_returnsHostWithHostname() {
+    NetworkEndpoint hostnameEndpoint =
+        NetworkEndpoint.newBuilder()
+            .setType(NetworkEndpoint.Type.HOSTNAME)
+            .setHostname(Hostname.newBuilder().setName("localhost"))
+            .build();
+    assertThat(NetworkEndpointUtils.toHostAndPort(hostnameEndpoint))
+        .isEqualTo(HostAndPort.fromHost("localhost"));
+  }
+
+  @Test
+  public void toHostAndPort_withHostnameAndPort_returnsHostWithHostnameAndPort() {
+    NetworkEndpoint hostnameAndPortEndpoint =
+        NetworkEndpoint.newBuilder()
+            .setType(NetworkEndpoint.Type.HOSTNAME_PORT)
+            .setPort(Port.newBuilder().setPortNumber(8888))
+            .setHostname(Hostname.newBuilder().setName("localhost"))
+            .build();
+    assertThat(NetworkEndpointUtils.toHostAndPort(hostnameAndPortEndpoint))
+        .isEqualTo(HostAndPort.fromParts("localhost", 8888));
   }
 
   @Test
