@@ -292,6 +292,35 @@ public class NetworkEndpointUtilsTest {
   }
 
   @Test
+  public void forIpAndHostname_returnsIpAndHostnameNetworkEndpoint() {
+    assertThat(NetworkEndpointUtils.forIpAndHostname("1.2.3.4", "host.com"))
+        .isEqualTo(
+            NetworkEndpoint.newBuilder()
+                .setType(NetworkEndpoint.Type.IP_HOSTNAME)
+                .setIpAddress(
+                    IpAddress.newBuilder()
+                        .setAddressFamily(AddressFamily.IPV4)
+                        .setAddress("1.2.3.4"))
+                .setHostname(Hostname.newBuilder().setName("host.com"))
+                .build());
+  }
+
+  @Test
+  public void forIpHostnameAndPort_returnsIpHostnameAndPortNetworkEndpoint() {
+    assertThat(NetworkEndpointUtils.forIpHostnameAndPort("1.2.3.4", "host.com", 8888))
+        .isEqualTo(
+            NetworkEndpoint.newBuilder()
+                .setType(NetworkEndpoint.Type.IP_HOSTNAME_PORT)
+                .setIpAddress(
+                    IpAddress.newBuilder()
+                        .setAddressFamily(AddressFamily.IPV4)
+                        .setAddress("1.2.3.4"))
+                .setHostname(Hostname.newBuilder().setName("host.com"))
+                .setPort(Port.newBuilder().setPortNumber(8888))
+                .build());
+  }
+
+  @Test
   public void forNetworkEndpointAndPort_withIpEndpointAndPort_returnsIpAndPort() {
     NetworkEndpoint ipEndpoint = NetworkEndpointUtils.forIp("1.2.3.4");
 

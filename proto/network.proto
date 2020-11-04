@@ -66,6 +66,12 @@ message NetworkEndpoint {
 
     // The network endpoint is represented by a hostname and port pair.
     HOSTNAME_PORT = 4;
+
+    // The network endpoint is represented by an IP address and hostname.
+    IP_HOSTNAME = 5;
+
+    // The network endpoint is represented by an IP address, hostname and port.
+    IP_HOSTNAME_PORT = 6;
   }
 
   // Type of the network endpoint.

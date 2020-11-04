@@ -35,9 +35,28 @@ public final class NetworkEndpointUtils {
 
   private NetworkEndpointUtils() {}
 
+  public static boolean hasIpAddress(NetworkEndpoint networkEndpoint) {
+    return networkEndpoint.getType().equals(NetworkEndpoint.Type.IP)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_PORT)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_HOSTNAME)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_HOSTNAME_PORT);
+  }
+
+  public static boolean hasHostname(NetworkEndpoint networkEndpoint) {
+    return networkEndpoint.getType().equals(NetworkEndpoint.Type.HOSTNAME)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.HOSTNAME_PORT)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_HOSTNAME)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_HOSTNAME_PORT);
+  }
+
+  public static boolean hasPort(NetworkEndpoint networkEndpoint) {
+    return networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_PORT)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.HOSTNAME_PORT)
+        || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_HOSTNAME_PORT);
+  }
+
   public static boolean isIpV6Endpoint(NetworkEndpoint networkEndpoint) {
-    return (networkEndpoint.getType().equals(NetworkEndpoint.Type.IP)
-            || networkEndpoint.getType().equals(NetworkEndpoint.Type.IP_PORT))
+    return hasIpAddress(networkEndpoint)
         && networkEndpoint.getIpAddress().getAddressFamily().equals(AddressFamily.IPV6);
   }
 
@@ -67,8 +86,10 @@ public final class NetworkEndpointUtils {
         return HostAndPort.fromParts(
             networkEndpoint.getIpAddress().getAddress(), networkEndpoint.getPort().getPortNumber());
       case HOSTNAME:
+      case IP_HOSTNAME:
         return HostAndPort.fromHost(networkEndpoint.getHostname().getName());
       case HOSTNAME_PORT:
+      case IP_HOSTNAME_PORT:
         return HostAndPort.fromParts(
             networkEndpoint.getHostname().getName(), networkEndpoint.getPort().getPortNumber());
       case UNRECOGNIZED:
@@ -120,10 +141,18 @@ public final class NetworkEndpointUtils {
         .build();
   }
 
+  /**
+   * Returns a {@link NetworkEndpoint} proto buffer object from the given ip address and hostname.
+   */
+  public static NetworkEndpoint forIpAndHostname(String ipAddress, String hostname) {
+    return forIp(ipAddress).toBuilder()
+        .setType(NetworkEndpoint.Type.IP_HOSTNAME)
+        .setHostname(Hostname.newBuilder().setName(hostname))
+        .build();
+  }
+
   /** Returns a {@link NetworkEndpoint} proto buffer object from the given hostname and port. */
   public static NetworkEndpoint forHostnameAndPort(String hostname, int port) {
-    checkArgument(
-        !InetAddresses.isInetAddress(hostname), "Expected hostname, got IP address '%s'", hostname);
     checkArgument(
         0 <= port && port <= MAX_PORT_NUMBER,
         "Port out of range. Expected [0, %s], actual %s.",
@@ -132,6 +161,23 @@ public final class NetworkEndpointUtils {
 
     return forHostname(hostname).toBuilder()
         .setType(NetworkEndpoint.Type.HOSTNAME_PORT)
+        .setPort(Port.newBuilder().setPortNumber(port))
+        .build();
+  }
+
+  /**
+   * Returns a {@link NetworkEndpoint} proto buffer object from the given ip address, hostname and
+   * port.
+   */
+  public static NetworkEndpoint forIpHostnameAndPort(String ipAddress, String hostname, int port) {
+    checkArgument(
+        0 <= port && port <= MAX_PORT_NUMBER,
+        "Port out of range. Expected [0, %s], actual %s.",
+        MAX_PORT_NUMBER,
+        port);
+
+    return forIpAndHostname(ipAddress, hostname).toBuilder()
+        .setType(NetworkEndpoint.Type.IP_HOSTNAME_PORT)
         .setPort(Port.newBuilder().setPortNumber(port))
         .build();
   }
@@ -161,8 +207,14 @@ public final class NetworkEndpointUtils {
             .setType(NetworkEndpoint.Type.HOSTNAME_PORT)
             .setPort(Port.newBuilder().setPortNumber(port))
             .build();
+      case IP_HOSTNAME:
+        return networkEndpoint.toBuilder()
+            .setType(NetworkEndpoint.Type.IP_HOSTNAME_PORT)
+            .setPort(Port.newBuilder().setPortNumber(port))
+            .build();
       case IP_PORT:
       case HOSTNAME_PORT:
+      case IP_HOSTNAME_PORT:
       case UNRECOGNIZED:
       case TYPE_UNSPECIFIED:
         throw new IllegalArgumentException("Invalid NetworkEndpoint type.");
