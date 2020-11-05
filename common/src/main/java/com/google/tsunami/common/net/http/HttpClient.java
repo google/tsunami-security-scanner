@@ -121,6 +121,9 @@ public final class HttpClient {
       case POST:
         okRequestBuilder.post(buildRequestBody(httpRequest));
         break;
+      case DELETE:
+        okRequestBuilder.delete(buildRequestBody(httpRequest));
+        break;
     }
 
     return okRequestBuilder.build();

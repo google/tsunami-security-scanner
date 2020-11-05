@@ -20,7 +20,8 @@ public enum HttpMethod {
   // Add more http methods here if necessary.
   GET("GET"),
   HEAD("HEAD"),
-  POST("POST");
+  POST("POST"),
+  DELETE("DELETE");
 
   private final String string;
 

@@ -53,6 +53,14 @@ public class HttpRequestTest {
   }
 
   @Test
+  public void delete_always_buildsHttpDeleteRequest() {
+    HttpRequest httpRequest = HttpRequest.delete("http://localhost/url").withEmptyHeaders().build();
+
+    assertThat(httpRequest.method()).isEqualTo(HttpMethod.DELETE);
+    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+  }
+
+  @Test
   public void build_whenGetRequestHasRequestBody_throwsIllegalStateException() {
     assertThrows(
         IllegalStateException.class,

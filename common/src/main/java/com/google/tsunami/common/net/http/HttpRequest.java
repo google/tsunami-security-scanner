@@ -114,6 +114,28 @@ public abstract class HttpRequest {
     return builder().setMethod(HttpMethod.POST).setUrl(uri);
   }
 
+  /**
+   * Create a new HTTP DELETE request with the given {@code url}.
+   *
+   * @param url the url of the DELETE request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder delete(String url) {
+    checkArgument(!Strings.isNullOrEmpty(url));
+    return delete(HttpUrl.parse(url));
+  }
+
+  /**
+   * Create a new HTTP DELETE request with the given {@code uri}.
+   *
+   * @param uri the url of the DELETE request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder delete(HttpUrl uri) {
+    checkNotNull(uri);
+    return builder().setMethod(HttpMethod.DELETE).setUrl(uri);
+  }
+
   /** Builder for {@link HttpRequest}. */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -137,9 +159,10 @@ public abstract class HttpRequest {
         case HEAD:
           checkState(
               !httpRequest.requestBody().isPresent(),
-              "An request body is not allowed for HTTP GET/HEAD request");
+              "A request body is not allowed for HTTP GET/HEAD request");
           break;
         case POST:
+        case DELETE:
           break;
       }
 
