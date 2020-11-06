@@ -21,14 +21,41 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
+import javax.inject.Qualifier;
 import javax.inject.Singleton;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 
 /** Guice module for installing {@link HttpClient} library. */
 public final class HttpClientModule extends AbstractModule {
+  // This TrustManager does NOT validate certificate chains.
+  private static final X509TrustManager TRUST_ALL_CERTS_MANAGER =
+      new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+          return new X509Certificate[0];
+        }
+      };
+
   // Maximum number of idle connections to each to keep in the pool.
   private final int connectionPoolMaxIdle;
   // Duration to keep the connection alive in the pool before closing it.
@@ -65,18 +92,50 @@ public final class HttpClientModule extends AbstractModule {
     return dispatcher;
   }
 
+  @Provides
+  @Singleton
+  SSLSocketFactory provideSslSocketFactory() throws GeneralSecurityException {
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(null, new TrustManager[] {TRUST_ALL_CERTS_MANAGER}, new SecureRandom());
+    return sslContext.getSocketFactory();
+  }
+
   // Missing features:
   // 1. Custom cookie handler.
   // 2. Connection / read / write timeout.
   @Provides
   @Singleton
-  OkHttpClient provideOkHttpClient(ConnectionPool connectionPool, Dispatcher dispatcher) {
-    return new OkHttpClient.Builder()
-        .connectionPool(connectionPool)
-        .dispatcher(dispatcher)
-        .followRedirects(followRedirects)
-        .build();
+  OkHttpClient provideOkHttpClient(
+      ConnectionPool connectionPool,
+      Dispatcher dispatcher,
+      SSLSocketFactory sslSocketFactory,
+      @TrustAllCertificates boolean trustAllCertificates) {
+    OkHttpClient.Builder clientBuilder =
+        new OkHttpClient.Builder()
+            .connectionPool(connectionPool)
+            .dispatcher(dispatcher)
+            .followRedirects(followRedirects);
+    if (trustAllCertificates) {
+      clientBuilder
+          .sslSocketFactory(sslSocketFactory, TRUST_ALL_CERTS_MANAGER)
+          .hostnameVerifier((hostname, session) -> true);
+    }
+    return clientBuilder.build();
   }
+
+  @Provides
+  @TrustAllCertificates
+  boolean shouldTrustAllCertificates(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    return httpClientCliOptions.trustAllCertificates
+        || httpClientConfigProperties.trustAllCertificates;
+  }
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface TrustAllCertificates {}
 
   /** Builder for {@link HttpClientModule}. */
   public static final class Builder {
