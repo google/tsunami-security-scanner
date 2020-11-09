@@ -39,7 +39,7 @@ import okhttp3.ResponseBody;
 /** A client library that communicates with remote servers via the HTTP protocol. */
 public final class HttpClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-  private static final String TSUNAMI_USER_AGENT = "TsunamiSecurityScanner";
+  public static final String TSUNAMI_USER_AGENT = "TsunamiSecurityScanner";
 
   private final OkHttpClient okHttpClient;
 
