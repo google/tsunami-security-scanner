@@ -20,6 +20,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static com.google.common.net.HttpHeaders.HOST;
 import static com.google.common.net.HttpHeaders.LOCATION;
 import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.truth.Truth.assertThat;
@@ -34,6 +35,8 @@ import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Guice;
 import com.google.protobuf.ByteString;
+import com.google.tsunami.common.data.NetworkEndpointUtils;
+import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -487,6 +490,29 @@ public final class HttpClientTest {
     assertThat(ex).hasCauseThat().isInstanceOf(IOException.class);
   }
 
+  @Test
+  public void send_whenHostnameAndIpInRequest_useHostnameAsProxy() throws IOException {
+    // MockWebServer listens on the loopback ipv6 address by default.
+    String ip = "::1";
+    String host = "host.com";
+    mockWebServer.setDispatcher(new HostnameTestDispatcher(host));
+    mockWebServer.start();
+    int port = mockWebServer.url("/").port();
+
+    NetworkService networkService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpHostnameAndPort(ip, host, port))
+            .build();
+
+    // The request to host.com should be sent through mockWebServer's IP.
+    HttpResponse response =
+        httpClient.send(
+            get(String.format("http://host.com:%d/test/get", port)).withEmptyHeaders().build(),
+            networkService);
+
+    assertThat(response.status()).isEqualTo(HttpStatus.OK);
+  }
+
   static final class RedirectDispatcher extends Dispatcher {
     static final String REDIRECT_PATH = "/redirect";
     static final String REDIRECT_DESTINATION_PATH = "/redirect-dest";
@@ -519,6 +545,22 @@ public final class HttpClientTest {
     public MockResponse dispatch(RecordedRequest recordedRequest) {
       if (recordedRequest.getPath().equals(USERAGENT_TEST_PATH)
           && nullToEmpty(recordedRequest.getHeader(USER_AGENT)).equals("TsunamiSecurityScanner")) {
+        return new MockResponse().setResponseCode(HttpStatus.OK.code());
+      }
+      return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.code());
+    }
+  }
+
+  static final class HostnameTestDispatcher extends Dispatcher {
+    private final String expectedHost;
+
+    HostnameTestDispatcher(String expectedHost) {
+      this.expectedHost = checkNotNull(expectedHost);
+    }
+
+    @Override
+    public MockResponse dispatch(RecordedRequest recordedRequest) {
+      if (nullToEmpty(recordedRequest.getHeader(HOST)).startsWith(expectedHost)) {
         return new MockResponse().setResponseCode(HttpStatus.OK.code());
       }
       return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.code());
