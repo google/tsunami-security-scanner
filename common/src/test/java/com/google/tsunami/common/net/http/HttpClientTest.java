@@ -38,6 +38,7 @@ import com.google.protobuf.ByteString;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
@@ -492,16 +493,17 @@ public final class HttpClientTest {
 
   @Test
   public void send_whenHostnameAndIpInRequest_useHostnameAsProxy() throws IOException {
-    // MockWebServer listens on the loopback ipv6 address by default.
-    String ip = "::1";
+    InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
     String host = "host.com";
     mockWebServer.setDispatcher(new HostnameTestDispatcher(host));
-    mockWebServer.start();
+    mockWebServer.start(loopbackAddress, 0);
     int port = mockWebServer.url("/").port();
 
     NetworkService networkService =
         NetworkService.newBuilder()
-            .setNetworkEndpoint(NetworkEndpointUtils.forIpHostnameAndPort(ip, host, port))
+            .setNetworkEndpoint(
+                NetworkEndpointUtils.forIpHostnameAndPort(
+                    loopbackAddress.getHostAddress(), host, port))
             .build();
 
     // The request to host.com should be sent through mockWebServer's IP.
