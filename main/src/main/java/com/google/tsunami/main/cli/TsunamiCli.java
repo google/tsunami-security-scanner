@@ -18,6 +18,7 @@ package com.google.tsunami.main.cli;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forHostname;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
+import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndHostname;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.flogger.GoogleLogger;
@@ -82,10 +83,16 @@ public final class TsunamiCli {
   private ScanTarget buildScanTarget() {
     ScanTarget.Builder scanTargetBuilder = ScanTarget.newBuilder();
 
+    String ip = null;
     if (mainCliOptions.ipV4Target != null) {
-      scanTargetBuilder.setNetworkEndpoint(forIp(mainCliOptions.ipV4Target));
+      ip = mainCliOptions.ipV4Target;
     } else if (mainCliOptions.ipV6Target != null) {
-      scanTargetBuilder.setNetworkEndpoint(forIp(mainCliOptions.ipV6Target));
+      ip = mainCliOptions.ipV6Target;
+    }
+    if (ip != null && mainCliOptions.hostnameTarget != null) {
+      scanTargetBuilder.setNetworkEndpoint(forIpAndHostname(ip, mainCliOptions.hostnameTarget));
+    } else if (ip != null) {
+      scanTargetBuilder.setNetworkEndpoint(forIp(ip));
     } else {
       scanTargetBuilder.setNetworkEndpoint(forHostname(mainCliOptions.hostnameTarget));
     }

@@ -170,6 +170,30 @@ public final class TsunamiCliTest {
                 .build());
   }
 
+  @Test
+  public void run_whenIpAndHostnameTarget_generatesCorrectResult()
+      throws InterruptedException, ExecutionException, IOException {
+
+    runCli(
+        ImmutableMap.of(), "--ip-v4-target=" + IP_TARGET, "--hostname-target=" + HOSTNAME_TARGET);
+
+    verify(scanResultsArchiver, times(1)).archive(scanResultsCaptor.capture());
+    ScanResults storedScanResult = scanResultsCaptor.getValue();
+    assertThat(storedScanResult.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(storedScanResult.getReconnaissanceReport())
+        .isEqualTo(
+            ReconnaissanceReport.newBuilder()
+                .setTargetInfo(
+                    TargetInfo.newBuilder()
+                        .addNetworkEndpoints(
+                            NetworkEndpointUtils.forIpAndHostname(IP_TARGET, HOSTNAME_TARGET)))
+                .addNetworkServices(
+                    FakeServiceFingerprinter.addWebServiceContext(
+                        FakePortScanner.getFakeNetworkService(
+                            NetworkEndpointUtils.forIpAndHostname(IP_TARGET, HOSTNAME_TARGET))))
+                .build());
+  }
+
   private static ScanFinding buildScanFindingFromDetectionReport(DetectionReport detectionReport) {
     return ScanFinding.newBuilder()
         .setTargetInfo(detectionReport.getTargetInfo())
