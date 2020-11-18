@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonSyntaxException;
 import com.google.protobuf.ByteString;
+import okhttp3.HttpUrl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,6 +30,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class HttpResponseTest {
 
+  private static final HttpUrl TEST_URL = HttpUrl.parse("https://example.com/");
+
   @Test
   public void bodyJson_whenValidResponseBody_returnsParsedJson() {
     HttpResponse httpResponse =
@@ -36,6 +39,7 @@ public final class HttpResponseTest {
             .setStatus(HttpStatus.OK)
             .setHeaders(HttpHeaders.builder().build())
             .setBodyBytes(ByteString.copyFromUtf8("{ \"test_value\": 1 }"))
+            .setResponseUrl(TEST_URL)
             .build();
 
     assertThat(httpResponse.bodyJson()).isPresent();
@@ -56,6 +60,7 @@ public final class HttpResponseTest {
         HttpResponse.builder()
             .setStatus(HttpStatus.OK)
             .setHeaders(HttpHeaders.builder().build())
+            .setResponseUrl(TEST_URL)
             .build();
 
     assertThat(httpResponse.bodyJson()).isEmpty();
@@ -68,6 +73,7 @@ public final class HttpResponseTest {
             .setStatus(HttpStatus.OK)
             .setHeaders(HttpHeaders.builder().build())
             .setBodyBytes(ByteString.copyFromUtf8("not a json"))
+            .setResponseUrl(TEST_URL)
             .build();
 
     assertThrows(JsonSyntaxException.class, httpResponse::bodyJson);

@@ -22,16 +22,23 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import java.util.Optional;
+import okhttp3.HttpUrl;
 
 /** Immutable HTTP response. */
 @Immutable
 @AutoValue
+@AutoValue.CopyAnnotations
+// HttpUrl is immutable even if not marked as such.
+@SuppressWarnings("Immutable")
 public abstract class HttpResponse {
   private static final JsonParser JSON_PARSER = new JsonParser();
 
   public abstract HttpStatus status();
   public abstract HttpHeaders headers();
   public abstract Optional<ByteString> bodyBytes();
+  // The URL that produced this response.
+  // TODO(b/173574468): Provide the full redirection request not just the Url.
+  public abstract Optional<HttpUrl> responseUrl();
 
   /** Returns the body of the HTTP response as a UTF-8 encoded String. */
   @Memoized
@@ -59,6 +66,8 @@ public abstract class HttpResponse {
     public abstract Builder setHeaders(HttpHeaders httpHeaders);
     public abstract Builder setBodyBytes(ByteString bodyBytes);
     public abstract Builder setBodyBytes(Optional<ByteString> bodyBytes);
+    public abstract Builder setResponseUrl(HttpUrl url);
+    public abstract Builder setResponseUrl(Optional<HttpUrl> url);
 
     public abstract HttpResponse build();
   }

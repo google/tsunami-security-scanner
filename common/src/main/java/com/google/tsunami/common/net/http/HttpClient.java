@@ -202,7 +202,8 @@ public final class HttpClient {
     HttpResponse.Builder httpResponseBuilder =
         HttpResponse.builder()
             .setStatus(HttpStatus.fromCode(okResponse.code()))
-            .setHeaders(convertHeaders(okResponse.headers()));
+            .setHeaders(convertHeaders(okResponse.headers()))
+            .setResponseUrl(okResponse.request().url());
     if (!okResponse.request().method().equals(HttpMethod.HEAD.name())
         && okResponse.body() != null) {
       httpResponseBuilder.setBodyBytes(ByteString.copyFrom(okResponse.body().bytes()));
