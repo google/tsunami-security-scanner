@@ -22,6 +22,7 @@ package tsunami.proto;
 option java_multiple_files = true;
 option java_outer_classname = "SoftwareProtos";
 option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
 
 // The exact version of a software.
 message Version {

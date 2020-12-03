@@ -24,6 +24,7 @@ import "network.proto";
 option java_multiple_files = true;
 option java_outer_classname = "ScanTargetProtos";
 option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
 
 // The information about a scan target.
 message ScanTarget {
