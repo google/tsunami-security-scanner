@@ -40,6 +40,10 @@ See [Tsunami Scan Orchestration](orchestration.md).
 *   ... [add command line arguments for my plugin?](howto.md#command_line)
 *   ... [add configuration properties for my plugin?](howto.md#configuration)
 
+## <a name="naming"></a>Naming
+
+The name "Tsunami" comes from the fact that this scanner is meant be used as part of a larger system to warn owners about automated "attack waves". Automated attacks are similar to tsunamis in the way that they come suddenly, without prior warning and can cause a lot of damage to organizations if no precautions are taken. The term "Tsunami Early Warning System Security Scanning Engine" is quite long and thus the name got abbreviated to Tsunami Scanning Engine, or Tsunami. Hence, the name is not an analogy to tsunamis itself, but to a system that detects them and warns everyone about them.
+
 ## <a name="future_work"></a>Future Work
 
 See [Future Work](future_work.md).
