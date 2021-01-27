@@ -39,6 +39,7 @@ import com.google.tsunami.main.cli.option.MainCliOptions;
 import com.google.tsunami.plugin.PluginExecutionModule;
 import com.google.tsunami.plugin.PluginLoadingModule;
 import com.google.tsunami.proto.ScanResults;
+import com.google.tsunami.proto.ScanStatus;
 import com.google.tsunami.proto.ScanTarget;
 import com.google.tsunami.workflow.DefaultScanningWorkflow;
 import com.google.tsunami.workflow.ScanningWorkflowException;
@@ -67,7 +68,7 @@ public final class TsunamiCli {
     this.mainCliOptions = checkNotNull(mainCliOptions);
   }
 
-  public void run()
+  public boolean run()
       throws ExecutionException, InterruptedException, ScanningWorkflowException, IOException {
     String logId = (mainCliOptions.logId == null) ? "" : (mainCliOptions.logId + ": ");
     // TODO(b/171405612): Find a way to print the log ID at every log line.
@@ -77,7 +78,19 @@ public final class TsunamiCli {
     logger.atInfo().log("Tsunami scan finished, saving results.");
     saveResults(scanResults);
 
-    logger.atInfo().log("TsunamiCli finished...");
+    if (hasSuccessfulResults(scanResults)) {
+      logger.atInfo().log("TsunamiCli finished...");
+      return true;
+    } else {
+      logger.atInfo().log(
+          "Tsunami scan has failed status, message = %s.", scanResults.getStatusMessage());
+      return false;
+    }
+  }
+
+  private static boolean hasSuccessfulResults(ScanResults scanResults) {
+    return scanResults.getScanStatus().equals(ScanStatus.SUCCEEDED)
+        || scanResults.getScanStatus().equals(ScanStatus.PARTIALLY_SUCCEEDED);
   }
 
   private ScanTarget buildScanTarget() {
@@ -145,7 +158,10 @@ public final class TsunamiCli {
       Injector injector =
           Guice.createInjector(new TsunamiCliModule(scanResult, args, tsunamiConfig));
 
-      injector.getInstance(TsunamiCli.class).run();
+      // Exit with non-zero code if scan failed.
+      if (!injector.getInstance(TsunamiCli.class).run()) {
+        System.exit(1);
+      }
 
       logger.atInfo().log("Full Tsunami scan took %s.", stopwatch.stop());
     } catch (Throwable e) {
