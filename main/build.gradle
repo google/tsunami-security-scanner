@@ -13,6 +13,7 @@ dependencies {
     compile deps.flogger
     compile deps.flogger_google_ext
     compile deps.guava
+    compile deps.jsoup
     runtime deps.jaxb_runtime
 
     testCompile deps.junit
