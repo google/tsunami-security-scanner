@@ -1,0 +1,35 @@
+---
+name: "Release the latest docker image"
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  push:
+    name: Build and push the Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v2
+      - name: 'Login to Docker Hub'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ "{{ secrets.DOCKERHUB_USERNAME }}" }}
+          password: ${{ "{{ secrets.DOCKERHUB_TOKEN }}" }}
+      - name: 'Build and push the docker image'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: google/tsunami-security-scanner:latest
+      - name: 'Publish the README to Docker Hub'
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ "{{ secrets.DOCKERHUB_USERNAME }}" }}
+          password: ${{ "{{ secrets.DOCKERHUB_TOKEN }}" }}
+          repository: google/tsunami-security-scanner
+          short-description: >
+            Tsunami is a general purpose network security scanner
+            with an extensible plugin system
+            for detecting high severity vulnerabilities with high confidence.
