@@ -1,5 +1,5 @@
 ---
-name: "Release the latest docker image"
+name: "Release the dev docker image"
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: google/tsunami-security-scanner:latest
+          tags: google/tsunami-security-scanner:dev
       - name: 'Publish the README to Docker Hub'
         uses: peter-evans/dockerhub-description@v2
         with:
