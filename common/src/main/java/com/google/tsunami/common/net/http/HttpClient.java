@@ -65,7 +65,7 @@ public final class HttpClient {
   public HttpResponse send(HttpRequest httpRequest, @Nullable NetworkService networkService)
       throws IOException {
     logger.atInfo().log(
-        "Sending HTTP '%s' request to '%s'.", httpRequest.method(), httpRequest.url().toString());
+        "Sending HTTP '%s' request to '%s'.", httpRequest.method(), httpRequest.url());
 
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     try (Response okHttpResponse =
@@ -87,8 +87,7 @@ public final class HttpClient {
   public ListenableFuture<HttpResponse> sendAsync(
       HttpRequest httpRequest, @Nullable NetworkService networkService) {
     logger.atInfo().log(
-        "Sending async HTTP '%s' request to '%s'.",
-        httpRequest.method(), httpRequest.url().toString());
+        "Sending async HTTP '%s' request to '%s'.", httpRequest.method(), httpRequest.url());
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
     Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest));
