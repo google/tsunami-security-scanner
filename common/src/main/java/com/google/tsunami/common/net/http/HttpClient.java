@@ -24,6 +24,7 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
+import com.google.tsunami.common.net.http.HttpClientModule.TrustAllCertificates;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -46,10 +47,12 @@ public final class HttpClient {
   public static final String TSUNAMI_USER_AGENT = "TsunamiSecurityScanner";
 
   private final OkHttpClient okHttpClient;
+  private final boolean trustAllCertificates;
 
   @Inject
-  HttpClient(OkHttpClient okHttpClient) {
+  HttpClient(OkHttpClient okHttpClient, @TrustAllCertificates boolean trustAllCertificates) {
     this.okHttpClient = checkNotNull(okHttpClient);
+    this.trustAllCertificates = trustAllCertificates;
   }
 
   /** Sends the given HTTP request using this client, blocking until full response is received. */
@@ -146,6 +149,9 @@ public final class HttpClient {
             })
         .hostnameVerifier(
             (hostname, session) -> {
+              if (trustAllCertificates) {
+                return true;
+              }
               if (hostname.equals(serviceHostname)) {
                 return true;
               }
@@ -231,10 +237,12 @@ public final class HttpClient {
   public static class Builder {
     private final OkHttpClient okHttpClient;
     private boolean followRedirects;
+    private boolean trustAllCertificates;
 
     private Builder(HttpClient httpClient) {
       this.okHttpClient = httpClient.okHttpClient;
       this.followRedirects = okHttpClient.followRedirects();
+      this.trustAllCertificates = httpClient.trustAllCertificates;
     }
 
     public Builder setFollowRedirects(boolean followRedirects) {
@@ -242,8 +250,14 @@ public final class HttpClient {
       return this;
     }
 
+    public Builder setTrustAllCertificates(boolean trustAllCertificates) {
+      this.trustAllCertificates = trustAllCertificates;
+      return this;
+    }
+
     public HttpClient build() {
-      return new HttpClient(okHttpClient.newBuilder().followRedirects(followRedirects).build());
+      return new HttpClient(
+          okHttpClient.newBuilder().followRedirects(followRedirects).build(), trustAllCertificates);
     }
   }
 }

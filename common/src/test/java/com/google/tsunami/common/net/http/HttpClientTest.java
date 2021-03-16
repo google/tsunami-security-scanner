@@ -33,15 +33,22 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocketFactory;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -56,6 +63,9 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link HttpClient}. */
 @RunWith(JUnit4.class)
 public final class HttpClientTest {
+  private static final String TESTING_KEYSTORE = "testdata/tsunami_test_server.p12";
+  private static final char[] TESTING_KEYSTORE_PASSWORD = "tsunamitest".toCharArray();
+
   private MockWebServer mockWebServer;
   @Inject private HttpClient httpClient;
 
@@ -532,6 +542,104 @@ public final class HttpClientTest {
             networkService);
 
     assertThat(response.status()).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  public void send_whenInvalidCertificatesAreIgnored_getResponseWithoutException()
+      throws GeneralSecurityException, IOException {
+    InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
+    String host = "host.com";
+    MockWebServer mockWebServer = startMockWebServerWithSsl(loopbackAddress);
+    int port = mockWebServer.url("/").port();
+    NetworkService networkService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(
+                NetworkEndpointUtils.forIpHostnameAndPort(
+                    loopbackAddress.getHostAddress(), host, port))
+            .build();
+
+    HttpClientCliOptions cliOptions = new HttpClientCliOptions();
+    HttpClientConfigProperties configProperties = new HttpClientConfigProperties();
+    cliOptions.trustAllCertificates = configProperties.trustAllCertificates = true;
+    HttpClient httpClient =
+        Guice.createInjector(
+                new AbstractModule() {
+                  @Override
+                  protected void configure() {
+                    install(new HttpClientModule.Builder().build());
+                    bind(HttpClientCliOptions.class).toInstance(cliOptions);
+                    bind(HttpClientConfigProperties.class).toInstance(configProperties);
+                  }
+                })
+            .getInstance(HttpClient.class);
+
+    HttpResponse response =
+        httpClient.send(
+            get(String.format("https://%s:%d", host, port)).withEmptyHeaders().build(),
+            networkService);
+    assertThat(response.bodyString()).hasValue("body");
+
+    mockWebServer.shutdown();
+  }
+
+  @Test
+  public void send_whenInvalidCertificatesAreNotIgnored_throws()
+      throws GeneralSecurityException, IOException {
+    InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
+    String host = "host.com";
+    MockWebServer mockWebServer = startMockWebServerWithSsl(loopbackAddress);
+    int port = mockWebServer.url("/").port();
+    NetworkService networkService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(
+                NetworkEndpointUtils.forIpHostnameAndPort(
+                    loopbackAddress.getHostAddress(), host, port))
+            .build();
+
+    HttpClientCliOptions cliOptions = new HttpClientCliOptions();
+    HttpClientConfigProperties configProperties = new HttpClientConfigProperties();
+    cliOptions.trustAllCertificates = configProperties.trustAllCertificates = false;
+    HttpClient httpClient =
+        Guice.createInjector(
+                new AbstractModule() {
+                  @Override
+                  protected void configure() {
+                    install(new HttpClientModule.Builder().build());
+                    bind(HttpClientCliOptions.class).toInstance(cliOptions);
+                    bind(HttpClientConfigProperties.class).toInstance(configProperties);
+                  }
+                })
+            .getInstance(HttpClient.class);
+
+    assertThrows(
+        SSLException.class,
+        () ->
+            httpClient.send(
+                get(String.format("https://%s:%d", host, port)).withEmptyHeaders().build(),
+                networkService));
+
+    mockWebServer.shutdown();
+  }
+
+  private MockWebServer startMockWebServerWithSsl(InetAddress serverAddress)
+      throws GeneralSecurityException, IOException {
+    MockWebServer mockWebServer = new MockWebServer();
+    mockWebServer.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.code()).setBody("body"));
+    mockWebServer.useHttps(getTestingSslSocketFactory(), false);
+    mockWebServer.start(serverAddress, 0);
+    return mockWebServer;
+  }
+
+  private SSLSocketFactory getTestingSslSocketFactory()
+      throws GeneralSecurityException, IOException {
+    final KeyManagerFactory keyManagerFactory =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    keyStore.load(getClass().getResourceAsStream(TESTING_KEYSTORE), TESTING_KEYSTORE_PASSWORD);
+    keyManagerFactory.init(keyStore, TESTING_KEYSTORE_PASSWORD);
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+    return sslContext.getSocketFactory();
   }
 
   static final class RedirectDispatcher extends Dispatcher {
