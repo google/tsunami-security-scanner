@@ -141,10 +141,27 @@ public final class HttpClientModuleTest {
   }
 
   @Test
+  public void setTrustAllCertificates_whenBothCliAndConfigValuesAreSet_cliValueTakesPrecedence()
+      throws GeneralSecurityException, IOException {
+    cliOptions.trustAllCertificates = false;
+    configProperties.trustAllCertificates = true;
+    HttpClient httpClient =
+        Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
+    MockWebServer mockWebServer = startMockWebServerWithSsl();
+
+    // The certificate used in test is a self-signed one. HttpClient will reject it unless the
+    // certificate is explicitly trusted.
+    assertThrows(
+        SSLHandshakeException.class,
+        () -> httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build()));
+
+    mockWebServer.shutdown();
+  }
+
+  @Test
   public void setTrustAllCertificates_whenCliOptionEnabledAndCertIsInvalid_ignoresCertError()
       throws GeneralSecurityException, IOException {
     cliOptions.trustAllCertificates = true;
-    configProperties.trustAllCertificates = false;
     HttpClient httpClient =
         Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
     MockWebServer mockWebServer = startMockWebServerWithSsl();
@@ -159,7 +176,6 @@ public final class HttpClientModuleTest {
   public void
       setTrustAllCertificates_whenConfigPropropertyEnabledAndCertIsInvalid_ignoresCertError()
           throws GeneralSecurityException, IOException {
-    cliOptions.trustAllCertificates = false;
     configProperties.trustAllCertificates = true;
     HttpClient httpClient =
         Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);

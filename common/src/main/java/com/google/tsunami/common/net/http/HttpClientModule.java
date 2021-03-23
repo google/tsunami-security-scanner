@@ -128,8 +128,13 @@ public final class HttpClientModule extends AbstractModule {
   boolean shouldTrustAllCertificates(
       HttpClientCliOptions httpClientCliOptions,
       HttpClientConfigProperties httpClientConfigProperties) {
-    return httpClientCliOptions.trustAllCertificates
-        || httpClientConfigProperties.trustAllCertificates;
+    if (httpClientCliOptions.trustAllCertificates != null) {
+      return httpClientCliOptions.trustAllCertificates;
+    }
+    if (httpClientConfigProperties.trustAllCertificates != null) {
+      return httpClientConfigProperties.trustAllCertificates;
+    }
+    return false;
   }
 
   @Qualifier

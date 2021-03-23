@@ -20,5 +20,6 @@ import com.google.tsunami.common.config.annotations.ConfigProperties;
 /** Configuration properties for {@link HttpClient}. */
 @ConfigProperties("common.net.http")
 public final class HttpClientConfigProperties {
-  boolean trustAllCertificates = false;
+  /** Whether the HTTP client should trust all certificates on HTTPS traffic. */
+  Boolean trustAllCertificates;
 }
