@@ -102,16 +102,23 @@ public final class HttpClientModule extends AbstractModule {
 
   // Missing features:
   // 1. Custom cookie handler.
-  // 2. Connection / read / write timeout.
   @Provides
   @Singleton
   OkHttpClient provideOkHttpClient(
       ConnectionPool connectionPool,
       Dispatcher dispatcher,
       SSLSocketFactory sslSocketFactory,
-      @TrustAllCertificates boolean trustAllCertificates) {
+      @TrustAllCertificates boolean trustAllCertificates,
+      @CallTimeoutSeconds int callTimeoutSeconds,
+      @ConnectTimeoutSeconds int connectTimeoutSeconds,
+      @ReadTimeoutSeconds int readTimeoutSeconds,
+      @WriteTimeoutSeconds int writeTimeoutSeconds) {
     OkHttpClient.Builder clientBuilder =
         new OkHttpClient.Builder()
+            .callTimeout(Duration.ofSeconds(callTimeoutSeconds))
+            .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
+            .readTimeout(Duration.ofSeconds(readTimeoutSeconds))
+            .writeTimeout(Duration.ofSeconds(writeTimeoutSeconds))
             .connectionPool(connectionPool)
             .dispatcher(dispatcher)
             .followRedirects(followRedirects);
@@ -137,10 +144,94 @@ public final class HttpClientModule extends AbstractModule {
     return false;
   }
 
+  @Provides
+  @CallTimeoutSeconds
+  int provideCallTimeoutSeconds(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    if (httpClientCliOptions.callTimeoutSeconds != null) {
+      return httpClientCliOptions.callTimeoutSeconds;
+    }
+    if (httpClientConfigProperties.callTimeoutSeconds != null) {
+      return httpClientConfigProperties.callTimeoutSeconds;
+    }
+    // Default call timeout specified in
+    // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/call-timeout/.
+    return 0;
+  }
+
+  @Provides
+  @ConnectTimeoutSeconds
+  int provideConnectTimeoutSeconds(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    if (httpClientCliOptions.connectTimeoutSeconds != null) {
+      return httpClientCliOptions.connectTimeoutSeconds;
+    }
+    if (httpClientConfigProperties.connectTimeoutSeconds != null) {
+      return httpClientConfigProperties.connectTimeoutSeconds;
+    }
+    // Default connect timeout specified in
+    // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/connect-timeout/.
+    return 10;
+  }
+
+  @Provides
+  @ReadTimeoutSeconds
+  int provideReadTimeoutSeconds(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    if (httpClientCliOptions.readTimeoutSeconds != null) {
+      return httpClientCliOptions.readTimeoutSeconds;
+    }
+    if (httpClientConfigProperties.readTimeoutSeconds != null) {
+      return httpClientConfigProperties.readTimeoutSeconds;
+    }
+    // Default read timeout specified in
+    // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/read-timeout/.
+    return 10;
+  }
+
+  @Provides
+  @WriteTimeoutSeconds
+  int provideWriteTimeoutSeconds(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    if (httpClientCliOptions.writeTimeoutSeconds != null) {
+      return httpClientCliOptions.writeTimeoutSeconds;
+    }
+    if (httpClientConfigProperties.writeTimeoutSeconds != null) {
+      return httpClientConfigProperties.writeTimeoutSeconds;
+    }
+    // Default write timeout specified in
+    // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/write-timeout/.
+    return 10;
+  }
+
   @Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
   @interface TrustAllCertificates {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface CallTimeoutSeconds {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface ConnectTimeoutSeconds {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface ReadTimeoutSeconds {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface WriteTimeoutSeconds {}
 
   /** Builder for {@link HttpClientModule}. */
   public static final class Builder {

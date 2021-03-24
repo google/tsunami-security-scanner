@@ -16,8 +16,10 @@
 package com.google.tsunami.common.net.http;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.google.tsunami.common.cli.CliOption;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Command line argument for {@link HttpClient}. */
 @Parameters(separators = "=")
@@ -28,6 +30,50 @@ public final class HttpClientCliOptions implements CliOption {
       description = "Whether the HTTP client should trust all certificates on HTTPS traffic.")
   Boolean trustAllCertificates;
 
+  @Parameter(
+      names = "--http-client-call-timeout-seconds",
+      description =
+          "The timeout in seconds for complete HTTP calls. See"
+              + " https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/call-timeout/"
+              + " for more details.")
+  Integer callTimeoutSeconds;
+
+  @Parameter(
+      names = "--http-client-connect-timeout-seconds",
+      description =
+          "The timeout in seconds for new HTTP connections. See"
+              + " https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/connect-timeout/"
+              + " for more details.")
+  Integer connectTimeoutSeconds;
+
+  @Parameter(
+      names = "--http-client-read-timeout-seconds",
+      description =
+          "The timeout in seconds for the read operations for HTTP connections. See"
+              + " https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/read-timeout/"
+              + " for more details.")
+  Integer readTimeoutSeconds;
+
+  @Parameter(
+      names = "--http-client-write-timeout-seconds",
+      description =
+          "The timeout in seconds for the write operations for HTTP connections. See"
+              + " https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/write-timeout/"
+              + " for more details.")
+  Integer writeTimeoutSeconds;
+
   @Override
-  public void validate() {}
+  public void validate() {
+    validateTimeout("--http-client-call-timeout-seconds", callTimeoutSeconds);
+    validateTimeout("--http-client-connect-timeout-seconds", connectTimeoutSeconds);
+    validateTimeout("--http-client-read-timeout-seconds", readTimeoutSeconds);
+    validateTimeout("--http-client-write-timeout-seconds", writeTimeoutSeconds);
+  }
+
+  private static void validateTimeout(String flagName, @Nullable Integer value) {
+    if (value != null && value < 0) {
+      throw new ParameterException(
+          String.format("%s cannot be a negative number, received %d.", flagName, value));
+    }
+  }
 }

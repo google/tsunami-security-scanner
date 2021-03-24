@@ -128,7 +128,7 @@ public final class HttpClientModuleTest {
     cliOptions.trustAllCertificates = false;
     configProperties.trustAllCertificates = false;
     HttpClient httpClient =
-        Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(HttpClient.class);
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     // The certificate used in test is a self-signed one. HttpClient will reject it unless the
@@ -146,7 +146,7 @@ public final class HttpClientModuleTest {
     cliOptions.trustAllCertificates = false;
     configProperties.trustAllCertificates = true;
     HttpClient httpClient =
-        Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(HttpClient.class);
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     // The certificate used in test is a self-signed one. HttpClient will reject it unless the
@@ -163,7 +163,7 @@ public final class HttpClientModuleTest {
       throws GeneralSecurityException, IOException {
     cliOptions.trustAllCertificates = true;
     HttpClient httpClient =
-        Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(HttpClient.class);
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     HttpResponse response = httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build());
@@ -178,7 +178,7 @@ public final class HttpClientModuleTest {
           throws GeneralSecurityException, IOException {
     configProperties.trustAllCertificates = true;
     HttpClient httpClient =
-        Guice.createInjector(getTrustAllCertificatesTestingModule()).getInstance(HttpClient.class);
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(HttpClient.class);
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     HttpResponse response = httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build());
@@ -187,7 +187,163 @@ public final class HttpClientModuleTest {
     mockWebServer.shutdown();
   }
 
-  private AbstractModule getTrustAllCertificatesTestingModule() {
+  @Test
+  public void setCallTimeoutSeconds_whenSpecifiedUsingCliOptions_setsValueFromCli() {
+    cliOptions.callTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.callTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setCallTimeoutSeconds_whenSpecifiedUsingConfigProperties_setsValueFromConfig() {
+    configProperties.callTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.callTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setCallTimeoutSeconds_whenBothCliAndConfigAreSet_cliTakesPrecedence() {
+    cliOptions.callTimeoutSeconds = 50;
+    configProperties.callTimeoutSeconds = 30;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.callTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setCallTimeoutSeconds_whenBothCliAndConfigAreNotSet_setsDefaultValue() {
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.callTimeoutMillis()).isEqualTo(0);
+  }
+
+  @Test
+  public void setConnectTimeoutSeconds_whenSpecifiedUsingCliOptions_setsValueFromCli() {
+    cliOptions.connectTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.connectTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setConnectTimeoutSeconds_whenSpecifiedUsingConfigProperties_setsValueFromConfig() {
+    configProperties.connectTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.connectTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setConnectTimeoutSeconds_whenBothCliAndConfigAreSet_cliTakesPrecedence() {
+    cliOptions.connectTimeoutSeconds = 50;
+    configProperties.connectTimeoutSeconds = 30;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.connectTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setConnectTimeoutSeconds_whenBothCliAndConfigAreNotSet_setsDefaultValue() {
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.connectTimeoutMillis()).isEqualTo(Duration.ofSeconds(10).toMillis());
+  }
+
+  @Test
+  public void setReadTimeoutSeconds_whenSpecifiedUsingCliOptions_setsValueFromCli() {
+    cliOptions.readTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.readTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setReadTimeoutSeconds_whenSpecifiedUsingConfigProperties_setsValueFromConfig() {
+    configProperties.readTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.readTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setReadTimeoutSeconds_whenBothCliAndConfigAreSet_cliTakesPrecedence() {
+    cliOptions.readTimeoutSeconds = 50;
+    configProperties.readTimeoutSeconds = 30;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.readTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setReadTimeoutSeconds_whenBothCliAndConfigAreNotSet_setsDefaultValue() {
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.readTimeoutMillis()).isEqualTo(Duration.ofSeconds(10).toMillis());
+  }
+
+  @Test
+  public void setWriteTimeoutSeconds_whenSpecifiedUsingCliOptions_setsValueFromCli() {
+    cliOptions.writeTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.writeTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setWriteTimeoutSeconds_whenSpecifiedUsingConfigProperties_setsValueFromConfig() {
+    configProperties.writeTimeoutSeconds = 50;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.writeTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setWriteTimeoutSeconds_whenBothCliAndConfigAreSet_cliTakesPrecedence() {
+    cliOptions.writeTimeoutSeconds = 50;
+    configProperties.writeTimeoutSeconds = 30;
+
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.writeTimeoutMillis()).isEqualTo(Duration.ofSeconds(50).toMillis());
+  }
+
+  @Test
+  public void setWriteTimeoutSeconds_whenBothCliAndConfigAreNotSet_setsDefaultValue() {
+    OkHttpClient okHttpClient =
+        Guice.createInjector(getTestingGuiceModuleWithConfigs()).getInstance(OkHttpClient.class);
+
+    assertThat(okHttpClient.writeTimeoutMillis()).isEqualTo(Duration.ofSeconds(10).toMillis());
+  }
+
+  private AbstractModule getTestingGuiceModuleWithConfigs() {
     return new AbstractModule() {
       @Override
       protected void configure() {

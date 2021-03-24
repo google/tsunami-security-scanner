@@ -22,4 +22,32 @@ import com.google.tsunami.common.config.annotations.ConfigProperties;
 public final class HttpClientConfigProperties {
   /** Whether the HTTP client should trust all certificates on HTTPS traffic. */
   Boolean trustAllCertificates;
+
+  /**
+   * The timeout in seconds for complete HTTP calls. See
+   * https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/call-timeout/ for
+   * more details.
+   */
+  Integer callTimeoutSeconds;
+
+  /**
+   * The timeout in seconds for new HTTP connections. See
+   * https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/connect-timeout/
+   * for more details.
+   */
+  Integer connectTimeoutSeconds;
+
+  /**
+   * The timeout in seconds for the read operations for HTTP connections. See
+   * https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/read-timeout/ for
+   * more details.
+   */
+  Integer readTimeoutSeconds;
+
+  /**
+   * The timeout in seconds for the write operations for HTTP connections. See
+   * https://square.github.io/okhttp/4.x/okhttp/okhttp3/-ok-http-client/-builder/write-timeout/ for
+   * more details.
+   */
+  Integer writeTimeoutSeconds;
 }
