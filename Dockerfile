@@ -29,7 +29,7 @@ FROM adoptopenjdk/openjdk13:debianslim-jre
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates \
+    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates dnsutils net-tools procps vi iproute2 \
     && apt-get clean \
     && mkdir logs/
 
