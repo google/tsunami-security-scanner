@@ -248,14 +248,24 @@ public final class HttpClientModule extends AbstractModule {
     private int maxRequestsPerHost = DEFAULT_MAX_REQUESTS_PER_HOST;
     private boolean followRedirects = DEFAULT_FOLLOW_REDIRECTS;
 
-    /** Sets the maximum number of idle connections to each to keep in the pool. */
+    /**
+     * Sets the maximum number of idle connections to each to keep in the pool.
+     *
+     * @param maxIdle maximum number of idel connecteds.
+     * @return the {@link Builder} instance itself.
+     */
     public Builder setConnectionPoolMaxIdle(int maxIdle) {
       checkArgument(maxIdle > 0);
       this.connectionPoolMaxIdle = maxIdle;
       return this;
     }
 
-    /** Sets the duration to keep the connection alive in the connection pool before closing it. */
+    /**
+     * Sets the duration to keep the connection alive in the connection pool before closing it.
+     *
+     * @param keepAliveDuration the duration to keep the connection alive.
+     * @return the {@link Builder} instance itself.
+     */
     public Builder setConnectionPoolKeepAliveDuration(Duration keepAliveDuration) {
       checkNotNull(keepAliveDuration);
       checkArgument(!keepAliveDuration.isNegative());
@@ -263,7 +273,12 @@ public final class HttpClientModule extends AbstractModule {
       return this;
     }
 
-    /** Sets the maximum number of requests to execute concurrently. */
+    /**
+     * Sets the maximum number of requests to execute concurrently.
+     *
+     * @param maxRequests the maximum number of concurrent requests.
+     * @return the {@link Builder} instance itself.
+     */
     public Builder setMaxRequests(int maxRequests) {
       checkArgument(maxRequests > 0);
       this.maxRequests = maxRequests;
@@ -272,6 +287,9 @@ public final class HttpClientModule extends AbstractModule {
 
     /**
      * Sets the maximum number of requests for each host (URL's host name) to execute concurrently.
+     *
+     * @param maxRequestsPerHost the maximum number of concurrent requests per host target.
+     * @return the {@link Builder} instance itself.
      */
     public Builder setMaxRequestsPerHost(int maxRequestsPerHost) {
       checkArgument(maxRequestsPerHost > 0);
@@ -282,6 +300,10 @@ public final class HttpClientModule extends AbstractModule {
     /**
      * Sets whether or not to follow redirect from server. If unset, by default redirects will be
      * followed.
+     *
+     * @param followRedirects whether the HTTP client should follow redirect responses from the
+     *     server.
+     * @return the {@link Builder} instance itself.
      */
     public Builder setFollowRedirects(boolean followRedirects) {
       this.followRedirects = followRedirects;

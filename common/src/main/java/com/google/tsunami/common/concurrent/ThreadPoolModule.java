@@ -108,6 +108,9 @@ public final class ThreadPoolModule extends BaseThreadPoolModule<ListeningExecut
      *
      * <p>By default, {@link SynchronousQueue} will be used when {@code queueCapacity} is set to
      * zero. Otherwise a {@link LinkedBlockingQueue} will be used.
+     *
+     * @param queueCapacity the capacity of the task queue.
+     * @return the Builder instance itself.
      */
     public Builder setQueueCapacity(int queueCapacity) {
       checkArgument(queueCapacity >= 0, "The queue capacity should be non-negative value.");
@@ -121,6 +124,9 @@ public final class ThreadPoolModule extends BaseThreadPoolModule<ListeningExecut
      * <p>NOTE: Do NOT set both {@link BlockingQueue} and {@code queueCapacity}. Only use this
      * method to override the default {@link BlockingQueue} choice. See comments of {@link
      * #getBlockingQueue} for which {@link BlockingQueue} is used by default.
+     *
+     * @param blockingQueue a {@link BlockingQueue} used for holding tasks before executing.
+     * @return the Builder instance itself.
      */
     public Builder setBlockingQueue(BlockingQueue<Runnable> blockingQueue) {
       this.blockingQueue = checkNotNull(blockingQueue);

@@ -44,6 +44,8 @@ public final class FakeUtcClock extends Clock {
    * <p>To create a fake UTC clock at a specific instant, calling {@code setNow()} as in:
    *
    * <pre>{@code FakeUtcClock fakeUtcClock = FakeUtcClock.create().setNow(TARGET_INSTANT);}</pre>
+   *
+   * @return a {@link FakeUtcClock} instance.
    */
   public static FakeUtcClock create() {
     return new FakeUtcClock(Instant.now());

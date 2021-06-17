@@ -55,7 +55,13 @@ public final class HttpClient {
     this.trustAllCertificates = trustAllCertificates;
   }
 
-  /** Sends the given HTTP request using this client, blocking until full response is received. */
+  /**
+   * Sends the given HTTP request using this client, blocking until full response is received.
+   *
+   * @param httpRequest the HTTP request to be sent by this client.
+   * @return the response returned from the HTTP server.
+   * @throws IOException if an I/O error occurs during the HTTP request.
+   */
   public HttpResponse send(HttpRequest httpRequest) throws IOException {
     return send(httpRequest, null);
   }
@@ -64,6 +70,11 @@ public final class HttpClient {
    * Sends the given HTTP request using this client blocking until full response is received. If
    * {@code networkService} is not null, the host header is set according to the service's header
    * field even if it resolves to a different ip.
+   *
+   * @param httpRequest the HTTP request to be sent by this client.
+   * @param networkService the {@link NetworkService} proto to be used for the HOST header.
+   * @return the response returned from the HTTP server.
+   * @throws IOException if an I/O error occurs during the HTTP request.
    */
   public HttpResponse send(HttpRequest httpRequest, @Nullable NetworkService networkService)
       throws IOException {
@@ -77,7 +88,12 @@ public final class HttpClient {
     }
   }
 
-  /** Sends the given HTTP request using this client asynchronously. */
+  /**
+   * Sends the given HTTP request using this client asynchronously.
+   *
+   * @param httpRequest the HTTP request to be sent by this client.
+   * @return the future for the response to be returned from the HTTP server.
+   */
   public ListenableFuture<HttpResponse> sendAsync(HttpRequest httpRequest) {
     return sendAsync(httpRequest, null);
   }
@@ -86,6 +102,10 @@ public final class HttpClient {
    * Sends the given HTTP request using this client asynchronously. If {@code networkService} is not
    * null, the host header is set according to the service's header field even if it resolves to a
    * different ip.
+   *
+   * @param httpRequest the HTTP request to be sent by this client.
+   * @param networkService the {@link NetworkService} proto to be used for the HOST header.
+   * @return the future for the response to be returned from the HTTP server.
    */
   public ListenableFuture<HttpResponse> sendAsync(
       HttpRequest httpRequest, @Nullable NetworkService networkService) {
@@ -127,7 +147,7 @@ public final class HttpClient {
     return responseFuture;
   }
 
-  /**
+  /*
    * Returns a modified HTTP client that's configured to connect to the {@code networkService}'s IP
    * and use its hostname in the host header, when both a hostname and an IP address is specified.
    * Returns an unmodified HTTP client otherwise.
@@ -227,6 +247,8 @@ public final class HttpClient {
   /**
    * Returns a {@link Builder} that allows client code to modify the configurations of the internal
    * http client.
+   *
+   * @return the {@link Builder} for modifying this client instance.
    */
   public Builder modify() {
     return new Builder(this);

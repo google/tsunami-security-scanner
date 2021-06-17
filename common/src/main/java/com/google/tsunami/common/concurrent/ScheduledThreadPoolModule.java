@@ -80,7 +80,12 @@ public final class ScheduledThreadPoolModule
       return this;
     }
 
-    /** Sets the size of the thread pool. */
+    /**
+     * Sets the size of the thread pool.
+     *
+     * @param size the size of the thread pool.
+     * @return the {@link Builder} instance itself.
+     */
     public Builder setSize(int size) {
       checkArgument(size > 0, "Thread pool size should be positive.");
       setCoreSize(size);

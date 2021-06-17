@@ -51,13 +51,11 @@ public class CommandExecutor {
     this.processBuilder = new ProcessBuilder(args);
   }
 
-  /**
+  /*
    * Executes the command and uses a {@link ThreadPoolExecutor} to collect output and error.
    *
-   * <p>This is a convenience method for testing purposes only as the executor is not shared and
+   * This is a convenience method for testing purposes only as the executor is not shared and
    * therefore defeats the purpose of having a cached thread pool.
-   *
-   * @return Started {@link Process} object.
    */
   @VisibleForTesting
   Process execute() throws IOException, InterruptedException, ExecutionException {
@@ -76,6 +74,9 @@ public class CommandExecutor {
    *
    * @param executor The executor to collect output and error streams.
    * @return Started {@link Process} object.
+   * @throws IOException if an I/O error occurs when starting the command executing process.
+   * @throws InterruptedException if interrupted while waiting for the command's output.
+   * @throws ExecutionException if the command execution failed.
    */
   public Process execute(Executor executor)
       throws IOException, InterruptedException, ExecutionException {

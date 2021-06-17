@@ -109,8 +109,11 @@ public enum HttpStatus {
           .collect(toImmutableMap(HttpStatus::code, Function.identity()));
 
   /**
-   * Returns the {@link HttpStatus} with the specified code, or null if there is no known status
+   * Creates the {@link HttpStatus} from the given status code, or null if there is no known status
    * with that code.
+   *
+   * @param code the HTTP status code.
+   * @return the matching {@link HttpStatus} from the given status code.
    */
   @Nullable
   public static HttpStatus fromCode(int code) {

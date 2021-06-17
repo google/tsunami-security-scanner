@@ -31,7 +31,13 @@ public final class FakeGoogleCloudStorageArchivers {
     }
   }
 
-  /** Get the byte array data stored in {@code storage} at {@code gcsUrl}. */
+  /**
+   * Get the byte array data stored in {@code storage} at {@code gcsUrl}.
+   *
+   * @param storage the instance of the GCS storage.
+   * @param gcsUrl the URL to the GCS storage object.
+   * @return the content of the GCS storage object in byte array format.
+   */
   public byte[] getStoredByteArrays(Storage storage, String gcsUrl) {
     if (!delegatedArchivers.containsKey(storage)) {
       throw new NoSuchElementException(String.format("Storage '%s' not found", storage));
@@ -39,7 +45,13 @@ public final class FakeGoogleCloudStorageArchivers {
     return delegatedArchivers.get(storage).getStoredByteArrays(gcsUrl);
   }
 
-  /** Get the {@link CharSequence} data stored in {@code storage} at {@code gcsUrl}. */
+  /**
+   * Get the {@link CharSequence} data stored in {@code storage} at {@code gcsUrl}.
+   *
+   * @param storage the instance of the GCS storage.
+   * @param gcsUrl the URL to the GCS storage object.
+   * @return the content of the GCS storage object in {@link CharSequence} format.
+   */
   public CharSequence getStoredCharSequence(Storage storage, String gcsUrl) {
     if (!delegatedArchivers.containsKey(storage)) {
       throw new NoSuchElementException(String.format("Storage '%s' not found", storage));

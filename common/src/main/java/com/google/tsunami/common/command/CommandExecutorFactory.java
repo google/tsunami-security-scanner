@@ -23,6 +23,8 @@ public class CommandExecutorFactory {
   /**
    * Sets an executor instance that will be returned by all future calls to {@link
    * CommandExecutorFactory#create(String...)}
+   *
+   * @param executor The {@link CommandExecutor} returned by this factory.
    */
   public static void setInstance(CommandExecutor executor) {
     instance = executor;
@@ -32,6 +34,7 @@ public class CommandExecutorFactory {
    * Creates a new {@link CommandExecutor} if none is set.
    *
    * @param args List of arguments to pass to the newly created {@link CommandExecutor}.
+   * @return the {@link CommandExecutor} instance created by this factory.
    */
   public static CommandExecutor create(String... args) {
     if (instance == null) {

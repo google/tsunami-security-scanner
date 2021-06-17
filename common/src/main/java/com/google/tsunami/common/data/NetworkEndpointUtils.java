@@ -73,6 +73,9 @@ public final class NetworkEndpointUtils {
    *   <li>ip_v6 = "3ffe::1", port = 8888 -&gt; uri = "[3ffe::1]:8888"
    *   <li>host = "localhost", port = 8888 -&gt; url = "localhost:8888"
    * </ul>
+   *
+   * @param networkEndpoint the {@link NetworkEndpoint} instance to be converted.
+   * @return the URI authority converted from the {@link NetworkEndpoint} instance.
    */
   public static String toUriAuthority(NetworkEndpoint networkEndpoint) {
     return toHostAndPort(networkEndpoint).toString();
@@ -102,7 +105,12 @@ public final class NetworkEndpointUtils {
             "Should never happen. Unchecked NetworkEndpoint type: %s", networkEndpoint.getType()));
   }
 
-  /** Returns a {@link NetworkEndpoint} proto buffer object from the given ip address. */
+  /**
+   * Creates a {@link NetworkEndpoint} proto buffer object from the given ip address.
+   *
+   * @param ipAddress the IP address of the network endpoint.
+   * @return the created {@link NetworkEndpoint} instance from the given IP address.
+   */
   public static NetworkEndpoint forIp(String ipAddress) {
     checkArgument(InetAddresses.isInetAddress(ipAddress), "'%s' is not an IP address.", ipAddress);
 
@@ -115,7 +123,13 @@ public final class NetworkEndpointUtils {
         .build();
   }
 
-  /** Returns a {@link NetworkEndpoint} proto buffer object from the given ip address and port. */
+  /**
+   * Creates a {@link NetworkEndpoint} proto buffer object from the given ip address and port.
+   *
+   * @param ipAddress the IP address of the network endpoint.
+   * @param port the port number of the network endpoint
+   * @return the created {@link NetworkEndpoint} instance from the given IP and port.
+   */
   public static NetworkEndpoint forIpAndPort(String ipAddress, int port) {
     checkArgument(InetAddresses.isInetAddress(ipAddress), "'%s' is not an IP address.", ipAddress);
     checkArgument(
@@ -130,7 +144,12 @@ public final class NetworkEndpointUtils {
         .build();
   }
 
-  /** Returns a {@link NetworkEndpoint} proto buffer object from the given hostname. */
+  /**
+   * Creates a {@link NetworkEndpoint} proto buffer object from the given hostname.
+   *
+   * @param hostname the hostname of the network endpoint
+   * @return the created {@link NetworkEndpoint} instance from the hostname.
+   */
   public static NetworkEndpoint forHostname(String hostname) {
     checkArgument(
         !InetAddresses.isInetAddress(hostname), "Expected hostname, got IP address '%s'", hostname);
@@ -142,7 +161,11 @@ public final class NetworkEndpointUtils {
   }
 
   /**
-   * Returns a {@link NetworkEndpoint} proto buffer object from the given ip address and hostname.
+   * Creates a {@link NetworkEndpoint} proto buffer object from the given ip address and hostname.
+   *
+   * @param hostname the hostname of the network endpoint
+   * @param ipAddress the IP address of the network endpoint.
+   * @return the created {@link NetworkEndpoint} instance from the IP address and hostname.
    */
   public static NetworkEndpoint forIpAndHostname(String ipAddress, String hostname) {
     return forIp(ipAddress).toBuilder()
@@ -151,7 +174,13 @@ public final class NetworkEndpointUtils {
         .build();
   }
 
-  /** Returns a {@link NetworkEndpoint} proto buffer object from the given hostname and port. */
+  /**
+   * Creates a {@link NetworkEndpoint} proto buffer object from the given hostname and port.
+   *
+   * @param hostname the hostname of the network endpoint
+   * @param port the port number of the network endpoint.
+   * @return the created {@link NetworkEndpoint} instance from the hostname and port.
+   */
   public static NetworkEndpoint forHostnameAndPort(String hostname, int port) {
     checkArgument(
         0 <= port && port <= MAX_PORT_NUMBER,
@@ -168,6 +197,11 @@ public final class NetworkEndpointUtils {
   /**
    * Returns a {@link NetworkEndpoint} proto buffer object from the given ip address, hostname and
    * port.
+   *
+   * @param ipAddress the IP address of the network endpoint.
+   * @param hostname the hostname of the network endpoint
+   * @param port the port number of the network endpoint.
+   * @return the created {@link NetworkEndpoint} instance from the parameters.
    */
   public static NetworkEndpoint forIpHostnameAndPort(String ipAddress, String hostname, int port) {
     checkArgument(
@@ -186,6 +220,10 @@ public final class NetworkEndpointUtils {
    * Returns a {@link NetworkEndpoint} proto buffer object from the given {@code networkEndpoint}
    * and port. The {@code networkEndpoint} parameter cannot contain any port information, otherwise
    * {@link IllegalArgumentException} is thrown.
+   *
+   * @param networkEndpoint the source {@link NetworkEndpoint} instance without the port number
+   * @param port the port number of the network endpoint.
+   * @return the {@link NetworkEndpoint} instance from the parameters.
    */
   public static NetworkEndpoint forNetworkEndpointAndPort(
       NetworkEndpoint networkEndpoint, int port) {

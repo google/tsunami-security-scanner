@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 abstract class Segment implements Comparable<Segment> {
   static final Segment NULL = Segment.fromTokenList(ImmutableList.of(Token.EMPTY));
 
-  private static final String KEEP_DELIMITER = "((?<=%1$s)|(?=%1$s))";
   private static final ImmutableSet<String> TOKENIZER_DELIMITERS =
       ImmutableSet.of("\\.", "\\+", "-", ":", "_", "~");
   private static final Pattern TOKENIZER_SPLIT_REGEX =
@@ -46,7 +45,7 @@ abstract class Segment implements Comparable<Segment> {
           "(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)|"
               // We keep the delimiter for comparison.
               + TOKENIZER_DELIMITERS.stream()
-                  .map(delimiter -> String.format(KEEP_DELIMITER, delimiter))
+                  .map(delimiter -> String.format("((?<=%1$s)|(?=%1$s))", delimiter))
                   .collect(Collectors.joining("|")));
   private static final ImmutableSet<String> EXCLUDED_TOKENS = ImmutableSet.of(".", "gg", "N/A");
 

@@ -64,6 +64,9 @@ public abstract class VersionRange {
    *   <li>(1.0,): from version 1.0 (exclusive) to positive infinity.
    *   <li>[1.0,2.0): from version 1.0 (inclusive) to version 2.0 (exclusive).
    * </ul>
+   *
+   * @param rangeString the string representation of a version range.
+   * @return the parsed {@link VersionRange} object from the given string.
    */
   public static VersionRange parse(String rangeString) {
     validateRangeString(rangeString);

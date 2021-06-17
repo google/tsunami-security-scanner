@@ -73,7 +73,11 @@ public abstract class HttpHeaders {
 
   abstract ImmutableListMultimap<String, String> rawHeaders();
 
-  /** Returns a set of all HTTP header names. */
+  /**
+   * Gets a set of all HTTP header names.
+   *
+   * @return all HTTP header names.
+   */
   public ImmutableSet<String> names() {
     return rawHeaders().keySet();
   }
@@ -82,6 +86,7 @@ public abstract class HttpHeaders {
    * Returns the first value for the header with the given name, or empty Optional if none exists.
    *
    * @param name case-insensitive header name
+   * @return the first value for the given header name.
    */
   public Optional<String> get(String name) {
     checkNotNull(name, "Name cannot be null.");
@@ -95,6 +100,7 @@ public abstract class HttpHeaders {
    * were added to the builder.
    *
    * @param name case-insensitive header name
+   * @return All values for the given header name.
    */
   public ImmutableList<String> getAll(String name) {
     checkNotNull(name, "Name cannot be null.");

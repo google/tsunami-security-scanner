@@ -40,7 +40,11 @@ public abstract class HttpResponse {
   // TODO(b/173574468): Provide the full redirection request not just the Url.
   public abstract Optional<HttpUrl> responseUrl();
 
-  /** Returns the body of the HTTP response as a UTF-8 encoded String. */
+  /**
+   * Gets the body of the HTTP response as a UTF-8 encoded String.
+   *
+   * @return HTTP response body as a Java {@link String}.
+   */
   @Memoized
   public Optional<String> bodyString() {
     return bodyBytes().map(ByteString::toStringUtf8);
@@ -49,6 +53,8 @@ public abstract class HttpResponse {
   /**
    * Tries to parse the response body as json and returns the parsing result as {@link JsonElement}.
    * If parsing failed, {@link com.google.gson.JsonSyntaxException} will be thrown.
+   *
+   * @return HTTP response body as a Gson {@link JsonElement} object.
    */
   @Memoized
   public Optional<JsonElement> bodyJson() {

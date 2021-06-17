@@ -43,7 +43,11 @@ public abstract class HttpRequest {
   public abstract HttpHeaders headers();
   public abstract Optional<ByteString> requestBody();
 
-  /** Create a {@link Builder} object for configuring {@link HttpRequest}. */
+  /**
+   * Creates a {@link Builder} object for configuring {@link HttpRequest}.
+   *
+   * @return a {@link Builder} instance for the {@link HttpRequest} object.
+   */
   public static Builder builder() {
     return new AutoValue_HttpRequest.Builder();
   }
