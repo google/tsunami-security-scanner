@@ -112,9 +112,10 @@ public final class DefaultScanningWorkflow {
    *
    * @param scanTarget the IP or hostname target to be scanned
    * @return The result of the scanning workflow.
+   * @throws ExecutionException if the scanning workflow execution thread failed.
+   * @throws InterruptedException if interrupted during scanning workflow execution.
    */
-  public ScanResults run(ScanTarget scanTarget)
-      throws ExecutionException, InterruptedException, ScanningWorkflowException {
+  public ScanResults run(ScanTarget scanTarget) throws ExecutionException, InterruptedException {
     return runAsync(scanTarget).get();
   }
 
@@ -124,8 +125,7 @@ public final class DefaultScanningWorkflow {
    * @param scanTarget the IP or hostname target to be scanned
    * @return A {@link ListenableFuture} over the result of the scanning workflow.
    */
-  public ListenableFuture<ScanResults> runAsync(ScanTarget scanTarget)
-      throws ScanningWorkflowException {
+  public ListenableFuture<ScanResults> runAsync(ScanTarget scanTarget) {
     checkNotNull(scanTarget);
     scanStartTimestamp = Instant.now(clock);
     executionTracer = ExecutionTracer.startWorkflow();

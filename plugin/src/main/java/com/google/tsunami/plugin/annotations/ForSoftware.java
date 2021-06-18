@@ -48,7 +48,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ForSoftware {
 
-  /** Name of the target software, case insensitive. */
+  /**
+   * Name of the target software, case insensitive.
+   *
+   * @return target software name.
+   */
   // TODO(b/145315535): handle name conflicts, include other properties that uniquely identify
   // software.
   String name();
@@ -74,6 +78,8 @@ public @interface ForSoftware {
    *   <li><code>[ 1.0, [1.1, 1.5), 1.7, 1.8 ]</code>
    *   <li><code>[ (,1.0], [1.1, 1.3), [1.4,) ]</code>
    * </ul>
+   *
+   * @return target software versions.
    */
   String[] versions() default {};
 }

@@ -23,7 +23,12 @@ public enum OutputDataFormat {
   BIN_PROTO,
   JSON;
 
-  /** Parses the given {@code value} into {@link OutputDataFormat} enum. */
+  /**
+   * Parses the given {@code value} into {@link OutputDataFormat} enum.
+   *
+   * @param value the string representation of the {@link OutputDataFormat} enum.
+   * @return the parsed {@link OutputDataFormat} enum.
+   */
   public static Optional<OutputDataFormat> parse(String value) {
     for (OutputDataFormat outputDataFormat : OutputDataFormat.values()) {
       if (Ascii.equalsIgnoreCase(outputDataFormat.name(), value)) {

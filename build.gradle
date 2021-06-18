@@ -33,7 +33,7 @@ subprojects {
         guavaVersion = '28.2-jre'
         guiceVersion = '4.2.3'
         grpcVersion = '1.29.0'
-        gsonVersion = '2.8.5'
+        gsonVersion = '2.8.6'
         jaxbVersion = '2.3.1'
         javaxInjectVersion = '1'
         jcommanderVersion = '1.48'

@@ -31,8 +31,6 @@ import okhttp3.HttpUrl;
 // HttpUrl is immutable even if not marked as such.
 @SuppressWarnings("Immutable")
 public abstract class HttpResponse {
-  private static final JsonParser JSON_PARSER = new JsonParser();
-
   public abstract HttpStatus status();
   public abstract HttpHeaders headers();
   public abstract Optional<ByteString> bodyBytes();
@@ -58,7 +56,7 @@ public abstract class HttpResponse {
    */
   @Memoized
   public Optional<JsonElement> bodyJson() {
-    return bodyString().map(JSON_PARSER::parse);
+    return bodyString().map(JsonParser::parseString);
   }
 
   public static Builder builder() {

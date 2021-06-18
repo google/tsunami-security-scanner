@@ -43,7 +43,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface PluginInfo {
-  /** The type of this plugin. */
+  /**
+   * The type of this plugin.
+   *
+   * @return Tsunami plugin type.
+   */
   PluginType type();
 
   /**
@@ -51,6 +55,8 @@ public @interface PluginInfo {
    *
    * <p><b>Convention:</b> use {@code lower_snake_case} style (lowercase words separated by
    * underscores) for this name.
+   *
+   * @return Tsunami plugin name.
    */
   // TODO(magl): add compile time style validation.
   String name();
@@ -59,6 +65,8 @@ public @interface PluginInfo {
    * The version of this plugin.
    *
    * <p><b>Convention:</b> follow the {@code major.minor} version scheme.
+   *
+   * @return Tsunami plugin version.
    */
   // TODO(magl): add compile time style validation.
   String version();
@@ -69,6 +77,8 @@ public @interface PluginInfo {
    * <p>In general, the description of a plugin should tell the purpose of this plugin. For example,
    * for a {@code VULN_DETECTOR}, the description should mention the affected software,
    * vulnerability, affected version ranges, etc.
+   *
+   * @return Tsunami plugin description.
    */
   String description();
 
@@ -76,10 +86,16 @@ public @interface PluginInfo {
    * Author of this plugin.
    *
    * <p><b>Convention:</b> "Name (contact email)". For example, {@code Alice (Alice@example.com)}.
+   *
+   * @return Tsunami plugin author.
    */
   // TODO(magl): add compile time style validation.
   String author();
 
-  /** Module for bootstrapping this plugin. */
+  /**
+   * Module for bootstrapping this plugin.
+   *
+   * @return Tsunami plugin's bootstrap module class.
+   */
   Class<? extends PluginBootstrapModule> bootstrapModule();
 }

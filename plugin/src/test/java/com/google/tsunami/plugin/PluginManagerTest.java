@@ -437,18 +437,19 @@ public class PluginManagerTest {
       version = "v0.1",
       description = "A fake ServiceFingerprinter.",
       author = "fake",
-      bootstrapModule = NoAnnotationFingerprinter.Module.class)
+      bootstrapModule = NoAnnotationFingerprinter.NoAnnotationFingerprinterBootstrapModule.class)
   private static final class NoAnnotationFingerprinter implements ServiceFingerprinter {
     @Override
     public FingerprintingReport fingerprint(TargetInfo targetInfo, NetworkService networkService) {
       return null;
     }
 
-    static Module getModule() {
-      return new Module();
+    static NoAnnotationFingerprinterBootstrapModule getModule() {
+      return new NoAnnotationFingerprinterBootstrapModule();
     }
 
-    private static final class Module extends PluginBootstrapModule {
+    private static final class NoAnnotationFingerprinterBootstrapModule
+        extends PluginBootstrapModule {
       @Override
       protected void configurePlugin() {
         registerPlugin(NoAnnotationFingerprinter.class);
@@ -462,7 +463,7 @@ public class PluginManagerTest {
       version = "v0.1",
       description = "A fake ServiceFingerprinter for web services.",
       author = "fake",
-      bootstrapModule = NoAnnotationFingerprinter.Module.class)
+      bootstrapModule = FakeWebFingerprinter.FakeWebFingerprinterBootstrapModule.class)
   @ForWebService
   private static final class FakeWebFingerprinter implements ServiceFingerprinter {
     @Override
@@ -470,11 +471,11 @@ public class PluginManagerTest {
       return null;
     }
 
-    static Module getModule() {
-      return new Module();
+    static FakeWebFingerprinterBootstrapModule getModule() {
+      return new FakeWebFingerprinterBootstrapModule();
     }
 
-    private static final class Module extends PluginBootstrapModule {
+    private static final class FakeWebFingerprinterBootstrapModule extends PluginBootstrapModule {
       @Override
       protected void configurePlugin() {
         registerPlugin(FakeWebFingerprinter.class);
@@ -488,7 +489,8 @@ public class PluginManagerTest {
       version = "v0.1",
       description = "A fake VulnDetector.",
       author = "fake",
-      bootstrapModule = FakeServiceNameFilteringDetector.Module.class)
+      bootstrapModule =
+          FakeServiceNameFilteringDetector.FakeServiceNameFilteringDetectorBootstrapModule.class)
   @ForServiceName("http")
   private static final class FakeServiceNameFilteringDetector implements VulnDetector {
     @Override
@@ -497,11 +499,12 @@ public class PluginManagerTest {
       return null;
     }
 
-    static Module getModule() {
-      return new Module();
+    static FakeServiceNameFilteringDetectorBootstrapModule getModule() {
+      return new FakeServiceNameFilteringDetectorBootstrapModule();
     }
 
-    private static final class Module extends PluginBootstrapModule {
+    private static final class FakeServiceNameFilteringDetectorBootstrapModule
+        extends PluginBootstrapModule {
       @Override
       protected void configurePlugin() {
         registerPlugin(FakeServiceNameFilteringDetector.class);
@@ -515,7 +518,8 @@ public class PluginManagerTest {
       version = "v0.1",
       description = "A fake VulnDetector.",
       author = "fake",
-      bootstrapModule = FakeSoftwareFilteringDetector.Module.class)
+      bootstrapModule =
+          FakeSoftwareFilteringDetector.FakeSofwareFilteringDetectorBootstrapModule.class)
   @ForSoftware(name = "Jenkins")
   private static final class FakeSoftwareFilteringDetector implements VulnDetector {
     @Override
@@ -524,11 +528,12 @@ public class PluginManagerTest {
       return null;
     }
 
-    static Module getModule() {
-      return new Module();
+    static FakeSofwareFilteringDetectorBootstrapModule getModule() {
+      return new FakeSofwareFilteringDetectorBootstrapModule();
     }
 
-    private static final class Module extends PluginBootstrapModule {
+    private static final class FakeSofwareFilteringDetectorBootstrapModule
+        extends PluginBootstrapModule {
       @Override
       protected void configurePlugin() {
         registerPlugin(FakeSoftwareFilteringDetector.class);

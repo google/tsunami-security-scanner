@@ -26,6 +26,7 @@ public interface PluginExecutor {
    * Executes a plugin's core business logic implemented in non-block manner.
    *
    * @param executorConfig The configuration of the execution, cannot be null.
+   * @param <T> type of the plugin execution result.
    * @return The future of the execution result.
    */
   <T> ListenableFuture<PluginExecutionResult<T>> executeAsync(

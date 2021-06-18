@@ -45,6 +45,8 @@ public @interface ForServiceName {
    * Array of target network service names for a Tsunami {@link
    * com.google.tsunami.plugin.VulnDetector} plugin. The values for application layer protocols
    * should genuinely follow naming conventions listed at RFC6335.
+   *
+   * @return the targeted network service names for a Tsunami plugin.
    */
   String[] value();
 }

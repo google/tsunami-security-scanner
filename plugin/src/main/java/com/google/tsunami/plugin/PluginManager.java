@@ -43,7 +43,11 @@ public class PluginManager {
     this.tsunamiPlugins = tsunamiPlugins;
   }
 
-  /** Retrieves all {@link PortScanner} plugins. */
+  /**
+   * Retrieves all {@link PortScanner} plugins.
+   *
+   * @return a list of all the installed {@link PortScanner} plugins.
+   */
   public ImmutableList<PluginMatchingResult<PortScanner>> getPortScanners() {
     return tsunamiPlugins.entrySet().stream()
         .filter(entry -> entry.getKey().type().equals(PluginType.PORT_SCAN))
@@ -56,14 +60,23 @@ public class PluginManager {
         .collect(toImmutableList());
   }
 
-  /** Retrieves the first {@link PortScanner} plugin if present. */
+  /**
+   * Retrieves the first {@link PortScanner} plugin if present.
+   *
+   * @return the first installed {@link PortScanner} plugin.
+   */
   public Optional<PluginMatchingResult<PortScanner>> getPortScanner() {
     ImmutableList<PluginMatchingResult<PortScanner>> allPortScanners = getPortScanners();
 
     return allPortScanners.isEmpty() ? Optional.empty() : Optional.of(allPortScanners.get(0));
   }
 
-  /** Retrieves a {@link ServiceFingerprinter} plugin for the given {@link NetworkService}. */
+  /**
+   * Retrieves a {@link ServiceFingerprinter} plugin for the given {@link NetworkService}.
+   *
+   * @param networkService the target {@link NetworkService} to be fingerprinted.
+   * @return the matched {@link ServiceFingerprinter} plugin for the given network service.
+   */
   public Optional<PluginMatchingResult<ServiceFingerprinter>> getServiceFingerprinter(
       NetworkService networkService) {
     return tsunamiPlugins.entrySet().stream()
