@@ -83,4 +83,16 @@ public final class CommandExecutorTest {
     assertThat(executor.getError()).isEqualTo("1\n");
     assertThat(executor.getError()).isEqualTo("1\n");
   }
+
+  @Test
+  public void execute_writesInputIfSet()
+      throws IOException, InterruptedException, ExecutionException {
+    CommandExecutor executor = new CommandExecutor("/bin/sh", "-c", "read in; echo $in");
+    executor.setInput("1");
+
+    Process process = executor.execute();
+    process.waitFor();
+
+    assertThat(executor.getOutput()).isEqualTo("1\n");
+  }
 }
