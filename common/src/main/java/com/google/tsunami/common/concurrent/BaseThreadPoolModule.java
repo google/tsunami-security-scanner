@@ -54,7 +54,7 @@ abstract class BaseThreadPoolModule<ExecutorServiceT extends ListeningExecutorSe
   private final int maxSize;
   private final int coreSize;
   private final long keepAliveSeconds;
-  @Nullable private final Duration shutdownDelay;
+  private final @Nullable Duration shutdownDelay;
   private final Key<ExecutorServiceT> key;
   private final Class<ExecutorServiceT> executorServiceTypeClass;
   private final RejectedExecutionHandler rejectedExecutionHandler;

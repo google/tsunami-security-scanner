@@ -77,7 +77,7 @@ public final class ThreadPoolModule extends BaseThreadPoolModule<ListeningExecut
   public static final class Builder
       extends BaseThreadPoolModuleBuilder<ListeningExecutorService, Builder> {
     private int queueCapacity = Integer.MAX_VALUE;
-    @Nullable private BlockingQueue<Runnable> blockingQueue;
+    private @Nullable BlockingQueue<Runnable> blockingQueue;
 
     public Builder() {
       super(ListeningExecutorService.class);
