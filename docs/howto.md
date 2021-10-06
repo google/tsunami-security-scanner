@@ -95,7 +95,7 @@ a `http` or a `https` service.
 
 ```java
 // ...
-@ForServiceName(["http", "https"])
+@ForServiceName({"http", "https"})
 public final class WebFingerprinter implements ServiceFingerprinter {
   // ...
 }
