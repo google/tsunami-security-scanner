@@ -40,6 +40,7 @@ import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Optional;
@@ -78,6 +79,73 @@ public final class HttpClientTest {
   @After
   public void tearDown() throws IOException {
     mockWebServer.shutdown();
+  }
+
+  @Test
+  public void sendAsIs_always_returnsExpectedHttpResponse()
+      throws IOException, InterruptedException {
+    String responseBody = "test response";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpUrl baseUrl = mockWebServer.url("/");
+    String requestUrl =
+        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/%2e%2e/%2e%2e/etc/passwd")
+            .toString();
+
+    HttpResponse response = httpClient.sendAsIs(get(requestUrl).withEmptyHeaders().build());
+
+    assertThat(mockWebServer.takeRequest().getPath()).isEqualTo("/%2e%2e/%2e%2e/etc/passwd");
+    assertThat(response)
+        .isEqualTo(
+            HttpResponse.builder()
+                .setStatus(HttpStatus.OK)
+                .setHeaders(
+                    HttpHeaders.builder()
+                        .addHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+                        // MockWebServer always adds this response header.
+                        .addHeader(CONTENT_LENGTH, String.valueOf(responseBody.length()))
+                        .build())
+                .setBodyBytes(ByteString.copyFrom(responseBody, UTF_8))
+                .build());
+  }
+
+  @Test
+  public void sendAsIs_withNonGetRequest_throws() throws IOException, InterruptedException {
+    mockWebServer.start();
+
+    HttpUrl baseUrl = mockWebServer.url("/");
+    String requestUrl =
+        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/%2e%2e/%2e%2e/etc/passwd")
+            .toString();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> httpClient.sendAsIs(post(requestUrl).withEmptyHeaders().build()));
+  }
+
+  @Test
+  public void send_always_canonicalizesRequestUrl() throws IOException, InterruptedException {
+    String responseBody = "test response";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpUrl baseUrl = mockWebServer.url("/");
+    String requestUrl =
+        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/%2e%2e/%2e%2e/etc/passwd")
+            .toString();
+
+    httpClient.send(get(requestUrl).withEmptyHeaders().build());
+
+    assertThat(mockWebServer.takeRequest().getPath()).isEqualTo("/etc/passwd");
   }
 
   @Test

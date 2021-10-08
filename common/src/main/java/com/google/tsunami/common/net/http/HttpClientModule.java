@@ -21,6 +21,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
+import com.google.tsunami.common.net.http.javanet.DefaultConnectionFactory;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -94,7 +96,8 @@ public final class HttpClientModule extends AbstractModule {
 
   @Provides
   @Singleton
-  SSLSocketFactory provideSslSocketFactory() throws GeneralSecurityException {
+  @TrustAllCertsSocketFactory
+  SSLSocketFactory provideTrustAllCertsSocketFactory() throws GeneralSecurityException {
     SSLContext sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, new TrustManager[] {TRUST_ALL_CERTS_MANAGER}, new SecureRandom());
     return sslContext.getSocketFactory();
@@ -107,7 +110,7 @@ public final class HttpClientModule extends AbstractModule {
   OkHttpClient provideOkHttpClient(
       ConnectionPool connectionPool,
       Dispatcher dispatcher,
-      SSLSocketFactory sslSocketFactory,
+      @TrustAllCertsSocketFactory SSLSocketFactory trustAllCertsSocketFactory,
       @TrustAllCertificates boolean trustAllCertificates,
       @CallTimeoutSeconds int callTimeoutSeconds,
       @ConnectTimeoutSeconds int connectTimeoutSeconds,
@@ -124,10 +127,24 @@ public final class HttpClientModule extends AbstractModule {
             .followRedirects(followRedirects);
     if (trustAllCertificates) {
       clientBuilder
-          .sslSocketFactory(sslSocketFactory, TRUST_ALL_CERTS_MANAGER)
+          .sslSocketFactory(trustAllCertsSocketFactory, TRUST_ALL_CERTS_MANAGER)
           .hostnameVerifier((hostname, session) -> true);
     }
     return clientBuilder.build();
+  }
+
+  @Provides
+  @Singleton
+  ConnectionFactory provideJavaNetConnectionFactory(
+      @TrustAllCertificates boolean trustAllCertificates,
+      @TrustAllCertsSocketFactory SSLSocketFactory trustAllCertsSocketFactory,
+      @ConnectTimeoutSeconds int connectTimeoutSeconds,
+      @ReadTimeoutSeconds int readTimeoutSeconds) {
+    return new DefaultConnectionFactory(
+        trustAllCertificates,
+        trustAllCertsSocketFactory,
+        Duration.ofSeconds(connectTimeoutSeconds),
+        Duration.ofSeconds(readTimeoutSeconds));
   }
 
   @Provides
@@ -212,6 +229,11 @@ public final class HttpClientModule extends AbstractModule {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
   @interface TrustAllCertificates {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface TrustAllCertsSocketFactory {}
 
   @Qualifier
   @Retention(RetentionPolicy.RUNTIME)

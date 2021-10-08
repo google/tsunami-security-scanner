@@ -33,13 +33,7 @@ import okhttp3.HttpUrl;
 @SuppressWarnings("Immutable")
 public abstract class HttpRequest {
   public abstract HttpMethod method();
-  // Ideally Tsunami's HTTP wrapper should not rely on library specific impls. However, currently
-  // we couldn't find a better open source implementation for modern URLs other than HttpUrl from
-  // OkHttp. Unless Guava provides a better solution, HttpUrl is the best solution for now.
-  // See https://github.com/google/guava/issues/1005 for discussions on Guava, and
-  // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-http-url/#why-another-url-model for the
-  // benefits HttpUrl provides.
-  public abstract HttpUrl url();
+  public abstract String url();
   public abstract HttpHeaders headers();
   public abstract Optional<ByteString> requestBody();
 
@@ -60,7 +54,7 @@ public abstract class HttpRequest {
    */
   public static Builder get(String url) {
     checkArgument(!Strings.isNullOrEmpty(url));
-    return get(HttpUrl.parse(url));
+    return builder().setMethod(HttpMethod.GET).setUrl(url);
   }
 
   /**
@@ -82,7 +76,7 @@ public abstract class HttpRequest {
    */
   public static Builder head(String url) {
     checkArgument(!Strings.isNullOrEmpty(url));
-    return head(HttpUrl.parse(url));
+    return builder().setMethod(HttpMethod.HEAD).setUrl(url);
   }
 
   /**
@@ -104,7 +98,7 @@ public abstract class HttpRequest {
    */
   public static Builder post(String url) {
     checkArgument(!Strings.isNullOrEmpty(url));
-    return post(HttpUrl.parse(url));
+    return builder().setMethod(HttpMethod.POST).setUrl(url);
   }
 
   /**
@@ -126,7 +120,7 @@ public abstract class HttpRequest {
    */
   public static Builder delete(String url) {
     checkArgument(!Strings.isNullOrEmpty(url));
-    return delete(HttpUrl.parse(url));
+    return builder().setMethod(HttpMethod.DELETE).setUrl(url);
   }
 
   /**
@@ -144,7 +138,11 @@ public abstract class HttpRequest {
   @AutoValue.Builder
   public abstract static class Builder {
     public abstract Builder setMethod(HttpMethod method);
-    public abstract Builder setUrl(HttpUrl url);
+    public abstract Builder setUrl(String url);
+    public Builder setUrl(HttpUrl url) {
+      setUrl(url.toString());
+      return this;
+    }
     public abstract Builder setHeaders(HttpHeaders httpHeaders);
     public abstract Builder setRequestBody(ByteString requestBody);
     public abstract Builder setRequestBody(Optional<ByteString> requestBody);

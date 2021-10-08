@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.protobuf.ByteString;
-import okhttp3.HttpUrl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -33,7 +32,7 @@ public class HttpRequestTest {
     HttpRequest httpRequest = HttpRequest.get("http://localhost/url").withEmptyHeaders().build();
 
     assertThat(httpRequest.method()).isEqualTo(HttpMethod.GET);
-    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
   }
 
   @Test
@@ -41,7 +40,7 @@ public class HttpRequestTest {
     HttpRequest httpRequest = HttpRequest.head("http://localhost/url").withEmptyHeaders().build();
 
     assertThat(httpRequest.method()).isEqualTo(HttpMethod.HEAD);
-    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
   }
 
   @Test
@@ -49,7 +48,7 @@ public class HttpRequestTest {
     HttpRequest httpRequest = HttpRequest.post("http://localhost/url").withEmptyHeaders().build();
 
     assertThat(httpRequest.method()).isEqualTo(HttpMethod.POST);
-    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
   }
 
   @Test
@@ -57,7 +56,7 @@ public class HttpRequestTest {
     HttpRequest httpRequest = HttpRequest.delete("http://localhost/url").withEmptyHeaders().build();
 
     assertThat(httpRequest.method()).isEqualTo(HttpMethod.DELETE);
-    assertThat(httpRequest.url()).isEqualTo(HttpUrl.parse("http://localhost/url"));
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
   }
 
   @Test
@@ -67,7 +66,7 @@ public class HttpRequestTest {
         () ->
             HttpRequest.builder()
                 .setMethod(HttpMethod.GET)
-                .setUrl(HttpUrl.parse("http://localhost"))
+                .setUrl("http://localhost")
                 .setHeaders(HttpHeaders.builder().build())
                 .setRequestBody(ByteString.EMPTY)
                 .build());

@@ -16,6 +16,7 @@
 package com.google.tsunami.common.net.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -25,8 +26,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.common.net.http.HttpClientModule.TrustAllCertificates;
+import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.net.ssl.HttpsURLConnection;
 import okhttp3.Call;
@@ -48,11 +53,65 @@ public final class HttpClient {
 
   private final OkHttpClient okHttpClient;
   private final boolean trustAllCertificates;
+  private final ConnectionFactory connectionFactory;
 
   @Inject
-  HttpClient(OkHttpClient okHttpClient, @TrustAllCertificates boolean trustAllCertificates) {
+  HttpClient(
+      OkHttpClient okHttpClient,
+      @TrustAllCertificates boolean trustAllCertificates,
+      ConnectionFactory connectionFactory) {
     this.okHttpClient = checkNotNull(okHttpClient);
     this.trustAllCertificates = trustAllCertificates;
+    this.connectionFactory = checkNotNull(connectionFactory);
+  }
+
+  /**
+   * NOTE: This is a temporary hack to workaround OkHttp's hardcoded URL canonicalization algorithm.
+   * We should rewrite the entire library using a more flexible backend.
+   *
+   * <p>Sends the given HTTP request as is, blocking until full response is received.
+   *
+   * @param httpRequest the HTTP request to be sent by this client.
+   * @return the response returned from the HTTP server.
+   * @throws IOException if an I/O error occurs during the HTTP request.
+   */
+  public HttpResponse sendAsIs(HttpRequest httpRequest) throws IOException {
+    if (!httpRequest.method().equals(HttpMethod.GET)) {
+      throw new IllegalArgumentException("sendAsIs method should only be used for GET method.");
+    }
+
+    HttpURLConnection connection = connectionFactory.openConnection(httpRequest.url());
+    connection.setRequestMethod(httpRequest.method().toString());
+    httpRequest.headers().names().stream()
+        .filter(headerName -> !Ascii.equalsIgnoreCase(headerName, USER_AGENT))
+        .forEach(
+            headerName ->
+                httpRequest
+                    .headers()
+                    .getAll(headerName)
+                    .forEach(
+                        headerValue -> connection.setRequestProperty(headerName, headerValue)));
+    connection.setRequestProperty(USER_AGENT, TSUNAMI_USER_AGENT);
+
+    connection.connect();
+
+    int responseCode = connection.getResponseCode();
+    HttpHeaders.Builder responseHeadersBuilder = HttpHeaders.builder();
+    for (Map.Entry<String, List<String>> headerEntry : connection.getHeaderFields().entrySet()) {
+      String headerName = headerEntry.getKey();
+      if (!isNullOrEmpty(headerName)) {
+        for (String headerValue : headerEntry.getValue()) {
+          if (!isNullOrEmpty(headerValue)) {
+            responseHeadersBuilder.addHeader(headerName, headerValue);
+          }
+        }
+      }
+    }
+    return HttpResponse.builder()
+        .setStatus(HttpStatus.fromCode(responseCode))
+        .setHeaders(responseHeadersBuilder.build())
+        .setBodyBytes(ByteString.readFrom(connection.getInputStream()))
+        .build();
   }
 
   /**
@@ -260,11 +319,13 @@ public final class HttpClient {
     private final OkHttpClient okHttpClient;
     private boolean followRedirects;
     private boolean trustAllCertificates;
+    private ConnectionFactory connectionFactory;
 
     private Builder(HttpClient httpClient) {
       this.okHttpClient = httpClient.okHttpClient;
       this.followRedirects = okHttpClient.followRedirects();
       this.trustAllCertificates = httpClient.trustAllCertificates;
+      this.connectionFactory = httpClient.connectionFactory;
     }
 
     public Builder setFollowRedirects(boolean followRedirects) {
@@ -279,7 +340,9 @@ public final class HttpClient {
 
     public HttpClient build() {
       return new HttpClient(
-          okHttpClient.newBuilder().followRedirects(followRedirects).build(), trustAllCertificates);
+          okHttpClient.newBuilder().followRedirects(followRedirects).build(),
+          trustAllCertificates,
+          connectionFactory);
     }
   }
 }
