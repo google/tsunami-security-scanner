@@ -259,6 +259,9 @@ public final class HttpClient {
       case HEAD:
         okRequestBuilder.head();
         break;
+      case PUT:
+        okRequestBuilder.put(buildRequestBody(httpRequest));
+        break;
       case POST:
         okRequestBuilder.post(buildRequestBody(httpRequest));
         break;

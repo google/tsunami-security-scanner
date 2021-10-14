@@ -21,6 +21,7 @@ public enum HttpMethod {
   GET("GET"),
   HEAD("HEAD"),
   POST("POST"),
+  PUT("PUT"),
   DELETE("DELETE");
 
   private final String string;
