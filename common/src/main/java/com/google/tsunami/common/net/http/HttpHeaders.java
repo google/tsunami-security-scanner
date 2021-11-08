@@ -147,6 +147,17 @@ public abstract class HttpHeaders {
       return this;
     }
 
+    public Builder addHeader(String name, String value, boolean canonicalize) {
+      checkNotNull(name, "Name cannot be null.");
+      checkNotNull(value, "Value cannot be null.");
+      if (canonicalize) {
+        return addHeader(name, value);
+      } else {
+        rawHeadersBuilder().put(name, value);
+        return this;
+      }
+    }
+
     public abstract HttpHeaders build();
 
     private static boolean isLegalHeaderName(String str) {

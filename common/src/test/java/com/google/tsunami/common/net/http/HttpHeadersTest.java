@@ -47,6 +47,28 @@ public class HttpHeadersTest {
   }
 
   @Test
+  public void builderAddHeader_whenEnableCanonicalization_canonicalizesHeaderName() {
+    HttpHeaders httpHeaders =
+        HttpHeaders.builder()
+            .addHeader("TEST_Header", "test_value", true)
+            .build();
+    assertThat(httpHeaders.rawHeaders())
+        .containsExactlyEntriesIn(
+            ImmutableListMultimap.of("test_header", "test_value"));
+  }
+
+  @Test
+  public void builderAddHeader_whenDisableCanonicalization_addsHeaderNameAsIs() {
+    HttpHeaders httpHeaders =
+        HttpHeaders.builder()
+            .addHeader("TEST_Header", "test_value", false)
+            .build();
+    assertThat(httpHeaders.rawHeaders())
+        .containsExactlyEntriesIn(
+            ImmutableListMultimap.of("TEST_Header", "test_value"));
+  }
+
+  @Test
   public void builderAddHeader_withNullName_throwsNullPointerException() {
     assertThrows(
         NullPointerException.class, () -> HttpHeaders.builder().addHeader(null, "test_value"));
