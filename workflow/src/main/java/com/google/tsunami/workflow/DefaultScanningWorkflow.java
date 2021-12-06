@@ -136,7 +136,7 @@ public final class DefaultScanningWorkflow {
         // Unfortunately FluentFuture doesn't support future peeking.
         .transform(
             scanResults -> {
-              logger.atInfo().log(executionTracer.buildLoggableExecutionTrace(scanResults));
+              logger.atInfo().log("%s", executionTracer.buildLoggableExecutionTrace(scanResults));
               return scanResults;
             },
             directExecutor())
