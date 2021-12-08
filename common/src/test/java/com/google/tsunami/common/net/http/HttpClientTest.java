@@ -84,22 +84,23 @@ public final class HttpClientTest {
   @Test
   public void sendAsIs_always_returnsExpectedHttpResponse()
       throws IOException, InterruptedException {
-    String responseBody = "test response";
-    mockWebServer.enqueue(
-        new MockResponse()
-            .setResponseCode(HttpStatus.OK.code())
-            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
-            .setBody(responseBody));
+    mockWebServer.setDispatcher(new SendAsIsTestDispatcher());
     mockWebServer.start();
+    String expectedResponseBody = SendAsIsTestDispatcher.buildBody("GET", "");
 
     HttpUrl baseUrl = mockWebServer.url("/");
     String requestUrl =
-        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/%2e%2e/%2e%2e/etc/passwd")
+        new URL(
+                baseUrl.scheme(),
+                baseUrl.host(),
+                baseUrl.port(),
+                "/send-as-is/%2e%2e/%2e%2e/etc/passwd")
             .toString();
 
     HttpResponse response = httpClient.sendAsIs(get(requestUrl).withEmptyHeaders().build());
 
-    assertThat(mockWebServer.takeRequest().getPath()).isEqualTo("/%2e%2e/%2e%2e/etc/passwd");
+    assertThat(mockWebServer.takeRequest().getPath())
+        .isEqualTo("/send-as-is/%2e%2e/%2e%2e/etc/passwd");
     assertThat(response)
         .isEqualTo(
             HttpResponse.builder()
@@ -108,24 +109,45 @@ public final class HttpClientTest {
                     HttpHeaders.builder()
                         .addHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
                         // MockWebServer always adds this response header.
-                        .addHeader(CONTENT_LENGTH, String.valueOf(responseBody.length()))
+                        .addHeader(CONTENT_LENGTH, String.valueOf(expectedResponseBody.length()))
                         .build())
-                .setBodyBytes(ByteString.copyFrom(responseBody, UTF_8))
+                .setBodyBytes(ByteString.copyFrom(expectedResponseBody, UTF_8))
                 .build());
   }
 
   @Test
-  public void sendAsIs_withNonGetRequest_throws() throws IOException, InterruptedException {
+  public void sendAsIs_withPostRequest_returnsExpectedHttpResponse()
+      throws IOException, InterruptedException {
+    mockWebServer.setDispatcher(new SendAsIsTestDispatcher());
     mockWebServer.start();
+    String requestBody = "POST BODY";
+    String expectedResponseBody = SendAsIsTestDispatcher.buildBody("POST", requestBody);
 
     HttpUrl baseUrl = mockWebServer.url("/");
     String requestUrl =
-        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/%2e%2e/%2e%2e/etc/passwd")
+        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/send-as-is/%2e%2e/%2e%2e/path")
             .toString();
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> httpClient.sendAsIs(post(requestUrl).withEmptyHeaders().build()));
+    HttpResponse response =
+        httpClient.sendAsIs(
+            post(requestUrl)
+                .setRequestBody(ByteString.copyFrom(requestBody, UTF_8))
+                .withEmptyHeaders()
+                .build());
+
+    assertThat(mockWebServer.takeRequest().getPath()).isEqualTo("/send-as-is/%2e%2e/%2e%2e/path");
+    assertThat(response)
+        .isEqualTo(
+            HttpResponse.builder()
+                .setStatus(HttpStatus.OK)
+                .setHeaders(
+                    HttpHeaders.builder()
+                        .addHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+                        // MockWebServer always adds this response header.
+                        .addHeader(CONTENT_LENGTH, String.valueOf(expectedResponseBody.length()))
+                        .build())
+                .setBodyBytes(ByteString.copyFrom(expectedResponseBody, UTF_8))
+                .build());
   }
 
   @Test
@@ -759,6 +781,25 @@ public final class HttpClientTest {
     public MockResponse dispatch(RecordedRequest recordedRequest) {
       if (nullToEmpty(recordedRequest.getHeader(HOST)).startsWith(expectedHost)) {
         return new MockResponse().setResponseCode(HttpStatus.OK.code());
+      }
+      return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.code());
+    }
+  }
+
+  static final class SendAsIsTestDispatcher extends Dispatcher {
+    static final String SEND_AS_IS_PATH = "/send-as-is/";
+
+    static String buildBody(String method, String requestBody) {
+      return String.format("Method: %s\nRequest Body: %s", method, requestBody);
+    }
+
+    @Override
+    public MockResponse dispatch(RecordedRequest recordedRequest) {
+      if (recordedRequest.getPath().startsWith(SEND_AS_IS_PATH)) {
+        return new MockResponse()
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(buildBody(recordedRequest.getMethod(), recordedRequest.getBody().readUtf8()))
+            .setResponseCode(HttpStatus.OK.code());
       }
       return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.code());
     }

@@ -21,7 +21,9 @@ import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.flogger.GoogleLogger;
+import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
@@ -76,10 +78,6 @@ public final class HttpClient {
    * @throws IOException if an I/O error occurs during the HTTP request.
    */
   public HttpResponse sendAsIs(HttpRequest httpRequest) throws IOException {
-    if (!httpRequest.method().equals(HttpMethod.GET)) {
-      throw new IllegalArgumentException("sendAsIs method should only be used for GET method.");
-    }
-
     HttpURLConnection connection = connectionFactory.openConnection(httpRequest.url());
     connection.setRequestMethod(httpRequest.method().toString());
     httpRequest.headers().names().stream()
@@ -93,7 +91,12 @@ public final class HttpClient {
                         headerValue -> connection.setRequestProperty(headerName, headerValue)));
     connection.setRequestProperty(USER_AGENT, TSUNAMI_USER_AGENT);
 
-    connection.connect();
+    if (ImmutableSet.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
+        .contains(httpRequest.method())) {
+      connection.setDoOutput(true);
+      ByteSource.wrap(httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray())
+          .copyTo(connection.getOutputStream());
+    }
 
     int responseCode = connection.getResponseCode();
     HttpHeaders.Builder responseHeadersBuilder = HttpHeaders.builder();
