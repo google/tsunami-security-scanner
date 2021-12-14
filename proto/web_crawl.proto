@@ -20,13 +20,14 @@ syntax = "proto3";
 package tsunami.proto;
 
 import "network_service.proto";
+import "network.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "WebCrawlProtos";
 option java_package = "com.google.tsunami.proto";
 option go_package = "github.com/google/tsunami-security-scanner/proto";
 
-// Next ID: 6
+// Next ID: 7
 message CrawlConfig {
   // The crawler should only interact with web resources under certain scopes.
   message Scope {
@@ -59,8 +60,12 @@ message CrawlConfig {
   bool should_enforce_scope_check = 5;
 
   // The network service to be crawled.
+  // DEPRECATED. Use network_endpoint instead.
+  NetworkService network_service = 4 [deprecated = true];
+
+  // The network endpoint to be crawled.
   // Required.
-  NetworkService network_service = 4;
+  NetworkEndpoint network_endpoint = 6;
 }
 
 message CrawlTarget {
