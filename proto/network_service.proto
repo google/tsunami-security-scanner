@@ -21,6 +21,7 @@ package tsunami.proto;
 
 import "network.proto";
 import "software.proto";
+import "web_crawl.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "NetworkServiceProtos";
@@ -62,6 +63,7 @@ message ServiceContext {
 }
 
 // Context information about a web application.
+// NEXT ID: 5
 message WebServiceContext {
   // The root path of the hosted web application.
   string application_root = 1;
@@ -71,4 +73,7 @@ message WebServiceContext {
 
   // The detected versions of the web application.
   VersionSet version_set = 3;
+
+  // Fingerprinter's crawling results for this web service.
+  repeated CrawlResult crawl_results = 4;
 }

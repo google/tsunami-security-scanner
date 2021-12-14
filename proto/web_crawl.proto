@@ -19,7 +19,6 @@ syntax = "proto3";
 
 package tsunami.proto;
 
-import "network_service.proto";
 import "network.proto";
 
 option java_multiple_files = true;
@@ -59,13 +58,11 @@ message CrawlConfig {
   // Optional.
   bool should_enforce_scope_check = 5;
 
-  // The network service to be crawled.
-  // DEPRECATED. Use network_endpoint instead.
-  NetworkService network_service = 4 [deprecated = true];
-
   // The network endpoint to be crawled.
   // Required.
   NetworkEndpoint network_endpoint = 6;
+
+  reserved 4;
 }
 
 message CrawlTarget {
