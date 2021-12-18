@@ -68,6 +68,8 @@ public final class HttpClientModule extends AbstractModule {
   private final int maxRequestsPerHost;
   // Whether or not to follow redirect from server.
   private final boolean followRedirects;
+  // A log ID to print in front of the logs.
+  private final String logId;
 
   public HttpClientModule(Builder builder) {
     checkNotNull(builder);
@@ -76,6 +78,7 @@ public final class HttpClientModule extends AbstractModule {
     this.maxRequests = builder.maxRequests;
     this.maxRequestsPerHost = builder.maxRequestsPerHost;
     this.followRedirects = builder.followRedirects;
+    this.logId = builder.logId;
   }
 
   @Provides
@@ -162,6 +165,12 @@ public final class HttpClientModule extends AbstractModule {
   }
 
   @Provides
+  @LogId
+  String provideLogid() {
+    return logId;
+  }
+
+  @Provides
   @CallTimeoutSeconds
   int provideCallTimeoutSeconds(
       HttpClientCliOptions httpClientCliOptions,
@@ -238,6 +247,11 @@ public final class HttpClientModule extends AbstractModule {
   @Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface LogId {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
   @interface CallTimeoutSeconds {}
 
   @Qualifier
@@ -263,12 +277,14 @@ public final class HttpClientModule extends AbstractModule {
     private static final int DEFAULT_MAX_REQUESTS = 64;
     private static final int DEFAULT_MAX_REQUESTS_PER_HOST = 5;
     private static final boolean DEFAULT_FOLLOW_REDIRECTS = true;
+    private static final String DEFAULT_LOG_ID = "";
 
     private int connectionPoolMaxIdle = DEFAULT_CONNECTION_POOL_MAX_IDLE;
     private Duration connectionPoolKeepAliveDuration = DEFAULT_CONNECTION_POOL_KEEP_ALIVE_DURATION;
     private int maxRequests = DEFAULT_MAX_REQUESTS;
     private int maxRequestsPerHost = DEFAULT_MAX_REQUESTS_PER_HOST;
     private boolean followRedirects = DEFAULT_FOLLOW_REDIRECTS;
+    private String logId = DEFAULT_LOG_ID;
 
     /**
      * Sets the maximum number of idle connections to each to keep in the pool.
@@ -329,6 +345,17 @@ public final class HttpClientModule extends AbstractModule {
      */
     public Builder setFollowRedirects(boolean followRedirects) {
       this.followRedirects = followRedirects;
+      return this;
+    }
+
+    /**
+     * Sets the log ID to print in front of the logs.
+     *
+     * @param logId the log ID to print in front of the logs.
+     * @return the {@link Builder} instance itself.
+     */
+    public Builder setLogId(String logId) {
+      this.logId = logId;
       return this;
     }
 

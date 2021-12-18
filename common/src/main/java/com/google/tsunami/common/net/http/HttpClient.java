@@ -27,6 +27,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
+import com.google.tsunami.common.net.http.HttpClientModule.LogId;
 import com.google.tsunami.common.net.http.HttpClientModule.TrustAllCertificates;
 import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
 import com.google.tsunami.proto.NetworkService;
@@ -56,15 +57,23 @@ public final class HttpClient {
   private final OkHttpClient okHttpClient;
   private final boolean trustAllCertificates;
   private final ConnectionFactory connectionFactory;
+  private final String logId;
 
   @Inject
   HttpClient(
       OkHttpClient okHttpClient,
       @TrustAllCertificates boolean trustAllCertificates,
-      ConnectionFactory connectionFactory) {
+      ConnectionFactory connectionFactory,
+      @LogId String logId) {
     this.okHttpClient = checkNotNull(okHttpClient);
     this.trustAllCertificates = trustAllCertificates;
     this.connectionFactory = checkNotNull(connectionFactory);
+    this.logId = logId;
+  }
+
+  /** Returns the log ID to print in front of the logs. */
+  public String getLogId() {
+    return logId;
   }
 
   /**
@@ -141,7 +150,7 @@ public final class HttpClient {
   public HttpResponse send(HttpRequest httpRequest, @Nullable NetworkService networkService)
       throws IOException {
     logger.atInfo().log(
-        "Sending HTTP '%s' request to '%s'.", httpRequest.method(), httpRequest.url());
+        "%sSending HTTP '%s' request to '%s'.", logId, httpRequest.method(), httpRequest.url());
 
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     try (Response okHttpResponse =
@@ -172,7 +181,8 @@ public final class HttpClient {
   public ListenableFuture<HttpResponse> sendAsync(
       HttpRequest httpRequest, @Nullable NetworkService networkService) {
     logger.atInfo().log(
-        "Sending async HTTP '%s' request to '%s'.", httpRequest.method(), httpRequest.url());
+        "%sSending async HTTP '%s' request to '%s'.",
+        logId, httpRequest.method(), httpRequest.url());
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
     Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest));
@@ -326,12 +336,14 @@ public final class HttpClient {
     private boolean followRedirects;
     private boolean trustAllCertificates;
     private ConnectionFactory connectionFactory;
+    private String logId;
 
     private Builder(HttpClient httpClient) {
       this.okHttpClient = httpClient.okHttpClient;
       this.followRedirects = okHttpClient.followRedirects();
       this.trustAllCertificates = httpClient.trustAllCertificates;
       this.connectionFactory = httpClient.connectionFactory;
+      this.logId = httpClient.logId;
     }
 
     public Builder setFollowRedirects(boolean followRedirects) {
@@ -344,11 +356,17 @@ public final class HttpClient {
       return this;
     }
 
+    public Builder setLogId(String logId) {
+      this.logId = logId;
+      return this;
+    }
+
     public HttpClient build() {
       return new HttpClient(
           okHttpClient.newBuilder().followRedirects(followRedirects).build(),
           trustAllCertificates,
-          connectionFactory);
+          connectionFactory,
+          logId);
     }
   }
 }
