@@ -1,0 +1,85 @@
+/*
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Data models utilized by the Tsunami Paylaod Generator
+syntax = "proto3";
+
+package tsunami.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "PayloadGeneratorProtos";
+option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
+
+// Attributes utilized by the PayloadGenerator to select a payload
+message PayloadGeneratorConfig {
+  // The type of vulnerability the detector is looking for
+  enum VulnerabilityType {
+    // Unspecified vulnerability type
+    VULNERABILITY_TYPE_UNSPECIFIED = 0;
+    // RCE which returns the output of the execution
+    REFLECTIVE_RCE = 1;
+    // RCE which does not return the output of the execution
+    BLIND_RCE = 2;
+    // Server-Side Request Forgery
+    SSRF = 3;
+  }
+
+  // The environment that processes the payload for execution e.g. a PHP-based
+  // target likely wants a payload that is itself PHP code.
+  enum InterpretationEnvironment {
+    // Unspecified interpretation environment type
+    INTERPRETATION_ENVIRONMENT_UNSPECIFIED = 0;
+    // Payload is interpreted within a Linux shell environment
+    LINUX_SHELL = 1;
+    // Payload is interpreted wihin a Java compiler context
+    JAVA = 2;
+    // Payload is interpreted wihin a PHP VM context
+    PHP = 3;
+  }
+
+  // The actual runtime environment when the payload is run e.g. while a
+  // PHP-based target wants a PHP-interpretation environment, the actual code
+  // execution may happen via the Linux shell: exec(“echo \”this is running in
+  // the system.\””).
+  enum ExecutionEnvironment {
+    // Unspecified execution environment type
+    EXECUTION_ENVIRONMENT_UNSPECIFIED = 0;
+    // Execute within the InterpretationEnvironment
+    EXEC_INTERPRETATION_ENVIRONMENT = 1;
+  }
+
+  // If set, the generator prefers selecting payloads which
+  // utilize the Tsunami callback server to reduce the chance of false
+  // positives, and the generator will throw an exception if a selected
+  // payload will use the Tsuanmi callback server and it is not enabled.
+  // If Tsunami is not configured to use the callback server, a
+  // callback-server-enabled payload should not be selected.
+  bool use_callback_server = 1;
+
+  VulnerabilityType vulnerability_type = 2;
+
+  InterpretationEnvironment interpretation_environment = 3;
+
+  ExecutionEnvironment execution_environment = 4;
+}
+
+// Attributes of a payload. A detector can check these attributes to change its
+// logic based on the payload type.
+message PayloadAttributes {
+  // Whether the payload uses the callback server
+  bool uses_callback_server = 1;
+}
