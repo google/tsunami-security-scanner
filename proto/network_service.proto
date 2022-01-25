@@ -52,6 +52,9 @@ message NetworkService {
   // Context information about this network service.
   ServiceContext service_context = 7;
 
+  // The cpe identifying the service
+  string cpe = 8;
+
   // TODO(magl): add ssl related information.
 }
 
