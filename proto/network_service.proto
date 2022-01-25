@@ -53,7 +53,7 @@ message NetworkService {
   ServiceContext service_context = 7;
 
   // The cpe identifying the service
-  string cpe = 8;
+  string cpe_uri = 8;
 
   // TODO(magl): add ssl related information.
 }
