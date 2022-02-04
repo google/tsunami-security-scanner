@@ -41,10 +41,11 @@ subprojects {
         okhttpVersion = '3.12.0'
         protobufVersion = '3.11.4'
         protocVersion = protobufVersion
-        snameyamlVersion = '1.26'
+        snakeyamlVersion = '1.26'
         junitVersion = '4.13'
         mockitoVersion = '2.28.2'
         truthVersion = '1.0.1'
+        tcsVersion = '0.0.1'
 
         // All Tsunami dependencies.
         deps = [
@@ -69,7 +70,9 @@ subprojects {
                 protobuf: "com.google.protobuf:protobuf-java:${protobufVersion}",
                 protobuf_lite: "com.google.protobuf:protobuf-javalite:${protobufVersion}",
                 protobuf_util: "com.google.protobuf:protobuf-java-util:${protobufVersion}",
-                snakeyaml: "org.yaml:snakeyaml:${snameyamlVersion}",
+                snakeyaml: "org.yaml:snakeyaml:${snakeyamlVersion}",
+                tcs_common: "com.google.tsunami:tcs-common:${tcsVersion}",
+                tcs_proto: "com.google.tsunami:tcs-proto:${tcsVersion}",
 
                 // Test dependencies.
                 guava_testlib: "com.google.guava:guava-testlib:${guavaVersion}",
@@ -105,8 +108,8 @@ subprojects {
     }
 
     plugins.withId('java') {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
 
         java.withJavadocJar()
         java.withSourcesJar()
