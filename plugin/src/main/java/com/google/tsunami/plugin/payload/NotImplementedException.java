@@ -16,13 +16,17 @@
 
 package com.google.tsunami.plugin.payload;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 /**
  * Thrown whenever a {@link PayloadGeneratorConfig} results in a combination that does not have a
  * payload.
  */
 public final class NotImplementedException extends Exception {
 
-  public NotImplementedException(String message) {
-    super(message);
+  @FormatMethod
+  public NotImplementedException(@FormatString String format, Object... args) {
+    super(String.format(format, args));
   }
 }

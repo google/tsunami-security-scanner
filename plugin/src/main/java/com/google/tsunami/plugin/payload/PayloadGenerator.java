@@ -17,7 +17,6 @@ package com.google.tsunami.plugin.payload;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.errorprone.annotations.DoNotCall;
 import com.google.tsunami.plugin.TcsClient;
 import com.google.tsunami.proto.PayloadGeneratorConfig;
 import javax.inject.Inject;
@@ -25,10 +24,8 @@ import javax.inject.Inject;
 /** Holds the generate function to get a detection payload given config parameters */
 public final class PayloadGenerator {
 
-  @SuppressWarnings("unused")
   private final TcsClient tcsClient;
 
-  @SuppressWarnings("unused")
   private final PayloadSecretGenerator secretGenerator;
 
   @Inject
@@ -37,11 +34,18 @@ public final class PayloadGenerator {
     this.secretGenerator = checkNotNull(secretGenerator);
   }
 
-  @DoNotCall
   public Payload generate(PayloadGeneratorConfig config) throws NotImplementedException {
+    Payload p;
+    switch (config.getVulnerabilityType()) {
+      case REFLECTIVE_RCE:
+        p = new ReflectiveRcePayload(config, this.tcsClient, this.secretGenerator);
+        break;
+      default:
+        throw new NotImplementedException(
+            "Payload selection for %s is not implemented", config.getVulnerabilityType());
+    }
 
-    throw new NotImplementedException(
-        String.format(
-            "Payload selection for %s is not implemented", config.getVulnerabilityType()));
+    p.initialize();
+    return p;
   }
 }
