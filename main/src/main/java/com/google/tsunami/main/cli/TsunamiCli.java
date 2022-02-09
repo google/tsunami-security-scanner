@@ -40,6 +40,7 @@ import com.google.tsunami.common.time.SystemUtcClockModule;
 import com.google.tsunami.main.cli.option.MainCliOptions;
 import com.google.tsunami.plugin.PluginExecutionModule;
 import com.google.tsunami.plugin.PluginLoadingModule;
+import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.ScanStatus;
 import com.google.tsunami.proto.ScanTarget;
@@ -48,6 +49,7 @@ import com.google.tsunami.workflow.ScanningWorkflowException;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
@@ -144,6 +146,7 @@ public final class TsunamiCli {
       install(new ScanResultsArchiverModule());
       install(new PluginExecutionModule());
       install(new PluginLoadingModule(classScanResult));
+      install(new PayloadGeneratorModule(new SecureRandom()));
     }
 
     private String extractLogId(String[] args) {
@@ -205,7 +208,7 @@ public final class TsunamiCli {
 
       return configLoader.loadConfig();
     } catch (ReflectiveOperationException e) {
-      throw new AssertionError("Error loading config.", e);
+      throw new LinkageError("Error loading config.", e);
     }
   }
 }
