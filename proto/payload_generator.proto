@@ -19,6 +19,8 @@ syntax = "proto3";
 
 package tsunami.proto;
 
+import 'google/protobuf/wrappers.proto';
+
 option java_multiple_files = true;
 option java_outer_classname = "PayloadGeneratorProtos";
 option java_package = "com.google.tsunami.proto";
@@ -82,4 +84,57 @@ message PayloadGeneratorConfig {
 message PayloadAttributes {
   // Whether the payload uses the callback server
   bool uses_callback_server = 1;
+}
+
+enum PayloadValidationType {
+  VALIDATION_TYPE_UNSPECIFIED = 0;
+
+  VALIDATION_REGEX = 1;
+}
+
+// Container type for payload_definitions.yaml
+message PayloadLibrary {
+  repeated PayloadDefinition payloads = 1;
+}
+
+// Schema for each entry in payload_definitions.yaml
+// Note: this message uses StringValue and BoolValue because we validate whether
+// each payload definition in the yaml file has the correct fields present.
+// Since empty proto fields are given default values (proto fields are not
+// nullable), we use the wrapped types to check for actual presence.
+message PayloadDefinition {
+  // The human-readable string to identify the payload
+  google.protobuf.StringValue name = 1;
+
+  PayloadGeneratorConfig.InterpretationEnvironment interpretation_environment =
+      2;
+  PayloadGeneratorConfig.ExecutionEnvironment execution_environment = 3;
+
+  // All vulnerability types this payload can be used for
+  repeated PayloadGeneratorConfig.VulnerabilityType vulnerability_type = 4;
+
+  // If true, payload_string must contain the $TSUNAMI_PAYLOAD_TOKEN_URL
+  // token. Validation will automatically check against the callback server, so
+  // the validation* fields do not need to be set.
+  google.protobuf.BoolValue uses_callback_server = 5;
+
+  // The actual payload command string. The following special tokens can be
+  // used which will cause the framework to inject dynamic content into the
+  // command:
+  // - $TSUNAMI_PAYLOAD_TOKEN_URL: url for the callback server
+  // - a random string, used to reduce false positives.
+  google.protobuf.StringValue payload_string = 6;
+
+  // The type of validation function for determining if the payload was
+  // executed. Currently, only REGEX is supported.
+  PayloadValidationType validation_type = 7;
+
+  // Required if validation_type == REGEX. Must be compatible with
+  // java.util.regex.Pattern. The string will first be preprocessed before
+  // applied as a regex, replacing any of the following tokens with the
+  // corresponding values supplied by the framework:
+  // - $TSUNAMI_PAYLOAD_TOKEN_RANDOM: a random string, used to reduce false
+  //   positives. The value is guaranteed to be the same as the value supplied
+  //   to payload_string.
+  google.protobuf.StringValue validation_regex = 8;
 }

@@ -17,48 +17,36 @@ package com.google.tsunami.plugin.payload;
 
 import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
-import com.google.tsunami.plugin.TcsClient;
 import com.google.tsunami.proto.PayloadAttributes;
 import com.google.tsunami.proto.PayloadGeneratorConfig;
 import java.util.Optional;
 
-/**
- * Skeletal implementation of a payload. Each exploit type should have its own payload type.
- * PayloadGenerator should only return subclasss of this class.
- */
-public abstract class Payload {
+/** Type returned by {@link PayloadGenerator} to be used in detectors. */
+public class Payload {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-
+  private final String payload;
+  private final Validator validator;
+  private final PayloadAttributes attributes;
   private final PayloadGeneratorConfig config;
-  private final TcsClient callbackServerClient;
-  private final PayloadSecretGenerator secretGenerator;
-  private BasePayload payload;
 
-  /** Each payload subclass should receive the config and the callback server client */
   public Payload(
-      PayloadGeneratorConfig config,
-      TcsClient callbackServerClient,
-      PayloadSecretGenerator secretGenerator) {
+      String payload,
+      Validator validator,
+      PayloadAttributes attributes,
+      PayloadGeneratorConfig config) {
+    this.payload = payload;
+    this.validator = validator;
+    this.attributes = attributes;
     this.config = config;
-    this.callbackServerClient = callbackServerClient;
-    this.secretGenerator = secretGenerator;
   }
-
-  /**
-   * Initializes the payload, selecting the actual payload command. This is only meant to be called
-   * by {@link PayloadGenerator}.
-   */
-  abstract void initialize() throws NotImplementedException;
 
   /** Returns the actual payload command string */
   public final String getPayload() {
     logger.atInfo().log(
         "%s generated payload `%s`, %s use the callback server",
-        this.config,
-        this.payload.getPayloadString(),
-        this.payload.getPayloadAttributes().getUsesCallbackServer() ? "does" : "does not");
-    return this.payload.getPayloadString();
+        this.config, this.payload, this.attributes.getUsesCallbackServer() ? "does" : "does not");
+    return this.payload;
   }
 
   /**
@@ -67,33 +55,13 @@ public abstract class Payload {
    */
   public final boolean checkIfExecuted(Optional<ByteString> input)
       throws NoCallbackServerException {
-    boolean result = this.payload.getValidator().isExecuted(input);
+    boolean result = this.validator.isExecuted(input);
     logger.atInfo().log("Input: %s, output: %s", input, result);
     return result;
   }
 
   /** Returns additional information about the paylaod to the caller. */
   public final PayloadAttributes getPayloadAttributes() {
-    return this.payload.getPayloadAttributes();
-  }
-
-  /** Internal API for getting the configuration originally passsed to {@link PayloadGenerator}. */
-  protected final PayloadGeneratorConfig getConfig() {
-    return this.config;
-  }
-
-  /** Internal API for interacting with the callback server. */
-  protected final TcsClient getCallbackServerClient() {
-    return this.callbackServerClient;
-  }
-
-  /** Internal API for interacting with the RNG. */
-  protected final PayloadSecretGenerator getSecretGenerator() {
-    return this.secretGenerator;
-  }
-
-  /** Internal API for setting the BasePayload. */
-  protected final void setBasePayload(BasePayload p) {
-    this.payload = p;
+    return this.attributes;
   }
 }
