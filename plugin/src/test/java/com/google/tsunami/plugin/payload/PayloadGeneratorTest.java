@@ -24,6 +24,7 @@ import com.google.inject.Guice;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.payload.testing.FakePayloadGeneratorModule;
+import com.google.tsunami.plugin.payload.testing.PayloadTestHelper;
 import com.google.tsunami.proto.PayloadGeneratorConfig;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -41,6 +42,7 @@ import org.junit.runners.JUnit4;
 public final class PayloadGeneratorTest {
 
   @Inject private PayloadGenerator payloadGenerator;
+
   private MockWebServer mockCallbackServer;
   private final SecureRandom testSecureRandom =
       new SecureRandom() {
@@ -66,13 +68,15 @@ public final class PayloadGeneratorTest {
     mockCallbackServer.start();
     Guice.createInjector(
             new HttpClientModule.Builder().build(),
-            new FakePayloadGeneratorModule(mockCallbackServer, true, testSecureRandom))
+            FakePayloadGeneratorModule.builder()
+                .setCallbackServer(mockCallbackServer)
+                .setSecureRng(testSecureRandom)
+                .build())
         .injectMembers(this);
   }
 
   @Test
-  public void generate_withLinuxConfiguration_andCallbackServer_returnsCurlPayload()
-      throws NotImplementedException {
+  public void generate_withLinuxConfiguration_andCallbackServer_returnsCurlPayload() {
     Payload p =
         payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
 
@@ -83,8 +87,29 @@ public final class PayloadGeneratorTest {
   }
 
   @Test
-  public void getPayload_withLinuxConfiguration_andNoCallbackServer_returnsPrintfPayload()
-      throws NotImplementedException {
+  public void
+      checkIfExecuted_withLinuxConfiguration_andCallbackServer_andExecutedCallbackUrl_returnsTrue() throws IOException {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockSuccessfulCallbackResponse());
+    Payload p =
+        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+
+    assertTrue(p.checkIfExecuted());
+  }
+
+  @Test
+  public void
+      checkIfExecuted_withLinuxConfiguration_andCallbackServer_andNotExecutedCallbackUrl_returnsFalse() {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
+    Payload p =
+        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+
+    assertFalse(p.checkIfExecuted());
+  }
+
+  @Test
+  public void getPayload_withLinuxConfiguration_andNoCallbackServer_returnsPrintfPayload() {
 
     Payload p =
         payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
@@ -94,13 +119,13 @@ public final class PayloadGeneratorTest {
   }
 
   @Test
-  public void getPayload_withLinuxConfiguration_andUnconfiguredCallbackServer_returnsPrintfPayload()
-      throws NotImplementedException {
+  public void
+      getPayload_withLinuxConfiguration_andUnconfiguredCallbackServer_returnsPrintfPayload() {
 
     // Replace PayloadGenerator with a version without a configured callback server
     Guice.createInjector(
             new HttpClientModule.Builder().build(),
-            new FakePayloadGeneratorModule(mockCallbackServer, false, this.testSecureRandom))
+            FakePayloadGeneratorModule.builder().setSecureRng(this.testSecureRandom).build())
         .injectMembers(this);
 
     Payload p =
@@ -112,8 +137,7 @@ public final class PayloadGeneratorTest {
 
   @Test
   public void
-      checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andCorrectInput_returnsTrue()
-          throws NotImplementedException, NoCallbackServerException {
+      checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andCorrectInput_returnsTrue() {
 
     Payload p =
         payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
@@ -127,8 +151,7 @@ public final class PayloadGeneratorTest {
 
   @Test
   public void
-      checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andIncorectInput_returnsFalse()
-          throws NotImplementedException, NoCallbackServerException {
+      checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andIncorectInput_returnsFalse() {
     Payload p =
         payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
 
@@ -181,5 +204,4 @@ public final class PayloadGeneratorTest {
         NotImplementedException.class,
         () -> payloadGenerator.generate(PayloadGeneratorConfig.getDefaultInstance()));
   }
-
 }

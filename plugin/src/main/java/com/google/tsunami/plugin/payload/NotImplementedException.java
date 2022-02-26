@@ -22,8 +22,12 @@ import com.google.errorprone.annotations.FormatString;
 /**
  * Thrown whenever a {@link PayloadGeneratorConfig} results in a combination that does not have a
  * payload.
+ *
+ * <p> To reduce the burden on callers, this is an unchecked exception. The goal is simply to
+ * notify the developer that the payload generator cannot be used in the requested context. If the
+ * generator <em>does</em> work in the requested context, this exception would never be thrown.
  */
-public final class NotImplementedException extends Exception {
+public final class NotImplementedException extends RuntimeException {
 
   @FormatMethod
   public NotImplementedException(@FormatString String format, Object... args) {

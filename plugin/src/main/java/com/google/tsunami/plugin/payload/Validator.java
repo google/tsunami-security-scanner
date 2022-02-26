@@ -23,9 +23,6 @@ import java.util.Optional;
 public interface Validator {
   /**
    * Returns whether the associated payload was executed.
-   *
-   * @throws NoCallbackServerException if the implementation uses the callback server but Tsunami
-   *     is not configured to use it.
    */
-  boolean isExecuted(Optional<ByteString> input) throws NoCallbackServerException;
+  boolean isExecuted(Optional<ByteString> input);
 }

@@ -25,7 +25,7 @@ subprojects {
 
     ext {
         // All dependency versions.
-        autoValueVersion = '1.7'
+        autoValueVersion = '1.9'
         classGraphVersion = '4.8.65'
         errorproneVersion = '2.4.0'
         floggerVersion = '0.5.1'

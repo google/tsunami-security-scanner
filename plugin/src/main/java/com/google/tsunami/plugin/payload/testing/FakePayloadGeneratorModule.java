@@ -16,37 +16,67 @@
 
 package com.google.tsunami.plugin.payload.testing;
 
+import com.google.auto.value.AutoBuilder;
 import com.google.inject.AbstractModule;
 import com.google.tsunami.plugin.TcsConfigProperties;
 import com.google.tsunami.plugin.payload.PayloadGenerator;
 import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import java.security.SecureRandom;
+import java.util.Optional;
 import okhttp3.mockwebserver.MockWebServer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-/** Guice module for interacting with {@link PayloadGenerator} in tests */
+/**
+ * Guice module for interacting with {@link PayloadGenerator} in tests. Use {@link
+ * FakePayloadGeneratorModuleBuilder} instead of this directly.
+ */
 public final class FakePayloadGeneratorModule extends AbstractModule {
-  private final TcsConfigProperties config;
+  private final TcsConfigProperties config = new TcsConfigProperties();
   private final SecureRandom secureRng;
 
-  public FakePayloadGeneratorModule(
-      MockWebServer callbackServer, boolean callbackServerIsEnabled, SecureRandom secureRng) {
-    this.config = new TcsConfigProperties();
-    this.secureRng = secureRng;
+  /**
+   * @param callbackServer - if supplied, enables the payload generator to use the callback server.
+   *     If this behavior is unwanted, leave this empty.
+   * @param secureRng - if you do not need control over the output of {@link SecureRandom#nextBytes}
+   *     in tests, leave this empty.
+   */
+  FakePayloadGeneratorModule(
+      Optional<MockWebServer> callbackServer, Optional<SecureRandom> secureRng) {
 
-    if (callbackServerIsEnabled) {
-      this.config.callbackAddress = callbackServer.getHostName();
-      this.config.callbackPort = callbackServer.getPort();
-      this.config.pollingUri = callbackServer.url("/").toString();
-    } else {
-      this.config.callbackAddress = null;
-      this.config.callbackPort = null;
-      this.config.pollingUri = null;
-    }
+    this.config.callbackAddress = callbackServer.map(c -> c.getHostName()).orElse(null);
+    this.config.callbackPort = callbackServer.map(c -> c.getPort()).orElse(null);
+    this.config.pollingUri = callbackServer.map(c -> c.url("/").toString()).orElse(null);
+    this.secureRng = secureRng.orElse(new SecureRandom());
   }
 
   @Override
   protected void configure() {
     install(new PayloadGeneratorModule(this.secureRng));
     bind(TcsConfigProperties.class).toInstance(this.config);
+  }
+
+  /** Returns a builder for configuring the module */
+  public static Builder builder() {
+    return Builder.builder();
+  }
+
+  static FakePayloadGeneratorModule build(
+      @Nullable MockWebServer callbackServer, @Nullable SecureRandom secureRng) {
+    return new FakePayloadGeneratorModule(
+        Optional.ofNullable(callbackServer), Optional.ofNullable(secureRng));
+  }
+
+  /** Configures {@link FakePayloadGeneratorModule}. */
+  @AutoBuilder(callMethod = "build")
+  public abstract static class Builder {
+    public static Builder builder() {
+      return new AutoBuilder_FakePayloadGeneratorModule_Builder();
+    }
+
+    public abstract Builder setCallbackServer(MockWebServer callbackServer);
+
+    public abstract Builder setSecureRng(SecureRandom secureRng);
+
+    public abstract FakePayloadGeneratorModule build();
   }
 }

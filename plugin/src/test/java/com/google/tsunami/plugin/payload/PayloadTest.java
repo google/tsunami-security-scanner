@@ -43,7 +43,34 @@ public final class PayloadTest {
   }
 
   @Test
-  public void checkIfExecuted_executesValidator() throws NoCallbackServerException {
+  public void checkIfExecuted_withNoParameter_executesValidator() {
+    TestValidatorIsCalledValidator testValidator = new TestValidatorIsCalledValidator();
+    Payload payload = new Payload("my-payload", testValidator, PAYLOAD_ATTRIBUTES, CONFIG);
+
+    payload.checkIfExecuted();
+    assertTrue(testValidator.wasCalled);
+  }
+
+  @Test
+  public void checkIfExecuted_withString_executesValidator() {
+    TestValidatorIsCalledValidator testValidator = new TestValidatorIsCalledValidator();
+    Payload payload = new Payload("my-payload", testValidator, PAYLOAD_ATTRIBUTES, CONFIG);
+
+    payload.checkIfExecuted("my-input");
+    assertTrue(testValidator.wasCalled);
+  }
+
+  @Test
+  public void checkIfExecuted_withByteString_executesValidator() {
+    TestValidatorIsCalledValidator testValidator = new TestValidatorIsCalledValidator();
+    Payload payload = new Payload("my-payload", testValidator, PAYLOAD_ATTRIBUTES, CONFIG);
+
+    payload.checkIfExecuted(ByteString.copyFromUtf8("my-input"));
+    assertTrue(testValidator.wasCalled);
+  }
+
+  @Test
+  public void checkIfExecuted_withOptional_executesValidator() {
     TestValidatorIsCalledValidator testValidator = new TestValidatorIsCalledValidator();
     Payload payload = new Payload("my-payload", testValidator, PAYLOAD_ATTRIBUTES, CONFIG);
 

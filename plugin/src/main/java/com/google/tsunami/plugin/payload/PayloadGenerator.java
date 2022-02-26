@@ -53,7 +53,7 @@ public final class PayloadGenerator {
     this.payloads = checkNotNull(payloads);
   }
 
-  public Payload generate(PayloadGeneratorConfig config) throws NotImplementedException {
+  public Payload generate(PayloadGeneratorConfig config) {
     PayloadDefinition p = null;
 
     // If a payload that uses callback server is requested, prioritize finding
@@ -96,8 +96,7 @@ public final class PayloadGenerator {
         && p.getExecutionEnvironment() == c.getExecutionEnvironment();
   }
 
-  private Payload convertParsedPayload(PayloadDefinition p, PayloadGeneratorConfig c)
-      throws NotImplementedException {
+  private Payload convertParsedPayload(PayloadDefinition p, PayloadGeneratorConfig c) {
     String secret = secretGenerator.generate(SECRET_LENGTH);
     if (p.getUsesCallbackServer().getValue()) {
       return new Payload(

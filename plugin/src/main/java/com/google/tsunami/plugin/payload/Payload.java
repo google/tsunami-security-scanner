@@ -50,14 +50,30 @@ public class Payload {
   }
 
   /**
-   * Checks if the supplied payload was executed based on an input string. Some payloads may not
-   * need an input for validation e.g. if it uses the callback server.
+   * Checks if the supplied payload was executed based on a given input e.g. a reflective RCE.
+   *
+   * @param input - an UTF-8 encoded string
    */
-  public final boolean checkIfExecuted(Optional<ByteString> input)
-      throws NoCallbackServerException {
-    boolean result = this.validator.isExecuted(input);
-    logger.atInfo().log("Input: %s, output: %s", input, result);
-    return result;
+  public final boolean checkIfExecuted(String input) {
+    return this.validator.isExecuted(Optional.of(ByteString.copyFromUtf8(input)));
+  }
+
+  /** Checks if the supplied payload was executed based on a given input e.g. a reflective RCE. */
+  public final boolean checkIfExecuted(ByteString input) {
+    return this.validator.isExecuted(Optional.of(input));
+  }
+
+  /** Checks if the supplied payload was executed based on a given input e.g. a reflective RCE. */
+  public final boolean checkIfExecuted(Optional<ByteString> input) {
+    return this.validator.isExecuted(input);
+  }
+
+  /**
+   * Checks if the supplied payload was executed without supplying an input e.g. validation against
+   * the callback server does not require input.
+   */
+  public final boolean checkIfExecuted() {
+    return this.validator.isExecuted(Optional.empty());
   }
 
   /** Returns additional information about the paylaod to the caller. */
