@@ -51,14 +51,13 @@ public final class PayloadGeneratorTest {
           Arrays.fill(bytes, (byte) 0xFF);
         }
       };
-  private final PayloadGeneratorConfig.Builder defaultLinuxPayloadConfig =
+  private static final PayloadGeneratorConfig DEFAULT_LINUX_PAYLOAD_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
           .setInterpretationEnvironment(
               PayloadGeneratorConfig.InterpretationEnvironment.LINUX_SHELL)
           .setExecutionEnvironment(
-              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT);
-
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT).build();
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
 
@@ -77,13 +76,13 @@ public final class PayloadGeneratorTest {
 
   @Test
   public void generate_withLinuxConfiguration_andCallbackServer_returnsCurlPayload() {
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(true).build());
 
-    assertThat(p.getPayload()).contains("curl");
-    assertThat(p.getPayload()).contains(mockCallbackServer.getHostName());
-    assertThat(p.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
-    assertTrue(p.getPayloadAttributes().getUsesCallbackServer());
+    assertThat(payload.getPayload()).contains("curl");
+    assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
+    assertThat(payload.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
+    assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
   @Test
@@ -91,10 +90,10 @@ public final class PayloadGeneratorTest {
       checkIfExecuted_withLinuxConfiguration_andCallbackServer_andExecutedCallbackUrl_returnsTrue() throws IOException {
 
     mockCallbackServer.enqueue(PayloadTestHelper.generateMockSuccessfulCallbackResponse());
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(true).build());
 
-    assertTrue(p.checkIfExecuted());
+    assertTrue(payload.checkIfExecuted());
   }
 
   @Test
@@ -102,20 +101,20 @@ public final class PayloadGeneratorTest {
       checkIfExecuted_withLinuxConfiguration_andCallbackServer_andNotExecutedCallbackUrl_returnsFalse() {
 
     mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(true).build());
 
-    assertFalse(p.checkIfExecuted());
+    assertFalse(payload.checkIfExecuted());
   }
 
   @Test
   public void getPayload_withLinuxConfiguration_andNoCallbackServer_returnsPrintfPayload() {
 
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(false).build());
 
-    assertThat(p.getPayload()).contains(CORRECT_PRINTF);
-    assertFalse(p.getPayloadAttributes().getUsesCallbackServer());
+    assertThat(payload.getPayload()).contains(CORRECT_PRINTF);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
   @Test
@@ -125,25 +124,25 @@ public final class PayloadGeneratorTest {
     // Replace PayloadGenerator with a version without a configured callback server
     Guice.createInjector(
             new HttpClientModule.Builder().build(),
-            FakePayloadGeneratorModule.builder().setSecureRng(this.testSecureRandom).build())
+            FakePayloadGeneratorModule.builder().setSecureRng(testSecureRandom).build())
         .injectMembers(this);
 
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(true).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(true).build());
 
-    assertThat(p.getPayload()).contains(CORRECT_PRINTF);
-    assertFalse(p.getPayloadAttributes().getUsesCallbackServer());
+    assertThat(payload.getPayload()).contains(CORRECT_PRINTF);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
   @Test
   public void
       checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andCorrectInput_returnsTrue() {
 
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(false).build());
 
     assertTrue(
-        p.checkIfExecuted(
+        payload.checkIfExecuted(
             Optional.of(
                 ByteString.copyFromUtf8(
                     "RANDOMOUTPUTTSUNAMI_PAYLOAD_STARTffffffffffffffffTSUNAMI_PAYLOAD_END"))));
@@ -152,10 +151,10 @@ public final class PayloadGeneratorTest {
   @Test
   public void
       checkIfExecuted_withLinuxConfiguration_andNoCallbackServer_andIncorectInput_returnsFalse() {
-    Payload p =
-        payloadGenerator.generate(defaultLinuxPayloadConfig.setUseCallbackServer(false).build());
+    Payload payload =
+        payloadGenerator.generate(DEFAULT_LINUX_PAYLOAD_CONFIG.toBuilder().setUseCallbackServer(false).build());
 
-    assertFalse(p.checkIfExecuted(Optional.of(ByteString.copyFromUtf8(CORRECT_PRINTF))));
+    assertFalse(payload.checkIfExecuted(Optional.of(ByteString.copyFromUtf8(CORRECT_PRINTF))));
   }
 
   @Test
