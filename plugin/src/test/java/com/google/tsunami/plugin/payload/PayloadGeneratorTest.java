@@ -65,6 +65,12 @@ public final class PayloadGeneratorTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
+  private static final PayloadGeneratorConfig ANY_SSRF_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.SSRF)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.INTERPRETATION_ANY)
+          .setExecutionEnvironment(PayloadGeneratorConfig.ExecutionEnvironment.EXEC_ANY).build();
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
 
@@ -215,6 +221,52 @@ public final class PayloadGeneratorTest {
     assertFalse(
         payload.checkIfExecuted(
             ByteString.copyFromUtf8("TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END")));
+  }
+
+  @Test
+  public void getPayload_withSsrfConfiguration_andCallbackServer_returnsCallbackUrl() {
+    Payload payload = payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(true).build());
+
+    assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
+    assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
+    assertThat(payload.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
+  }
+
+  @Test
+  public void checkIfExecuted_withSsrfConfiguration_andCallbackServer_andExecutedUrl_returnsTrue()
+      throws IOException {
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockSuccessfulCallbackResponse());
+    Payload payload =
+        payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(true).build());
+
+    assertTrue(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void getPayload_withSsrfConfiguration_andCallbackServer_andNotExecutedUrl_returnsFalse() {
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
+    Payload payload =
+        payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(true).build());
+
+    assertFalse(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void
+      checkIfExecuted_withSsrfConfiguration_andNoCallbackServer_andCorrectInput_returnsTrue() {
+    Payload payload =
+        payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(false).build());
+
+    assertTrue(payload.checkIfExecuted("<title>Error 404 (Not Found)!!1</title>"));
+  }
+
+  @Test
+  public void
+      checkIfExecuted_withSsrfConfiguration_andNoCallbackServer_andIncorrectInput_returnsFalse() {
+    Payload payload =
+        payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(false).build());
+
+    assertFalse(payload.checkIfExecuted("404 not found"));
   }
 
   @Test

@@ -1,20 +1,38 @@
- # Copyright 2022 Google LLC
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- # http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # See payload_generator.proto for how this file is defined
 
 payloads:
+  - name: general_ssrf_callback
+    interpretation_environment: INTERPRETATION_ANY
+    execution_environment: EXEC_ANY
+    uses_callback_server: true
+    payload_string: $TSUNAMI_PAYLOAD_TOKEN_URL
+    vulnerability_type:
+      - SSRF
+  - name: general_ssrf_no_callback
+    # We use http://google.com for SSRF validation without the callback server because we can count
+    # on the 404 response being stable with good uptime, but detectors could break if this changed.
+    interpretation_environment: INTERPRETATION_ANY
+    execution_environment: EXEC_ANY
+    uses_callback_server: false
+    payload_string: http://google.com/page-does-not-exist
+    validationType: VALIDATION_REGEX
+    validationRegex: (?s).*Error 404 \(Not Found\)!!1.*
+    vulnerability_type:
+      - SSRF
   - name: linux_callback
     interpretation_environment: LINUX_SHELL
     execution_environment: EXEC_INTERPRETATION_ENVIRONMENT

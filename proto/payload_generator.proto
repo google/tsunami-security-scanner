@@ -51,6 +51,8 @@ message PayloadGeneratorConfig {
     JAVA = 2;
     // Payload is interpreted wihin a PHP VM context
     PHP = 3;
+    // Interpretation environment doesn't matter
+    INTERPRETATION_ANY = 4;
   }
 
   // The actual runtime environment when the payload is run e.g. while a
@@ -62,6 +64,8 @@ message PayloadGeneratorConfig {
     EXECUTION_ENVIRONMENT_UNSPECIFIED = 0;
     // Execute within the InterpretationEnvironment
     EXEC_INTERPRETATION_ENVIRONMENT = 1;
+    // Execution environment doesn't matter
+    EXEC_ANY = 2;
   }
 
   // If set, the generator prefers selecting payloads which
