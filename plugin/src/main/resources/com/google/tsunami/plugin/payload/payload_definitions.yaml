@@ -32,3 +32,12 @@ payloads:
     validation_regex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
     vulnerability_type:
       - REFLECTIVE_RCE
+  - name: java_string_format
+    interpretationEnvironment: JAVA
+    executionEnvironment: EXEC_INTERPRETATION_ENVIRONMENT
+    usesCallbackServer: false
+    payloadString: String.format("%s%s%s", "TSUNAMI_PAYLOAD_START", "$TSUNAMI_PAYLOAD_TOKEN_RANDOM", "TSUNAMI_PAYLOAD_END")
+    validationType: VALIDATION_REGEX
+    validationRegex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
+    vulnerabilityType:
+      - REFLECTIVE_RCE

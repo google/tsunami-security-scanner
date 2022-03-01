@@ -53,14 +53,18 @@ public final class PayloadGenerator {
     this.payloads = checkNotNull(payloads);
   }
 
+  public boolean isCallbackServerEnabled() {
+    return tcsClient.isCallbackServerEnabled();
+  }
+
   public Payload generate(PayloadGeneratorConfig config) {
     PayloadDefinition p = null;
 
     // If a payload that uses callback server is requested, prioritize finding
     // one. If there's none, fallback to any payload that matches.
-    if (this.tcsClient.isCallbackServerEnabled() && config.getUseCallbackServer()) {
-      for (PayloadDefinition candidate : this.payloads) {
-        if (this.isMatchingPayload(candidate, config)
+    if (tcsClient.isCallbackServerEnabled() && config.getUseCallbackServer()) {
+      for (PayloadDefinition candidate : payloads) {
+        if (isMatchingPayload(candidate, config)
             && candidate.getUsesCallbackServer().getValue()) {
           p = candidate;
           break;
@@ -69,8 +73,8 @@ public final class PayloadGenerator {
     }
 
     if (p == null) {
-      for (PayloadDefinition candidate : this.payloads) {
-        if (this.isMatchingPayload(candidate, config)
+      for (PayloadDefinition candidate : payloads) {
+        if (isMatchingPayload(candidate, config)
             && !candidate.getUsesCallbackServer().getValue()) {
           p = candidate;
           break;
@@ -102,8 +106,8 @@ public final class PayloadGenerator {
       return new Payload(
           p.getPayloadString()
               .getValue()
-              .replace(TOKEN_CALLBACK_SERVER_URL, this.tcsClient.getCallbackUri(secret)),
-          (Validator) (unused) -> this.tcsClient.hasOobLog(secret),
+              .replace(TOKEN_CALLBACK_SERVER_URL, tcsClient.getCallbackUri(secret)),
+          (Validator) (unused) -> tcsClient.hasOobLog(secret),
           PayloadAttributes.newBuilder().setUsesCallbackServer(true).build(),
           c);
     } else {
