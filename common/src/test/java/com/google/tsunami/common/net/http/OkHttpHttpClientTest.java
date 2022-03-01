@@ -61,9 +61,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link HttpClient}. */
+/** Tests for {@link OkHttpHttpClient}. */
 @RunWith(JUnit4.class)
-public final class HttpClientTest {
+public final class OkHttpHttpClientTest {
   private static final String TESTING_KEYSTORE = "testdata/tsunami_test_server.p12";
   private static final char[] TESTING_KEYSTORE_PASSWORD = "tsunamitest".toCharArray();
 

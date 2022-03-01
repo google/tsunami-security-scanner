@@ -15,66 +15,22 @@
  */
 package com.google.tsunami.common.net.http;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.net.HttpHeaders.USER_AGENT;
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-
-import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.flogger.GoogleLogger;
-import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.protobuf.ByteString;
-import com.google.tsunami.common.net.http.HttpClientModule.LogId;
-import com.google.tsunami.common.net.http.HttpClientModule.TrustAllCertificates;
-import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
 import com.google.tsunami.proto.NetworkService;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.util.List;
-import java.util.Map;
-import javax.inject.Inject;
-import javax.net.ssl.HttpsURLConnection;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Dns;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import java.time.Duration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A client library that communicates with remote servers via the HTTP protocol. */
-public final class HttpClient {
-  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+public abstract class HttpClient {
   public static final String TSUNAMI_USER_AGENT = "TsunamiSecurityScanner";
 
-  private final OkHttpClient okHttpClient;
-  private final boolean trustAllCertificates;
-  private final ConnectionFactory connectionFactory;
-  private final String logId;
-
-  @Inject
-  HttpClient(
-      OkHttpClient okHttpClient,
-      @TrustAllCertificates boolean trustAllCertificates,
-      ConnectionFactory connectionFactory,
-      @LogId String logId) {
-    this.okHttpClient = checkNotNull(okHttpClient);
-    this.trustAllCertificates = trustAllCertificates;
-    this.connectionFactory = checkNotNull(connectionFactory);
-    this.logId = logId;
-  }
-
-  /** Returns the log ID to print in front of the logs. */
-  public String getLogId() {
-    return logId;
-  }
+  /**
+   * Gets log id.
+   *
+   * @return log id string.
+   */
+  public abstract String getLogId();
 
   /**
    * NOTE: This is a temporary hack to workaround OkHttp's hardcoded URL canonicalization algorithm.
@@ -86,45 +42,7 @@ public final class HttpClient {
    * @return the response returned from the HTTP server.
    * @throws IOException if an I/O error occurs during the HTTP request.
    */
-  public HttpResponse sendAsIs(HttpRequest httpRequest) throws IOException {
-    HttpURLConnection connection = connectionFactory.openConnection(httpRequest.url());
-    connection.setRequestMethod(httpRequest.method().toString());
-    httpRequest.headers().names().stream()
-        .filter(headerName -> !Ascii.equalsIgnoreCase(headerName, USER_AGENT))
-        .forEach(
-            headerName ->
-                httpRequest
-                    .headers()
-                    .getAll(headerName)
-                    .forEach(
-                        headerValue -> connection.setRequestProperty(headerName, headerValue)));
-    connection.setRequestProperty(USER_AGENT, TSUNAMI_USER_AGENT);
-
-    if (ImmutableSet.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
-        .contains(httpRequest.method())) {
-      connection.setDoOutput(true);
-      ByteSource.wrap(httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray())
-          .copyTo(connection.getOutputStream());
-    }
-
-    int responseCode = connection.getResponseCode();
-    HttpHeaders.Builder responseHeadersBuilder = HttpHeaders.builder();
-    for (Map.Entry<String, List<String>> headerEntry : connection.getHeaderFields().entrySet()) {
-      String headerName = headerEntry.getKey();
-      if (!isNullOrEmpty(headerName)) {
-        for (String headerValue : headerEntry.getValue()) {
-          if (!isNullOrEmpty(headerValue)) {
-            responseHeadersBuilder.addHeader(headerName, headerValue);
-          }
-        }
-      }
-    }
-    return HttpResponse.builder()
-        .setStatus(HttpStatus.fromCode(responseCode))
-        .setHeaders(responseHeadersBuilder.build())
-        .setBodyBytes(ByteString.readFrom(connection.getInputStream()))
-        .build();
-  }
+  public abstract HttpResponse sendAsIs(HttpRequest httpRequest) throws IOException;
 
   /**
    * Sends the given HTTP request using this client, blocking until full response is received.
@@ -133,9 +51,7 @@ public final class HttpClient {
    * @return the response returned from the HTTP server.
    * @throws IOException if an I/O error occurs during the HTTP request.
    */
-  public HttpResponse send(HttpRequest httpRequest) throws IOException {
-    return send(httpRequest, null);
-  }
+  public abstract HttpResponse send(HttpRequest httpRequest) throws IOException;
 
   /**
    * Sends the given HTTP request using this client blocking until full response is received. If
@@ -147,17 +63,8 @@ public final class HttpClient {
    * @return the response returned from the HTTP server.
    * @throws IOException if an I/O error occurs during the HTTP request.
    */
-  public HttpResponse send(HttpRequest httpRequest, @Nullable NetworkService networkService)
-      throws IOException {
-    logger.atInfo().log(
-        "%sSending HTTP '%s' request to '%s'.", logId, httpRequest.method(), httpRequest.url());
-
-    OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
-    try (Response okHttpResponse =
-        callHttpClient.newCall(buildOkHttpRequest(httpRequest)).execute()) {
-      return parseResponse(okHttpResponse);
-    }
-  }
+  public abstract HttpResponse send(
+      HttpRequest httpRequest, @Nullable NetworkService networkService) throws IOException;
 
   /**
    * Sends the given HTTP request using this client asynchronously.
@@ -165,9 +72,7 @@ public final class HttpClient {
    * @param httpRequest the HTTP request to be sent by this client.
    * @return the future for the response to be returned from the HTTP server.
    */
-  public ListenableFuture<HttpResponse> sendAsync(HttpRequest httpRequest) {
-    return sendAsync(httpRequest, null);
-  }
+  public abstract ListenableFuture<HttpResponse> sendAsync(HttpRequest httpRequest);
 
   /**
    * Sends the given HTTP request using this client asynchronously. If {@code networkService} is not
@@ -178,195 +83,22 @@ public final class HttpClient {
    * @param networkService the {@link NetworkService} proto to be used for the HOST header.
    * @return the future for the response to be returned from the HTTP server.
    */
-  public ListenableFuture<HttpResponse> sendAsync(
-      HttpRequest httpRequest, @Nullable NetworkService networkService) {
-    logger.atInfo().log(
-        "%sSending async HTTP '%s' request to '%s'.",
-        logId, httpRequest.method(), httpRequest.url());
-    OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
-    SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
-    Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest));
+  public abstract ListenableFuture<HttpResponse> sendAsync(
+      HttpRequest httpRequest, @Nullable NetworkService networkService);
 
-    try {
-      requestCall.enqueue(
-          new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-              responseFuture.setException(e);
-            }
+  public abstract <T extends HttpClient> Builder<T> modify();
 
-            @Override
-            public void onResponse(Call call, Response response) {
-              try (ResponseBody unused = response.body()) {
-                responseFuture.set(parseResponse(response));
-              } catch (Throwable t) {
-                responseFuture.setException(t);
-              }
-            }
-          });
-    } catch (Throwable t) {
-      responseFuture.setException(t);
-    }
+  /** Base builder for implementations of HttpClient */
+  public abstract static class Builder<T extends HttpClient> {
 
-    // Makes sure cancellation state is propagated to OkHttp.
-    responseFuture.addListener(
-        () -> {
-          if (responseFuture.isCancelled()) {
-            requestCall.cancel();
-          }
-        },
-        directExecutor());
-    return responseFuture;
-  }
+    public abstract Builder<T> setFollowRedirects(boolean followRedirects);
 
-  /*
-   * Returns a modified HTTP client that's configured to connect to the {@code networkService}'s IP
-   * and use its hostname in the host header, when both a hostname and an IP address is specified.
-   * Returns an unmodified HTTP client otherwise.
-   */
-  private OkHttpClient clientWithHostnameAsProxy(NetworkService networkService) {
-    if (networkService == null) {
-      return this.okHttpClient;
-    }
-    String serviceIp = networkService.getNetworkEndpoint().getIpAddress().getAddress();
-    String serviceHostname = networkService.getNetworkEndpoint().getHostname().getName();
-    return this.okHttpClient
-        .newBuilder()
-        .dns(
-            hostname -> {
-              if (hostname.equals(serviceHostname)) {
-                hostname = serviceIp;
-              }
-              return Dns.SYSTEM.lookup(hostname);
-            })
-        .hostnameVerifier(
-            (hostname, session) -> {
-              if (trustAllCertificates) {
-                return true;
-              }
-              if (hostname.equals(serviceHostname)) {
-                return true;
-              }
-              return HttpsURLConnection.getDefaultHostnameVerifier().verify(hostname, session);
-            })
-        .build();
-  }
+    public abstract Builder<T> setTrustAllCertificates(boolean trustAllCertificates);
 
-  private static Request buildOkHttpRequest(HttpRequest httpRequest) {
-    Request.Builder okRequestBuilder = new Request.Builder().url(httpRequest.url());
+    public abstract Builder<T> setLogId(String logId);
 
-    httpRequest.headers().names().stream()
-        .filter(headerName -> !Ascii.equalsIgnoreCase(headerName, USER_AGENT))
-        .forEach(
-            headerName ->
-                httpRequest
-                    .headers()
-                    .getAll(headerName)
-                    .forEach(headerValue -> okRequestBuilder.addHeader(headerName, headerValue)));
-    okRequestBuilder.addHeader(USER_AGENT, TSUNAMI_USER_AGENT);
+    public abstract Builder<T> setConnectTimeout(Duration connectionTimeout);
 
-    switch (httpRequest.method()) {
-      case GET:
-        okRequestBuilder.get();
-        break;
-      case HEAD:
-        okRequestBuilder.head();
-        break;
-      case PUT:
-        okRequestBuilder.put(buildRequestBody(httpRequest));
-        break;
-      case POST:
-        okRequestBuilder.post(buildRequestBody(httpRequest));
-        break;
-      case DELETE:
-        okRequestBuilder.delete(buildRequestBody(httpRequest));
-        break;
-    }
-
-    return okRequestBuilder.build();
-  }
-
-  private static RequestBody buildRequestBody(HttpRequest httpRequest) {
-    MediaType mediaType =
-        MediaType.parse(
-            httpRequest.headers().get(com.google.common.net.HttpHeaders.CONTENT_TYPE).orElse(""));
-    return RequestBody.create(
-        mediaType, httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray());
-  }
-
-  private static HttpResponse parseResponse(Response okResponse) throws IOException {
-    logger.atInfo().log(
-        "Received HTTP response with code '%d' for request to '%s'.",
-        okResponse.code(), okResponse.request().url());
-
-    HttpResponse.Builder httpResponseBuilder =
-        HttpResponse.builder()
-            .setStatus(HttpStatus.fromCode(okResponse.code()))
-            .setHeaders(convertHeaders(okResponse.headers()))
-            .setResponseUrl(okResponse.request().url());
-    if (!okResponse.request().method().equals(HttpMethod.HEAD.name())
-        && okResponse.body() != null) {
-      httpResponseBuilder.setBodyBytes(ByteString.copyFrom(okResponse.body().bytes()));
-    }
-    return httpResponseBuilder.build();
-  }
-
-  private static HttpHeaders convertHeaders(Headers headers) {
-    HttpHeaders.Builder headersBuilder = HttpHeaders.builder();
-    for (int i = 0; i < headers.size(); i++) {
-      headersBuilder.addHeader(headers.name(i), headers.value(i));
-    }
-    return headersBuilder.build();
-  }
-
-  /**
-   * Returns a {@link Builder} that allows client code to modify the configurations of the internal
-   * http client.
-   *
-   * @return the {@link Builder} for modifying this client instance.
-   */
-  public Builder modify() {
-    return new Builder(this);
-  }
-
-  /** Builder for {@link HttpClient}. */
-  // TODO(b/145315535): add more configurable options into the builder.
-  public static class Builder {
-    private final OkHttpClient okHttpClient;
-    private boolean followRedirects;
-    private boolean trustAllCertificates;
-    private ConnectionFactory connectionFactory;
-    private String logId;
-
-    private Builder(HttpClient httpClient) {
-      this.okHttpClient = httpClient.okHttpClient;
-      this.followRedirects = okHttpClient.followRedirects();
-      this.trustAllCertificates = httpClient.trustAllCertificates;
-      this.connectionFactory = httpClient.connectionFactory;
-      this.logId = httpClient.logId;
-    }
-
-    public Builder setFollowRedirects(boolean followRedirects) {
-      this.followRedirects = followRedirects;
-      return this;
-    }
-
-    public Builder setTrustAllCertificates(boolean trustAllCertificates) {
-      this.trustAllCertificates = trustAllCertificates;
-      return this;
-    }
-
-    public Builder setLogId(String logId) {
-      this.logId = logId;
-      return this;
-    }
-
-    public HttpClient build() {
-      return new HttpClient(
-          okHttpClient.newBuilder().followRedirects(followRedirects).build(),
-          trustAllCertificates,
-          connectionFactory,
-          logId);
-    }
+    public abstract T build();
   }
 }
