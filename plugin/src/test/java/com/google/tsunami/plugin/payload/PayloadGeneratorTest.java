@@ -70,7 +70,8 @@ public final class PayloadGeneratorTest {
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.SSRF)
           .setInterpretationEnvironment(
               PayloadGeneratorConfig.InterpretationEnvironment.INTERPRETATION_ANY)
-          .setExecutionEnvironment(PayloadGeneratorConfig.ExecutionEnvironment.EXEC_ANY).build();
+          .setExecutionEnvironment(PayloadGeneratorConfig.ExecutionEnvironment.EXEC_ANY)
+          .build();
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
 
@@ -225,7 +226,8 @@ public final class PayloadGeneratorTest {
 
   @Test
   public void getPayload_withSsrfConfiguration_andCallbackServer_returnsCallbackUrl() {
-    Payload payload = payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(true).build());
+    Payload payload =
+        payloadGenerator.generate(ANY_SSRF_CONFIG.toBuilder().setUseCallbackServer(true).build());
 
     assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
     assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
@@ -314,5 +316,38 @@ public final class PayloadGeneratorTest {
     assertThrows(
         NotImplementedException.class,
         () -> payloadGenerator.generate(PayloadGeneratorConfig.getDefaultInstance()));
+  }
+
+  /**
+   * Tests that NoCallbackServerException is correctly thrown.
+   *
+   * <p>We expect the exception to be thrown when all the following circumstances are met:
+   * <ol>
+   *   <li>throwErrorIfCallbackServerUnconfigured flag is set
+   *   <li>the callback server is configured
+   *   <li>callback-server-utilizing payload is requested
+   *   <li>there is no payload defined that meets the other requested parameters
+   * </ol>
+   */
+  @Test
+  public void
+      generate_with_andThrowErrorIfCallbackServerUnconfigured_throwsNoCallbackServerException() {
+    PayloadFrameworkConfigs config = new PayloadFrameworkConfigs();
+    config.throwErrorIfCallbackServerUnconfigured = true;
+    Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            FakePayloadGeneratorModule.builder()
+                .setFrameworkConfigs(config)
+                .setCallbackServer(mockCallbackServer)
+                .build())
+        .injectMembers(this);
+
+    assertThrows(
+        NoCallbackServerException.class,
+        () ->
+            payloadGenerator.generate(
+                // We keep the other parameters e.g. VulnerabilityType unset so that we will never
+                // find a payload since the definition doesn't exist.
+                PayloadGeneratorConfig.newBuilder().setUseCallbackServer(true).build()));
   }
 }

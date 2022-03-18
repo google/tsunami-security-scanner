@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.plugin.TcsClient;
 import com.google.tsunami.proto.PayloadAttributes;
@@ -31,26 +32,27 @@ import javax.inject.Qualifier;
 
 /** Holds the generate function to get a detection payload given config parameters */
 public final class PayloadGenerator {
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final int SECRET_LENGTH = 8;
-
   private static final String TOKEN_CALLBACK_SERVER_URL = "$TSUNAMI_PAYLOAD_TOKEN_URL";
   private static final String TOKEN_RANDOM_STRING = "$TSUNAMI_PAYLOAD_TOKEN_RANDOM";
 
   private final TcsClient tcsClient;
-
   private final PayloadSecretGenerator secretGenerator;
-
   private final ImmutableList<PayloadDefinition> payloads;
+  private final PayloadFrameworkConfigs frameworkConfig;
 
   @Inject
   PayloadGenerator(
       TcsClient tcsClient,
       PayloadSecretGenerator secretGenerator,
-      @Payloads ImmutableList<PayloadDefinition> payloads) {
+      @Payloads ImmutableList<PayloadDefinition> payloads,
+      PayloadFrameworkConfigs config) {
     this.tcsClient = checkNotNull(tcsClient);
     this.secretGenerator = checkNotNull(secretGenerator);
     this.payloads = checkNotNull(payloads);
+    this.frameworkConfig = checkNotNull(config);
   }
 
   public boolean isCallbackServerEnabled() {
@@ -58,31 +60,44 @@ public final class PayloadGenerator {
   }
 
   public Payload generate(PayloadGeneratorConfig config) {
-    PayloadDefinition p = null;
+    PayloadDefinition selectedPayload = null;
 
     // If a payload that uses callback server is requested, prioritize finding
     // one. If there's none, fallback to any payload that matches.
-    if (tcsClient.isCallbackServerEnabled() && config.getUseCallbackServer()) {
+    if (config.getUseCallbackServer()) {
+      if (tcsClient.isCallbackServerEnabled()) {
+        for (PayloadDefinition candidate : payloads) {
+          if (isMatchingPayload(candidate, config)
+              && candidate.getUsesCallbackServer().getValue()) {
+            selectedPayload = candidate;
+            break;
+          }
+        }
+      }
+
+      if (selectedPayload == null) { // or implictly the callback server is not enabled
+        if (frameworkConfig.throwErrorIfCallbackServerUnconfigured) {
+          throw new NoCallbackServerException();
+        } else {
+          logger.atWarning().log(
+              "Received request for payload that uses the callback server but no callback server is"
+                  + " configured. Attemping to fallback and find a suitable payload that does not"
+                  + " use the callback server. To disable this behavior and error instead, set"
+                  + " PayloadFrameworkConfigs.throwErrorIfCallbackServerUnconfigured to true.");
+        }
+      }
+    }
+
+    if (selectedPayload == null) {
       for (PayloadDefinition candidate : payloads) {
-        if (isMatchingPayload(candidate, config)
-            && candidate.getUsesCallbackServer().getValue()) {
-          p = candidate;
+        if (isMatchingPayload(candidate, config) && !candidate.getUsesCallbackServer().getValue()) {
+          selectedPayload = candidate;
           break;
         }
       }
     }
 
-    if (p == null) {
-      for (PayloadDefinition candidate : payloads) {
-        if (isMatchingPayload(candidate, config)
-            && !candidate.getUsesCallbackServer().getValue()) {
-          p = candidate;
-          break;
-        }
-      }
-    }
-
-    if (p == null) {
+    if (selectedPayload == null) {
       throw new NotImplementedException(
           "No payload implemented for %s vulnerability type, %s interpretation environment, %s"
               + " execution environment",
@@ -91,7 +106,7 @@ public final class PayloadGenerator {
           config.getExecutionEnvironment());
     }
 
-    return convertParsedPayload(p, config);
+    return convertParsedPayload(selectedPayload, config);
   }
 
   private boolean isMatchingPayload(PayloadDefinition p, PayloadGeneratorConfig c) {
