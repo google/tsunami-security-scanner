@@ -19,7 +19,6 @@ package com.google.tsunami.plugin.payload.testing;
 import com.google.auto.value.AutoBuilder;
 import com.google.inject.AbstractModule;
 import com.google.tsunami.plugin.TcsConfigProperties;
-import com.google.tsunami.plugin.payload.PayloadFrameworkConfigs;
 import com.google.tsunami.plugin.payload.PayloadGenerator;
 import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import java.security.SecureRandom;
@@ -33,7 +32,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class FakePayloadGeneratorModule extends AbstractModule {
   private final TcsConfigProperties tcsConfig = new TcsConfigProperties();
-  private final PayloadFrameworkConfigs frameworkConfigs;
   private final SecureRandom secureRng;
 
   /**
@@ -43,25 +41,18 @@ public final class FakePayloadGeneratorModule extends AbstractModule {
    *     in tests, leave this empty.
    */
   FakePayloadGeneratorModule(
-      Optional<MockWebServer> callbackServer,
-      Optional<PayloadFrameworkConfigs> frameworkConfigs,
-      Optional<SecureRandom> secureRng) {
+      Optional<MockWebServer> callbackServer, Optional<SecureRandom> secureRng) {
 
     this.tcsConfig.callbackAddress = callbackServer.map(c -> c.getHostName()).orElse(null);
     this.tcsConfig.callbackPort = callbackServer.map(c -> c.getPort()).orElse(null);
     this.tcsConfig.pollingUri = callbackServer.map(c -> c.url("/").toString()).orElse(null);
     this.secureRng = secureRng.orElse(new SecureRandom());
-
-    PayloadFrameworkConfigs defaultFrameworkConfigs = new PayloadFrameworkConfigs();
-    defaultFrameworkConfigs.throwErrorIfCallbackServerUnconfigured = false;
-    this.frameworkConfigs = frameworkConfigs.orElse(defaultFrameworkConfigs);
   }
 
   @Override
   protected void configure() {
     install(new PayloadGeneratorModule(secureRng));
     bind(TcsConfigProperties.class).toInstance(tcsConfig);
-    bind(PayloadFrameworkConfigs.class).toInstance(frameworkConfigs);
   }
 
   /** Returns a builder for configuring the module */
@@ -70,13 +61,9 @@ public final class FakePayloadGeneratorModule extends AbstractModule {
   }
 
   static FakePayloadGeneratorModule build(
-      @Nullable MockWebServer callbackServer,
-      @Nullable PayloadFrameworkConfigs frameworkConfigs,
-      @Nullable SecureRandom secureRng) {
+      @Nullable MockWebServer callbackServer, @Nullable SecureRandom secureRng) {
     return new FakePayloadGeneratorModule(
-        Optional.ofNullable(callbackServer),
-        Optional.ofNullable(frameworkConfigs),
-        Optional.ofNullable(secureRng));
+        Optional.ofNullable(callbackServer), Optional.ofNullable(secureRng));
   }
 
   /** Configures {@link FakePayloadGeneratorModule}. */
@@ -87,8 +74,6 @@ public final class FakePayloadGeneratorModule extends AbstractModule {
     }
 
     public abstract Builder setCallbackServer(MockWebServer callbackServer);
-
-    public abstract Builder setFrameworkConfigs(PayloadFrameworkConfigs config);
 
     public abstract Builder setSecureRng(SecureRandom secureRng);
 

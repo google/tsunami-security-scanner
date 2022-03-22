@@ -68,14 +68,6 @@ message PayloadGeneratorConfig {
     EXEC_ANY = 2;
   }
 
-  // If set, the generator prefers selecting payloads which
-  // utilize the Tsunami callback server to reduce the chance of false
-  // positives, and the generator will throw an exception if a selected
-  // payload will use the Tsuanmi callback server and it is not enabled.
-  // If Tsunami is not configured to use the callback server, a
-  // callback-server-enabled payload should not be selected.
-  bool use_callback_server = 1;
-
   VulnerabilityType vulnerability_type = 2;
 
   InterpretationEnvironment interpretation_environment = 3;

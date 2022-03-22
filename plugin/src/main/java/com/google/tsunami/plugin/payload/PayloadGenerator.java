@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.plugin.TcsClient;
 import com.google.tsunami.proto.PayloadAttributes;
@@ -32,8 +31,6 @@ import javax.inject.Qualifier;
 
 /** Holds the generate function to get a detection payload given config parameters */
 public final class PayloadGenerator {
-  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-
   private static final int SECRET_LENGTH = 8;
   private static final String TOKEN_CALLBACK_SERVER_URL = "$TSUNAMI_PAYLOAD_TOKEN_URL";
   private static final String TOKEN_RANDOM_STRING = "$TSUNAMI_PAYLOAD_TOKEN_RANDOM";
@@ -41,49 +38,35 @@ public final class PayloadGenerator {
   private final TcsClient tcsClient;
   private final PayloadSecretGenerator secretGenerator;
   private final ImmutableList<PayloadDefinition> payloads;
-  private final PayloadFrameworkConfigs frameworkConfig;
 
   @Inject
   PayloadGenerator(
       TcsClient tcsClient,
       PayloadSecretGenerator secretGenerator,
-      @Payloads ImmutableList<PayloadDefinition> payloads,
-      PayloadFrameworkConfigs config) {
+      @Payloads ImmutableList<PayloadDefinition> payloads) {
     this.tcsClient = checkNotNull(tcsClient);
     this.secretGenerator = checkNotNull(secretGenerator);
     this.payloads = checkNotNull(payloads);
-    this.frameworkConfig = checkNotNull(config);
   }
 
   public boolean isCallbackServerEnabled() {
     return tcsClient.isCallbackServerEnabled();
   }
 
+  /**
+   * Returns a {@link Payload} for a given {@link PayloadGeneratorConfig}.
+   *
+   * <p>The framework prioritizes finding a callback server payload if callback server is enabled
+   * and falls back to any payload that matches.
+   */
   public Payload generate(PayloadGeneratorConfig config) {
     PayloadDefinition selectedPayload = null;
 
-    // If a payload that uses callback server is requested, prioritize finding
-    // one. If there's none, fallback to any payload that matches.
-    if (config.getUseCallbackServer()) {
-      if (tcsClient.isCallbackServerEnabled()) {
-        for (PayloadDefinition candidate : payloads) {
-          if (isMatchingPayload(candidate, config)
-              && candidate.getUsesCallbackServer().getValue()) {
-            selectedPayload = candidate;
-            break;
-          }
-        }
-      }
-
-      if (selectedPayload == null) { // or implictly the callback server is not enabled
-        if (frameworkConfig.throwErrorIfCallbackServerUnconfigured) {
-          throw new NoCallbackServerException();
-        } else {
-          logger.atWarning().log(
-              "Received request for payload that uses the callback server but no callback server is"
-                  + " configured. Attemping to fallback and find a suitable payload that does not"
-                  + " use the callback server. To disable this behavior and error instead, set"
-                  + " PayloadFrameworkConfigs.throwErrorIfCallbackServerUnconfigured to true.");
+    if (tcsClient.isCallbackServerEnabled()) {
+      for (PayloadDefinition candidate : payloads) {
+        if (isMatchingPayload(candidate, config) && candidate.getUsesCallbackServer().getValue()) {
+          selectedPayload = candidate;
+          break;
         }
       }
     }
