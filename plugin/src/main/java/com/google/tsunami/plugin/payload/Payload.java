@@ -41,7 +41,11 @@ public class Payload {
     this.config = config;
   }
 
-  /** Returns the actual payload command string */
+  /**
+   * Get the string representation of the payload.
+   *
+   * @return the actual payload string
+   */
   public final String getPayload() {
     logger.atInfo().log(
         "%s generated payload `%s`, %s use the callback server",
@@ -52,18 +56,29 @@ public class Payload {
   /**
    * Checks if the supplied payload was executed based on a given input e.g. a reflective RCE.
    *
-   * @param input - an UTF-8 encoded string
+   * @param input - a UTF-8 encoded string
+   * @return whether this payload is executed on the scan target.
    */
   public final boolean checkIfExecuted(String input) {
     return this.validator.isExecuted(Optional.of(ByteString.copyFromUtf8(input)));
   }
 
-  /** Checks if the supplied payload was executed based on a given input e.g. a reflective RCE. */
+  /**
+   * Checks if the supplied payload was executed based on a given input e.g. a reflective RCE.
+   *
+   * @param input - a sequence of bytes in the {@link ByteString} format.
+   * @return whether this payload is executed on the scan target.
+   */
   public final boolean checkIfExecuted(ByteString input) {
     return this.validator.isExecuted(Optional.of(input));
   }
 
-  /** Checks if the supplied payload was executed based on a given input e.g. a reflective RCE. */
+  /**
+   * Checks if the supplied payload was executed based on a given input e.g. a reflective RCE.
+   *
+   * @param input - an optional sequence of bytes in the {@link ByteString} format.
+   * @return whether this payload is executed on the scan target.
+   */
   public final boolean checkIfExecuted(Optional<ByteString> input) {
     return this.validator.isExecuted(input);
   }
@@ -71,12 +86,18 @@ public class Payload {
   /**
    * Checks if the supplied payload was executed without supplying an input e.g. validation against
    * the callback server does not require input.
+   *
+   * @return whether this payload is executed on the scan target.
    */
   public final boolean checkIfExecuted() {
     return this.validator.isExecuted(Optional.empty());
   }
 
-  /** Returns additional information about the paylaod to the caller. */
+  /**
+   * Get additional attributes about this payload.
+   *
+   * @return the {@link PayloadAttributes} about this payload
+   */
   public final PayloadAttributes getPayloadAttributes() {
     return this.attributes;
   }

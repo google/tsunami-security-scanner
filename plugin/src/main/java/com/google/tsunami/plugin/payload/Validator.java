@@ -22,7 +22,10 @@ import java.util.Optional;
 @FunctionalInterface
 public interface Validator {
   /**
-   * Returns whether the associated payload was executed.
+   * Checks whether the payload is executed.
+   *
+   * @param input - an optional sequence of bytes in the {@link ByteString} format.
+   * @return whether a payload is executed on the scan target.
    */
   boolean isExecuted(Optional<ByteString> input);
 }

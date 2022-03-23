@@ -20,8 +20,8 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 /**
- * Thrown whenever a {@link PayloadGeneratorConfig} results in a combination that does not have a
- * payload.
+ * Thrown whenever a {@link com.google.tsunami.proto.PayloadGeneratorConfig} results in a
+ * combination that does not have a payload.
  *
  * <p> To reduce the burden on callers, this is an unchecked exception. The goal is simply to
  * notify the developer that the payload generator cannot be used in the requested context. If the

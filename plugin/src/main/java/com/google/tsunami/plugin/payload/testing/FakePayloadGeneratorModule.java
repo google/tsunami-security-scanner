@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Guice module for interacting with {@link PayloadGenerator} in tests. Use {@link
- * FakePayloadGeneratorModuleBuilder} instead of this directly.
+ * FakePayloadGeneratorModule.Builder} instead of this directly.
  */
 public final class FakePayloadGeneratorModule extends AbstractModule {
   private final TcsConfigProperties tcsConfig = new TcsConfigProperties();
@@ -55,7 +55,11 @@ public final class FakePayloadGeneratorModule extends AbstractModule {
     bind(TcsConfigProperties.class).toInstance(tcsConfig);
   }
 
-  /** Returns a builder for configuring the module */
+  /**
+   * Creates a builder for the {@link FakePayloadGeneratorModule}.
+   *
+   * @return a builder for configuring the module
+   */
   public static Builder builder() {
     return Builder.builder();
   }

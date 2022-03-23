@@ -58,6 +58,9 @@ public final class PayloadGenerator {
    *
    * <p>The framework prioritizes finding a callback server payload if callback server is enabled
    * and falls back to any payload that matches.
+   *
+   * @param config configurations to the payload generator
+   * @return the generated {@link Payload} based on the given {@code config}
    */
   public Payload generate(PayloadGeneratorConfig config) {
     PayloadDefinition selectedPayload = null;

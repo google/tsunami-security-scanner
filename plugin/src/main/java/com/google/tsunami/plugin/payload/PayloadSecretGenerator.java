@@ -41,11 +41,11 @@ public final class PayloadSecretGenerator {
     return BaseEncoding.base16().lowerCase().encode(randomBytes);
   }
 
-  public static Module getModule() {
-    return new Module();
+  public static PayloadSecretGeneratorModule getModule() {
+    return new PayloadSecretGeneratorModule();
   }
 
-  private static final class Module extends AbstractModule {
+  private static final class PayloadSecretGeneratorModule extends AbstractModule {
     @Provides
     @PayloadSecretRng
     @Singleton
