@@ -76,6 +76,12 @@ message CrawlTarget {
   bytes http_request_body = 3;
 }
 
+// Represents an HTTP header.
+message HttpHeader {
+  string key = 1;
+  string value = 2;
+}
+
 message CrawlResult {
   // The target visited by the crawler.
   CrawlTarget crawl_target = 1;
@@ -91,4 +97,7 @@ message CrawlResult {
 
   // The content of the resource served at the crawl target.
   bytes content = 5;
+
+  // Http headers of the response
+  repeated HttpHeader response_headers = 6;
 }
