@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forHostname;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndHostname;
+import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetworkService;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
@@ -110,6 +111,8 @@ public final class TsunamiCli {
       scanTargetBuilder.setNetworkEndpoint(forIpAndHostname(ip, mainCliOptions.hostnameTarget));
     } else if (ip != null) {
       scanTargetBuilder.setNetworkEndpoint(forIp(ip));
+    } else if (mainCliOptions.uriTarget != null) {
+      scanTargetBuilder.setNetworkService(buildUriNetworkService(mainCliOptions.uriTarget));
     } else {
       scanTargetBuilder.setNetworkEndpoint(forHostname(mainCliOptions.hostnameTarget));
     }

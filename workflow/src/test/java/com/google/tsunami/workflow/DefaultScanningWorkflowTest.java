@@ -18,6 +18,7 @@ package com.google.tsunami.workflow;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
+import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetworkService;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
@@ -84,6 +85,47 @@ public final class DefaultScanningWorkflowTest {
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(
             ImmutableList.of(FakeVulnDetector.class, FakeVulnDetector2.class));
+  }
+
+  @Test
+  public void run_whenUriScanTarget_executesScanningWorkflow()
+      throws InterruptedException, ExecutionException {
+    ScanResults scanResults = scanningWorkflow.run(buildUriScanTarget());
+    ExecutionTracer executionTracer = scanningWorkflow.getExecutionTracer();
+
+    assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(executionTracer.isDone()).isTrue();
+    assertThat(
+            executionTracer.getSelectedVulnDetectors().stream()
+                .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
+        .containsExactlyElementsIn(
+            ImmutableList.of(FakeVulnDetector.class, FakeVulnDetector2.class));
+    assertThat(scanResults.getScanFindings(0).getNetworkService().getServiceName())
+        .isEqualTo("https");
+    assertThat(
+            scanResults
+                .getScanFindings(0)
+                .getNetworkService()
+                .getServiceContext()
+                .getWebServiceContext()
+                .getApplicationRoot())
+        .isEqualTo("/function1");
+    assertThat(
+            scanResults
+                .getScanFindings(0)
+                .getNetworkService()
+                .getNetworkEndpoint()
+                .getPort()
+                .getPortNumber())
+        .isEqualTo(443);
+    assertThat(
+            scanResults
+                .getScanFindings(0)
+                .getNetworkService()
+                .getNetworkEndpoint()
+                .getHostname()
+                .getName())
+        .isEqualTo("localhost");
   }
 
   // TODO(b/145315535): add default output for the fake plugins and test the output of the workflow.
@@ -253,5 +295,11 @@ public final class DefaultScanningWorkflowTest {
 
   private static ScanTarget buildScanTarget() {
     return ScanTarget.newBuilder().setNetworkEndpoint(forIp("1.2.3.4")).build();
+  }
+
+  private static ScanTarget buildUriScanTarget() {
+    return ScanTarget.newBuilder()
+        .setNetworkService(buildUriNetworkService("https://localhost/function1"))
+        .build();
   }
 }

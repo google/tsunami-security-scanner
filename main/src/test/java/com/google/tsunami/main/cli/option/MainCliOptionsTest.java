@@ -32,4 +32,14 @@ public class MainCliOptionsTest {
 
     assertThrows(ParameterException.class, cliOptions::validate);
   }
+
+  @Test
+  public void validate_whenUriTargetPassedWithHostnameTarget_throwsParameterException() {
+    MainCliOptions cliOptions = new MainCliOptions();
+
+    cliOptions.hostnameTarget = "localhost";
+    cliOptions.uriTarget = "https://localhost/function1";
+
+    assertThrows(ParameterException.class, cliOptions::validate);
+  }
 }

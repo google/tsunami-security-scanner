@@ -46,23 +46,39 @@ public final class MainCliOptions implements CliOption {
   @Parameter(names = "--log-id", description = "A log ID to print in front of the logs.")
   public String logId;
 
+  @Parameter(
+      names = "--uri-target",
+      description =
+          "The URI of the scanning target that supports both http & https schemes. When this"
+              + " parameter is set, port scan is automatically skipped.")
+  public String uriTarget;
+
   @Override
   public void validate() {
-    List<String> nonEmptyTargets = new ArrayList<>();
+    List<String> portScanEnabledTargets = new ArrayList<>();
+    List<String> portScanDisabledTargets = new ArrayList<>();
     if (ipV4Target != null) {
-      nonEmptyTargets.add("--ip-v4-target");
+      portScanEnabledTargets.add("--ip-v4-target");
     }
     if (ipV6Target != null) {
-      nonEmptyTargets.add("--ip-v6-target");
+      portScanEnabledTargets.add("--ip-v6-target");
     }
     if (hostnameTarget != null) {
-      nonEmptyTargets.add("--hostname-target");
+      portScanEnabledTargets.add("--hostname-target");
+    }
+    if (uriTarget != null) {
+      portScanDisabledTargets.add("--uri-target");
     }
 
-    if (nonEmptyTargets.isEmpty()) {
+    if (portScanEnabledTargets.isEmpty() && portScanDisabledTargets.isEmpty()) {
       throw new ParameterException(
           "One of the following parameters is expected: --ip-v4-target, --ip-v6-target,"
-              + " --hostname-target");
+              + " --hostname-target, --uri-target");
+    }
+    if (!portScanEnabledTargets.isEmpty() && !portScanDisabledTargets.isEmpty()) {
+      throw new ParameterException(
+          "Parameters that require port scan (--ip-v4-target, --ip-v6-target, --hostname-target)"
+              + " should not be passed along with parameters that skip port scan (--uri-target)");
     }
   }
 }

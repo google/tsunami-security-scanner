@@ -20,6 +20,7 @@ syntax = "proto3";
 package tsunami.proto;
 
 import "network.proto";
+import "network_service.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "ScanTargetProtos";
@@ -28,6 +29,10 @@ option go_package = "github.com/google/tsunami-security-scanner/proto";
 
 // The information about a scan target.
 message ScanTarget {
-  // The network endpoint to be scanned.
-  NetworkEndpoint network_endpoint = 1;
+  oneof target {
+    // The network endpoint to be scanned.
+    NetworkEndpoint network_endpoint = 1;
+    // The network service to be scanned.
+    NetworkService network_service = 2;
+  }
 }

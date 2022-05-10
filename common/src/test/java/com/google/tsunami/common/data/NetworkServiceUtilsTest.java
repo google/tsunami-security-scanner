@@ -16,12 +16,23 @@
 package com.google.tsunami.common.data;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndPort;
 
+import com.google.tsunami.proto.AddressFamily;
+import com.google.tsunami.proto.Hostname;
+import com.google.tsunami.proto.IpAddress;
+import com.google.tsunami.proto.NetworkEndpoint;
 import com.google.tsunami.proto.NetworkService;
+import com.google.tsunami.proto.Port;
 import com.google.tsunami.proto.ServiceContext;
 import com.google.tsunami.proto.Software;
+import com.google.tsunami.proto.TransportProtocol;
 import com.google.tsunami.proto.WebServiceContext;
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.URL;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -260,5 +271,39 @@ public final class NetworkServiceUtilsTest {
                             WebServiceContext.newBuilder().setApplicationRoot("test_root")))
                 .build()))
         .isEqualTo("https://127.0.0.1/test_root/");
+  }
+
+  @Test
+  public void buildUriNetworkService_returnsNetworkService() throws IOException {
+
+    URL url = new URL("https://localhost/function1");
+    String hostname = url.getHost();
+    String ipaddress = InetAddress.getByName(hostname).getHostAddress();
+    InetAddress inetAddress = InetAddress.getByName(url.getHost());
+    AddressFamily addressFamily =
+        inetAddress instanceof Inet4Address ? AddressFamily.IPV4 : AddressFamily.IPV6;
+
+    NetworkEndpoint networkEndpoint =
+        NetworkEndpoint.newBuilder()
+            .setType(NetworkEndpoint.Type.IP_HOSTNAME_PORT)
+            .setIpAddress(
+                IpAddress.newBuilder().setAddressFamily(addressFamily).setAddress(ipaddress))
+            .setPort(Port.newBuilder().setPortNumber(443))
+            .setHostname(Hostname.newBuilder().setName("localhost"))
+            .build();
+
+    NetworkService networkService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(networkEndpoint)
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setServiceContext(
+                ServiceContext.newBuilder()
+                    .setWebServiceContext(
+                        WebServiceContext.newBuilder().setApplicationRoot("/function1")))
+            .build();
+
+    assertThat(NetworkServiceUtils.buildUriNetworkService("https://localhost/function1"))
+        .isEqualTo(networkService);
   }
 }
