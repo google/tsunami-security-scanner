@@ -52,6 +52,10 @@ message NetworkService {
   // Context information about this network service.
   ServiceContext service_context = 7;
 
+  // The detected Common Platform Enumeration (CPE) name for service,
+  // in the uri binding representation, like: cpe:/a:openbsd:openssh:8.4p1
+  repeated string cpes = 8;
+
   // TODO(magl): add ssl related information.
 }
 
