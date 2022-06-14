@@ -1,0 +1,84 @@
+/*
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Data representation of a tsunami plugin definition passed between language servers.
+syntax = "proto3";
+
+package tsunami.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "PluginRepresentationProtos";
+option java_package = "com.google.tsunami.proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto";
+
+// Represents a PluginDefinition placeholder.
+message PluginDefinition {
+  // PluginInfo of this definition.
+  PluginInfo info = 1;
+
+  // The name of the target service.
+  TargetServiceName target_service_name = 2;
+
+  // The name of the target software.
+  TargetSoftware target_software = 3;
+
+  // If the definition is for a web service or not.
+  bool for_web_service = 4;
+}
+
+// Represents a PluginInfo annotation placeholder used by the PluginDefinition proto above.
+message PluginInfo {
+  enum PluginType {
+    // Plugin is an unspecified type.
+    PLUGIN_TYPE_UNSPECIFIED = 0;
+    // Plugin is a port scanner.
+    PORT_SCAN = 1;
+    // Plugin is a service fingerprinter.
+    SERVICE_FINGERPRINT = 2;
+    // Plugin is a vulnerability detector.
+    VULN_DETECTION = 3;
+  }
+
+  // Type of plugin.
+  PluginType type = 1;
+
+  // Name of the plugin.
+  string name = 2;
+
+  // Version of the plugin
+  string version = 3;
+
+  // Description of the plugin.
+  string description = 4;
+
+  // Author of the plugin.
+  string author = 5;
+}
+
+// Represents a ForServiceName annotation placeholder used by the PluginDefinition proto above.
+message TargetServiceName {
+  // The value of the name of the target.
+  repeated string value = 1;
+}
+
+// Represents a ForSoftware annotation placeholder used by the PluginDefinition proto above.
+message TargetSoftware {
+  // The name of the target software, case insensitive.
+  string name = 1;
+
+  // Array of versions and version ranges of the target software.
+  repeated string value = 2;
+}
