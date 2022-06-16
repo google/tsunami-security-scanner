@@ -38,4 +38,6 @@ idea {
 dependencies {
     compile deps.protobuf
     compile deps.grpc_protobuf
+    compile deps.grpc_stub
+    compile deps.javax_annotations
 }
