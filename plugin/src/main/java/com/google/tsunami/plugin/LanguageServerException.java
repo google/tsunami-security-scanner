@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.tsunami.common;
+package com.google.tsunami.plugin;
 
-/** Error codes for Tsunami scanner executions. */
-public enum ErrorCode {
-  CONFIG_ERROR,
-  PLUGIN_EXECUTION_ERROR,
-  WORKFLOW_ERROR,
-  LANGUAGE_SERVER_ERROR,
+import com.google.tsunami.common.ErrorCode;
+import com.google.tsunami.common.TsunamiException;
 
-  UNKNOWN;
+/** Exception for language server errors. */
+public final class LanguageServerException extends TsunamiException {
+
+  public LanguageServerException(String message) {
+    super(ErrorCode.LANGUAGE_SERVER_ERROR, message);
+  }
+
+  public LanguageServerException(String message, Throwable cause) {
+    super(ErrorCode.LANGUAGE_SERVER_ERROR, message, cause);
+  }
 }
