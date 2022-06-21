@@ -14,6 +14,8 @@ dependencies {
     compile deps.mock_web_server
     compile deps.protobuf
     compile deps.protobuf_util
+    compile deps.grpc_core
+    compile deps.grpc_testing
     compile deps.tcs_common, deps.tcs_proto
     annotationProcessor deps.autovalue_annotation_processor
 
