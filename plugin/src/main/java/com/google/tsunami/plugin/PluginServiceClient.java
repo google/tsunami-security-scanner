@@ -17,16 +17,21 @@ package com.google.tsunami.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.tsunami.proto.PluginServiceGrpc;
 import com.google.tsunami.proto.PluginServiceGrpc.PluginServiceFutureStub;
+import com.google.tsunami.proto.RunRequest;
+import com.google.tsunami.proto.RunResponse;
 import io.grpc.Channel;
+import java.time.Duration;
 
 /**
  * Client side gRPC handler for the PluginService RPC protocol. Main handler for all gRPC calls to
  * the language-specific servers.
  */
-public class PluginServiceClient {
+public final class PluginServiceClient {
 
   private final PluginServiceFutureStub pluginService;
   private final ListeningScheduledExecutorService scheduledExecutorService;
@@ -34,5 +39,16 @@ public class PluginServiceClient {
   PluginServiceClient(Channel channel, ListeningScheduledExecutorService service) {
     this.pluginService = PluginServiceGrpc.newFutureStub(checkNotNull(channel));
     this.scheduledExecutorService = checkNotNull(service);
+  }
+
+  /**
+   * Sends a run request to the gRPC language server with a specified deadline.
+   *
+   * @param request The main request containing plugins to run.
+   * @param deadline The timeout of the service.
+   * @return The future of the run response.
+   */
+  public ListenableFuture<RunResponse> runWithDeadline(RunRequest request, Duration deadline) {
+    return Futures.withTimeout(pluginService.run(request), deadline, scheduledExecutorService);
   }
 }
