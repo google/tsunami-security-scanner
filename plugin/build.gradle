@@ -17,6 +17,7 @@ dependencies {
     compile deps.grpc_core
     compile deps.grpc_testing
     compile deps.grpc_context
+    compile deps.grpc_services
     compile deps.tcs_common, deps.tcs_proto
     annotationProcessor deps.autovalue_annotation_processor
 

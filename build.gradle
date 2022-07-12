@@ -65,6 +65,7 @@ subprojects {
                 grpc_context: "io.grpc:grpc-context:${grpcVersion}",
                 grpc_stub: "io.grpc:grpc-stub:${grpcVersion}",
                 grpc_core: "io.grpc:grpc-core:${grpcVersion}",
+                grpc_services: "io.grpc:grpc-services:${grpcVersion}",
                 grpc_testing: "io.grpc:grpc-testing:${grpcVersion}",
                 javax_annotations: "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}",
                 gson: "com.google.code.gson:gson:${gsonVersion}",

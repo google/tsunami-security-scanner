@@ -36,6 +36,10 @@ import com.google.tsunami.proto.RunResponse;
 import com.google.tsunami.proto.TargetInfo;
 import com.google.tsunami.proto.TransportProtocol;
 import io.grpc.Deadline;
+import io.grpc.health.v1.HealthCheckRequest;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
+import io.grpc.health.v1.HealthGrpc.HealthImplBase;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -221,6 +225,52 @@ public final class PluginServiceClientTest {
 
     assertThat(listPlugins.isDone()).isTrue();
     assertThat(listPlugins.get().getPluginsList()).containsExactlyElementsIn(plugins);
+  }
+
+  @Test
+  public void checkHealth_returnServingHealthResponse() throws Exception {
+    HealthCheckRequest request = HealthCheckRequest.getDefaultInstance();
+
+    HealthImplBase healthImpl =
+        new HealthImplBase() {
+          @Override
+          public void check(
+              HealthCheckRequest request, StreamObserver<HealthCheckResponse> responseObserver) {
+            responseObserver.onNext(
+                HealthCheckResponse.newBuilder().setStatus(ServingStatus.SERVING).build());
+            responseObserver.onCompleted();
+          }
+        };
+    serviceRegistry.addService(healthImpl);
+
+    ListenableFuture<HealthCheckResponse> health =
+        pluginService.checkHealthWithDeadline(request, DEADLINE_DEFAULT);
+
+    assertThat(health.isDone()).isTrue();
+    assertThat(health.get().getStatus()).isEqualTo(ServingStatus.SERVING);
+  }
+
+  @Test
+  public void checkHealth_returnNotServingHealthResponse() throws Exception {
+    HealthCheckRequest request = HealthCheckRequest.getDefaultInstance();
+
+    HealthImplBase healthImpl =
+        new HealthImplBase() {
+          @Override
+          public void check(
+              HealthCheckRequest request, StreamObserver<HealthCheckResponse> responseObserver) {
+            responseObserver.onNext(
+                HealthCheckResponse.newBuilder().setStatus(ServingStatus.NOT_SERVING).build());
+            responseObserver.onCompleted();
+          }
+        };
+    serviceRegistry.addService(healthImpl);
+
+    ListenableFuture<HealthCheckResponse> health =
+        pluginService.checkHealthWithDeadline(request, DEADLINE_DEFAULT);
+
+    assertThat(health.isDone()).isTrue();
+    assertThat(health.get().getStatus()).isEqualTo(ServingStatus.NOT_SERVING);
   }
 
   private void assertRunResponseContainsAllRunRequestParameters(

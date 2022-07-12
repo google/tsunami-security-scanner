@@ -26,6 +26,10 @@ import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import io.grpc.Channel;
 import io.grpc.Deadline;
+import io.grpc.health.v1.HealthCheckRequest;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.health.v1.HealthGrpc;
+import io.grpc.health.v1.HealthGrpc.HealthFutureStub;
 
 /**
  * Client side gRPC handler for the PluginService RPC protocol. Main handler for all gRPC calls to
@@ -33,9 +37,11 @@ import io.grpc.Deadline;
  */
 public final class PluginServiceClient {
 
+  private final HealthFutureStub healthService;
   private final PluginServiceFutureStub pluginService;
 
   PluginServiceClient(Channel channel) {
+    this.healthService = HealthGrpc.newFutureStub(checkNotNull(channel));
     this.pluginService = PluginServiceGrpc.newFutureStub(checkNotNull(channel));
   }
 
@@ -60,5 +66,17 @@ public final class PluginServiceClient {
   public ListenableFuture<ListPluginsResponse> listPluginsWithDeadline(
       ListPluginsRequest request, Deadline deadline) {
     return pluginService.withDeadline(deadline).listPlugins(request);
+  }
+
+  /**
+   * Sends a health check request to retrieve the status of the language server.
+   *
+   * @param request The health check request to send to the language server.
+   * @param deadline The maximum time to keep this call alive.
+   * @return The language server's status via {@link HealthCheckResponse}.
+   */
+  public ListenableFuture<HealthCheckResponse> checkHealthWithDeadline(
+      HealthCheckRequest request, Deadline deadline) {
+    return healthService.withDeadline(deadline).check(request);
   }
 }
