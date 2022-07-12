@@ -62,6 +62,7 @@ subprojects {
                 guice: "com.google.inject:guice:${guiceVersion}",
                 guice_assisted: "com.google.inject.extensions:guice-assistedinject:${guiceVersion}",
                 grpc_protobuf: "io.grpc:grpc-protobuf:${grpcVersion}",
+                grpc_context: "io.grpc:grpc-context:${grpcVersion}",
                 grpc_stub: "io.grpc:grpc-stub:${grpcVersion}",
                 grpc_core: "io.grpc:grpc-core:${grpcVersion}",
                 grpc_testing: "io.grpc:grpc-testing:${grpcVersion}",

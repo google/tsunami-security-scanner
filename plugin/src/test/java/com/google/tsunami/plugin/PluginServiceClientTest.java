@@ -16,15 +16,15 @@
 package com.google.tsunami.plugin;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.inject.Guice;
-import com.google.inject.Key;
-import com.google.tsunami.common.concurrent.ScheduledThreadPoolModule;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.proto.DetectionReport;
 import com.google.tsunami.proto.DetectionReportList;
+import com.google.tsunami.proto.ListPluginsRequest;
+import com.google.tsunami.proto.ListPluginsResponse;
 import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkEndpoint;
 import com.google.tsunami.proto.NetworkService;
@@ -35,17 +35,14 @@ import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import com.google.tsunami.proto.TargetInfo;
 import com.google.tsunami.proto.TransportProtocol;
+import io.grpc.Deadline;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.util.MutableHandlerRegistry;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Qualifier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,24 +53,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class PluginServiceClientTest {
 
-  // TODO(b/236740807): Create a wrapper for results and errors.
-
-  // Useful test thread pool used for testing grpc handlers
-  @Qualifier
-  @Retention(RetentionPolicy.RUNTIME)
-  @interface TestThreadPool {}
-
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
-
-  private static final int THREAD_POOLS = 1;
-  private static final String THREAD_POOL_NAME = "test";
 
   private static final String PLUGIN_NAME = "test plugin";
   private static final String PLUGIN_VERSION = "0.0.1";
   private static final String PLUGIN_DESCRIPTION = "test description";
   private static final String PLUGIN_AUTHOR = "tester";
 
-  private static final Duration DURATION_DEFAULT = Duration.ofSeconds(1);
+  private static final Deadline DEADLINE_DEFAULT = Deadline.after(1, SECONDS);
 
   private PluginServiceClient pluginService;
   private final MutableHandlerRegistry serviceRegistry = new MutableHandlerRegistry();
@@ -90,15 +77,7 @@ public final class PluginServiceClientTest {
 
     pluginService =
         new PluginServiceClient(
-            InProcessChannelBuilder.forName(serverName).directExecutor().build(),
-            Guice.createInjector(
-                    new ScheduledThreadPoolModule.Builder()
-                        .setName(THREAD_POOL_NAME)
-                        .setSize(THREAD_POOLS)
-                        .setAnnotation(TestThreadPool.class)
-                        .build())
-                .getInstance(
-                    Key.get(ListeningScheduledExecutorService.class, TestThreadPool.class)));
+            InProcessChannelBuilder.forName(serverName).directExecutor().build());
   }
 
   @Test
@@ -119,7 +98,7 @@ public final class PluginServiceClientTest {
         };
     serviceRegistry.addService(runImpl);
 
-    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DURATION_DEFAULT);
+    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DEADLINE_DEFAULT);
     RunResponse runResponse = run.get();
 
     assertThat(run.isDone()).isTrue();
@@ -146,7 +125,7 @@ public final class PluginServiceClientTest {
         };
     serviceRegistry.addService(runImpl);
 
-    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DURATION_DEFAULT);
+    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DEADLINE_DEFAULT);
     RunResponse runResponse = run.get();
 
     assertThat(run.isDone()).isTrue();
@@ -208,12 +187,40 @@ public final class PluginServiceClientTest {
         };
     serviceRegistry.addService(runImpl);
 
-    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DURATION_DEFAULT);
+    ListenableFuture<RunResponse> run = pluginService.runWithDeadline(runRequest, DEADLINE_DEFAULT);
     RunResponse runResponse = run.get();
 
     assertThat(run.isDone()).isTrue();
     assertThat(runResponse.getReports().getDetectionReportsCount()).isEqualTo(numPluginsToTest);
     assertRunResponseContainsAllRunRequestParameters(runResponse, runRequest);
+  }
+
+  @Test
+  public void listPlugins_returnsMultiplePlugins() throws Exception {
+    ListPluginsRequest request = ListPluginsRequest.getDefaultInstance();
+
+    List<PluginDefinition> plugins = Lists.newArrayList();
+    for (int i = 0; i < 5; i++) {
+      plugins.add(createSinglePluginDefinitionWithName(String.format(PLUGIN_NAME + "%d", i)));
+    }
+
+    PluginServiceImplBase listPluginsImpl =
+        new PluginServiceImplBase() {
+          @Override
+          public void listPlugins(
+              ListPluginsRequest request, StreamObserver<ListPluginsResponse> responseObserver) {
+            responseObserver.onNext(
+                ListPluginsResponse.newBuilder().addAllPlugins(plugins).build());
+            responseObserver.onCompleted();
+          }
+        };
+    serviceRegistry.addService(listPluginsImpl);
+
+    ListenableFuture<ListPluginsResponse> listPlugins =
+        pluginService.listPluginsWithDeadline(request, DEADLINE_DEFAULT);
+
+    assertThat(listPlugins.isDone()).isTrue();
+    assertThat(listPlugins.get().getPluginsList()).containsExactlyElementsIn(plugins);
   }
 
   private void assertRunResponseContainsAllRunRequestParameters(
@@ -256,5 +263,4 @@ public final class PluginServiceClientTest {
         .addPlugins(MatchedPlugin.newBuilder().addServices(httpService).setPlugin(singlePlugin))
         .build();
   }
-  // TODO(b/236740807): Add test case for errors related to RPC calls once wrapper CL is done.
 }

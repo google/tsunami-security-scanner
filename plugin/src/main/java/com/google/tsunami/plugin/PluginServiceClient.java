@@ -17,15 +17,15 @@ package com.google.tsunami.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.tsunami.proto.ListPluginsRequest;
+import com.google.tsunami.proto.ListPluginsResponse;
 import com.google.tsunami.proto.PluginServiceGrpc;
 import com.google.tsunami.proto.PluginServiceGrpc.PluginServiceFutureStub;
 import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import io.grpc.Channel;
-import java.time.Duration;
+import io.grpc.Deadline;
 
 /**
  * Client side gRPC handler for the PluginService RPC protocol. Main handler for all gRPC calls to
@@ -34,11 +34,9 @@ import java.time.Duration;
 public final class PluginServiceClient {
 
   private final PluginServiceFutureStub pluginService;
-  private final ListeningScheduledExecutorService scheduledExecutorService;
 
-  PluginServiceClient(Channel channel, ListeningScheduledExecutorService service) {
+  PluginServiceClient(Channel channel) {
     this.pluginService = PluginServiceGrpc.newFutureStub(checkNotNull(channel));
-    this.scheduledExecutorService = checkNotNull(service);
   }
 
   /**
@@ -48,7 +46,19 @@ public final class PluginServiceClient {
    * @param deadline The timeout of the service.
    * @return The future of the run response.
    */
-  public ListenableFuture<RunResponse> runWithDeadline(RunRequest request, Duration deadline) {
-    return Futures.withTimeout(pluginService.run(request), deadline, scheduledExecutorService);
+  public ListenableFuture<RunResponse> runWithDeadline(RunRequest request, Deadline deadline) {
+    return pluginService.withDeadline(deadline).run(request);
+  }
+
+  /**
+   * Sends a list plugins request to the gRPC language server with a specified deadline.
+   *
+   * @param request The main request to notify the language server to send their plugins.
+   * @param deadline The timeout of the service.
+   * @return The future of the run response.
+   */
+  public ListenableFuture<ListPluginsResponse> listPluginsWithDeadline(
+      ListPluginsRequest request, Deadline deadline) {
+    return pluginService.withDeadline(deadline).listPlugins(request);
   }
 }
