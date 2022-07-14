@@ -27,5 +27,8 @@ public enum PluginType {
   SERVICE_FINGERPRINT,
 
   /** A plugin that detects certain vulnerabilities on an exposed network service. */
-  VULN_DETECTION
+  VULN_DETECTION,
+
+  /** A plugin that contains vulnerability detectors from language servers. */
+  REMOTE_VULN_DETECTION
 }
