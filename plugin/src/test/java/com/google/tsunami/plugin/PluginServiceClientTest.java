@@ -64,7 +64,7 @@ public final class PluginServiceClientTest {
   private static final String PLUGIN_DESCRIPTION = "test description";
   private static final String PLUGIN_AUTHOR = "tester";
 
-  private static final Deadline DEADLINE_DEFAULT = Deadline.after(1, SECONDS);
+  private static final Deadline DEADLINE_DEFAULT = Deadline.after(5, SECONDS);
 
   private PluginServiceClient pluginService;
   private final MutableHandlerRegistry serviceRegistry = new MutableHandlerRegistry();

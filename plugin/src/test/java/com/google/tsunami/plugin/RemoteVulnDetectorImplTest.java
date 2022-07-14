@@ -83,6 +83,7 @@ public final class RemoteVulnDetectorImplTest {
   @Test
   public void detect_withServingServer_returnsSuccessfulDetectionReportList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.SERVING);
+    registerSuccessfulRunService();
 
     RemoteVulnDetector pluginToTest = getNewRemoteVulnDetectorInstance();
     var endpointToTest = NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80);
@@ -214,6 +215,24 @@ public final class RemoteVulnDetectorImplTest {
           public void check(
               HealthCheckRequest request, StreamObserver<HealthCheckResponse> responseObserver) {
             responseObserver.onNext(HealthCheckResponse.newBuilder().setStatus(status).build());
+            responseObserver.onCompleted();
+          }
+        });
+  }
+
+  private void registerSuccessfulRunService() {
+    serviceRegistry.addService(
+        new PluginServiceImplBase() {
+          @Override
+          public void run(RunRequest request, StreamObserver<RunResponse> responseObserver) {
+            DetectionReportList.Builder reportListBuilder = DetectionReportList.newBuilder();
+            for (MatchedPlugin plugin : request.getPluginsList()) {
+              reportListBuilder.addDetectionReports(
+                  DetectionReport.newBuilder()
+                      .setTargetInfo(request.getTarget())
+                      .setNetworkService(plugin.getServices(0)));
+            }
+            responseObserver.onNext(RunResponse.newBuilder().setReports(reportListBuilder).build());
             responseObserver.onCompleted();
           }
         });
