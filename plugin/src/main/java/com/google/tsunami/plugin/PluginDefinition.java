@@ -15,6 +15,7 @@
  */
 package com.google.tsunami.plugin;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
@@ -29,8 +30,11 @@ import java.util.Optional;
 @AutoValue
 abstract class PluginDefinition {
   abstract PluginInfo pluginInfo();
+
   abstract Optional<ForServiceName> targetServiceName();
+
   abstract Optional<ForSoftware> targetSoftware();
+
   abstract boolean isForWebService();
 
   /**
@@ -81,5 +85,17 @@ abstract class PluginDefinition {
 
     return new AutoValue_PluginDefinition(
         pluginInfo.get(), targetServiceName, targetSoftware, isForWebService);
+  }
+
+  /**
+   * Factory method for creating a {@link PluginDefinition} for {@link RemoteVulnDetector}
+   * implementations using the {@link PluginInfo} class.
+   *
+   * @param remotePluginInfo the {@link PluginInfo} of the remote Tsunami plugin
+   * @return a {@link PluginDefinition} built from the plugin info.
+   */
+  public static PluginDefinition forRemotePlugin(PluginInfo remotePluginInfo) {
+    return new AutoValue_PluginDefinition(
+        checkNotNull(remotePluginInfo), Optional.empty(), Optional.empty(), false);
   }
 }
