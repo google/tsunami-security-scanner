@@ -58,7 +58,11 @@ public final class PluginLoadingModule extends AbstractModule {
     ClassInfoList tsunamiPluginClasses =
         classScanResult
             .getClassesImplementing(TSUNAMI_PLUGIN_INTERFACE)
-            .filter(classInfo -> !classInfo.isInterface());
+            .filter(
+                classInfo ->
+                    !classInfo.isInterface()
+                        && !classInfo.implementsInterface(
+                            "com.google.tsunami.plugin.RemoteVulnDetector"));
     for (ClassInfo tsunamiPluginClass : tsunamiPluginClasses) {
       logger.atInfo().log("Found plugin class: %s", tsunamiPluginClass.getName());
       // PluginInfo annotation is required for TsunamiPlugin.
@@ -67,8 +71,7 @@ public final class PluginLoadingModule extends AbstractModule {
             String.format(
                 "Tsunami plugin '%s' must be annotated with PluginInfo",
                 tsunamiPluginClass.getSimpleName()));
-      }
-
+        }
       install(newPluginBootstrapModule(tsunamiPluginClass));
     }
   }
