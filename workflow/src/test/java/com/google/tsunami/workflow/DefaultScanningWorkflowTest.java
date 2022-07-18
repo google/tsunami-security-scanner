@@ -26,12 +26,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
 import com.google.tsunami.plugin.testing.FailedPortScannerBootstrapModule;
+import com.google.tsunami.plugin.testing.FailedRemoteVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FailedServiceFingerprinterBootstrapModule;
 import com.google.tsunami.plugin.testing.FailedVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePluginExecutionModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule2;
+import com.google.tsunami.plugin.testing.FakeRemoteVulnDetector;
+import com.google.tsunami.plugin.testing.FakeRemoteVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeServiceFingerprinter;
 import com.google.tsunami.plugin.testing.FakeServiceFingerprinterBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeVulnDetector;
@@ -62,7 +65,8 @@ public final class DefaultScanningWorkflowTest {
             new FakePortScannerBootstrapModule2(),
             new FakeServiceFingerprinterBootstrapModule(),
             new FakeVulnDetectorBootstrapModule(),
-            new FakeVulnDetectorBootstrapModule2())
+            new FakeVulnDetectorBootstrapModule2(),
+            new FakeRemoteVulnDetectorBootstrapModule())
         .injectMembers(this);
   }
 
@@ -84,7 +88,8 @@ public final class DefaultScanningWorkflowTest {
             executionTracer.getSelectedVulnDetectors().stream()
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(
-            ImmutableList.of(FakeVulnDetector.class, FakeVulnDetector2.class));
+            ImmutableList.of(
+                FakeVulnDetector.class, FakeVulnDetector2.class, FakeRemoteVulnDetector.class));
   }
 
   @Test
@@ -99,7 +104,8 @@ public final class DefaultScanningWorkflowTest {
             executionTracer.getSelectedVulnDetectors().stream()
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(
-            ImmutableList.of(FakeVulnDetector.class, FakeVulnDetector2.class));
+            ImmutableList.of(
+                FakeVulnDetector.class, FakeVulnDetector2.class, FakeRemoteVulnDetector.class));
     assertThat(scanResults.getScanFindings(0).getNetworkService().getServiceName())
         .isEqualTo("https");
     assertThat(
@@ -250,15 +256,20 @@ public final class DefaultScanningWorkflowTest {
             new FakePortScannerBootstrapModule(),
             new FakeServiceFingerprinterBootstrapModule(),
             new FakeVulnDetectorBootstrapModule(),
-            new FailedVulnDetectorBootstrapModule());
+            new FakeRemoteVulnDetectorBootstrapModule(),
+            new FailedVulnDetectorBootstrapModule(),
+            new FailedRemoteVulnDetectorBootstrapModule());
     scanningWorkflow = injector.getInstance(DefaultScanningWorkflow.class);
 
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
 
     assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.PARTIALLY_SUCCEEDED);
     assertThat(scanResults.getStatusMessage())
-        .contains("Failed plugins:\n/fake/VULN_DETECTION/FailedVulnDetector/v0.1");
-    assertThat(scanResults.getScanFindingsList()).hasSize(1);
+        .contains(
+            "Failed plugins:\n"
+                + "/fake/VULN_DETECTION/FailedVulnDetector/v0.1\n"
+                + "/fake/REMOTE_VULN_DETECTION/FailedRemoteVulnDetector/v0.1");
+    assertThat(scanResults.getScanFindingsList()).hasSize(2);
   }
 
   @Test
@@ -270,7 +281,8 @@ public final class DefaultScanningWorkflowTest {
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
             new FakeServiceFingerprinterBootstrapModule(),
-            new FailedVulnDetectorBootstrapModule());
+            new FailedVulnDetectorBootstrapModule(),
+            new FailedRemoteVulnDetectorBootstrapModule());
     scanningWorkflow = injector.getInstance(DefaultScanningWorkflow.class);
 
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());

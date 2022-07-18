@@ -32,6 +32,7 @@ import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
 import com.google.tsunami.common.TsunamiException;
 import com.google.tsunami.common.time.UtcClock;
+import com.google.tsunami.plugin.LanguageServerException;
 import com.google.tsunami.plugin.PluginExecutionException;
 import com.google.tsunami.plugin.PluginExecutionResult;
 import com.google.tsunami.plugin.PluginExecutor;
@@ -151,6 +152,7 @@ public final class DefaultScanningWorkflow {
             directExecutor())
         // Execution errors are handled and reported back in the ScanResults.
         .catching(PluginExecutionException.class, this::onExecutionError, directExecutor())
+        .catching(LanguageServerException.class, this::onExecutionError, directExecutor())
         .catching(ScanningWorkflowException.class, this::onExecutionError, directExecutor());
   }
 
