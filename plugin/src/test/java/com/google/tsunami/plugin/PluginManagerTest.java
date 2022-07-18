@@ -19,7 +19,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.multibindings.MapBinder;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
 import com.google.tsunami.plugin.annotations.ForServiceName;
@@ -30,6 +32,7 @@ import com.google.tsunami.plugin.testing.FakePortScanner;
 import com.google.tsunami.plugin.testing.FakePortScanner2;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule2;
+import com.google.tsunami.plugin.testing.FakeRemoteVulnDetector;
 import com.google.tsunami.plugin.testing.FakeServiceFingerprinterBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeVulnDetector;
 import com.google.tsunami.plugin.testing.FakeVulnDetector2;
@@ -431,6 +434,43 @@ public class PluginManagerTest {
     assertThat(pluginManager.getVulnDetectors(fakeReconnaissanceReport)).isEmpty();
   }
 
+  @Test
+  public void
+      getVulnDetectors_whenRemotePluginsInstalledNoFiltering_returnsAllRemoteTsunamiPlugins()
+          throws Exception {
+    NetworkService fakeNetworkService1 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .build();
+    NetworkService fakeNetworkService2 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(fakeNetworkService1)
+            .addNetworkServices(fakeNetworkService2)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakeServiceFingerprinterBootstrapModule(),
+                new FakeRemoteVulnDetectorLoadingModule(2))
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> remotePlugins =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(
+            remotePlugins.stream()
+                .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
+        .containsExactly(FakeRemoteVulnDetector.class, FakeRemoteVulnDetector.class);
+  }
+
   @PluginInfo(
       type = PluginType.SERVICE_FINGERPRINT,
       name = "NoAnnotationFingerprinter",
@@ -537,6 +577,29 @@ public class PluginManagerTest {
       @Override
       protected void configurePlugin() {
         registerPlugin(FakeSoftwareFilteringDetector.class);
+      }
+    }
+  }
+
+  private static final class FakeRemoteVulnDetectorLoadingModule extends AbstractModule {
+    private final int numRemotePlugins;
+
+    public FakeRemoteVulnDetectorLoadingModule() {
+      this(0);
+    }
+
+    public FakeRemoteVulnDetectorLoadingModule(int numRemotePlugins) {
+      this.numRemotePlugins = numRemotePlugins;
+    }
+
+    @Override
+    protected void configure() {
+      MapBinder<PluginDefinition, TsunamiPlugin> tsunamiPluginBinder =
+          MapBinder.newMapBinder(binder(), PluginDefinition.class, TsunamiPlugin.class);
+      for (int i = 0; i < numRemotePlugins; i++) {
+        tsunamiPluginBinder
+            .addBinding(RemoteVulnDetectorLoadingModule.getRemoteVulnDetectorPluginDefinition(i))
+            .toInstance(new FakeRemoteVulnDetector(i));
       }
     }
   }

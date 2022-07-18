@@ -22,6 +22,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.ReconnaissanceReport;
 import java.util.Arrays;
@@ -95,10 +96,25 @@ public class PluginManager {
   public ImmutableList<PluginMatchingResult<VulnDetector>> getVulnDetectors(
       ReconnaissanceReport reconnaissanceReport) {
     return tsunamiPlugins.entrySet().stream()
-        .filter(entry -> entry.getKey().type().equals(PluginType.VULN_DETECTION))
-        .map(entry -> matchVulnDetectors(entry.getKey(), entry.getValue(), reconnaissanceReport))
+        .filter(entry -> isVulnDetector(entry.getKey()))
+        .map(entry -> matchAllVulnDetectors(entry.getKey(), entry.getValue(), reconnaissanceReport))
         .flatMap(Streams::stream)
         .collect(toImmutableList());
+  }
+
+  private static boolean isVulnDetector(PluginDefinition pluginDefinition) {
+    return pluginDefinition.type().equals(PluginType.VULN_DETECTION)
+        || pluginDefinition.type().equals(PluginType.REMOTE_VULN_DETECTION);
+  }
+
+  private static Optional<PluginMatchingResult<VulnDetector>> matchAllVulnDetectors(
+      PluginDefinition pluginDefinition,
+      Provider<TsunamiPlugin> vulnDetectorProvider,
+      ReconnaissanceReport reconnaissanceReport) {
+    if (pluginDefinition.type().equals(PluginType.REMOTE_VULN_DETECTION)) {
+      return matchRemoteVulnDetectors(pluginDefinition, vulnDetectorProvider, reconnaissanceReport);
+    }
+    return matchVulnDetectors(pluginDefinition, vulnDetectorProvider, reconnaissanceReport);
   }
 
   private static Optional<PluginMatchingResult<VulnDetector>> matchVulnDetectors(
@@ -132,6 +148,31 @@ public class PluginManager {
                 .build());
   }
 
+  private static Optional<PluginMatchingResult<VulnDetector>> matchRemoteVulnDetectors(
+      PluginDefinition pluginDefinition,
+      Provider<TsunamiPlugin> tsunamiPlugin,
+      ReconnaissanceReport reconnaissanceReport) {
+    var remoteVulnDetector = (RemoteVulnDetector) tsunamiPlugin.get();
+    var builder =
+        PluginMatchingResult.<VulnDetector>builder()
+            .setTsunamiPlugin(remoteVulnDetector)
+            // PluginDefinition class for the RemoteVulnDetector.
+            .setPluginDefinition(pluginDefinition)
+            .addAllMatchedServices(reconnaissanceReport.getNetworkServicesList());
+    for (com.google.tsunami.proto.PluginDefinition remotePluginDefinition :
+        remoteVulnDetector.getAllPlugins()) {
+      var matchedPlugin =
+          MatchedPlugin.newBuilder()
+              // PluginDefinition proto of the language-specific detector.
+              .setPlugin(remotePluginDefinition)
+              // TODO(b/239439169): Add plugin matching logic for remote plugins.
+              .addAllServices(reconnaissanceReport.getNetworkServicesList())
+              .build();
+      remoteVulnDetector.addMatchedPluginToDetect(matchedPlugin);
+    }
+    return Optional.of(builder.build());
+  }
+
   private static boolean hasMatchingServiceName(
       NetworkService networkService, PluginDefinition pluginDefinition) {
     String serviceName = networkService.getServiceName();
@@ -159,7 +200,9 @@ public class PluginManager {
   @AutoValue
   public abstract static class PluginMatchingResult<T extends TsunamiPlugin> {
     public abstract PluginDefinition pluginDefinition();
+
     public abstract T tsunamiPlugin();
+
     public abstract ImmutableList<NetworkService> matchedServices();
 
     public String pluginId() {
@@ -171,6 +214,7 @@ public class PluginManager {
     }
 
     /** Builder for {@link PluginMatchingResult}. */
+    @SuppressWarnings("CanIgnoreReturnValueSuggester")
     @AutoValue.Builder
     public abstract static class Builder<T extends TsunamiPlugin> {
       public abstract Builder<T> setPluginDefinition(PluginDefinition value);
