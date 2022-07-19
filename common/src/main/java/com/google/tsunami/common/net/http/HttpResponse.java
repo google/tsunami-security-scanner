@@ -20,6 +20,7 @@ import com.google.auto.value.extension.memoized.Memoized;
 import com.google.errorprone.annotations.Immutable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.protobuf.ByteString;
 import java.util.Optional;
 import okhttp3.HttpUrl;
@@ -57,6 +58,21 @@ public abstract class HttpResponse {
   @Memoized
   public Optional<JsonElement> bodyJson() {
     return bodyString().map(JsonParser::parseString);
+  }
+
+  /**
+   * Tries to determine if a given field in Json response is equal to a specific value. If parsing
+   * failed, {@link com.google.gson.JsonSyntaxException} or {@link IllegalStateException} will be
+   * thrown.
+   *
+   * @return boolean
+   */
+  public boolean jsonFieldEqualsToValue(String fieldname, String value) {
+    Optional<JsonPrimitive> jsonPrimitive =
+        bodyJson()
+            .map(JsonElement::getAsJsonObject)
+            .map(object -> object.getAsJsonPrimitive(fieldname));
+    return jsonPrimitive.isPresent() && jsonPrimitive.get().getAsString().equals(value);
   }
 
   public static Builder builder() {

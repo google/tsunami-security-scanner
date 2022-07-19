@@ -17,7 +17,9 @@ package com.google.tsunami.common.net.http;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonSyntaxException;
 import com.google.protobuf.ByteString;
@@ -77,5 +79,59 @@ public final class HttpResponseTest {
             .build();
 
     assertThrows(JsonSyntaxException.class, httpResponse::bodyJson);
+  }
+
+  @Test
+  public void bodyJson_whenEmptyBodyResponseBody_throwsJsonSyntaxException() {
+    HttpResponse httpResponse =
+        HttpResponse.builder()
+            .setStatus(HttpStatus.OK)
+            .setHeaders(HttpHeaders.builder().build())
+            .setBodyBytes(ByteString.copyFromUtf8(""))
+            .setResponseUrl(TEST_URL)
+            .build();
+
+    assertThrows(
+        IllegalStateException.class, () -> httpResponse.jsonFieldEqualsToValue("field", "value"));
+  }
+
+  @Test
+  public void jsonFieldEqualsToValue_whenEmptyJsonResponseBody_returnsFalse() {
+    HttpResponse httpResponse =
+        HttpResponse.builder()
+            .setStatus(HttpStatus.OK)
+            .setHeaders(HttpHeaders.builder().build())
+            .setBodyBytes(ByteString.copyFromUtf8("{}"))
+            .setResponseUrl(TEST_URL)
+            .build();
+
+    assertFalse(httpResponse.jsonFieldEqualsToValue("field", "value"));
+  }
+
+  @Test
+  public void jsonFieldEqualsToValue_whenNonJsonResponseBody_throwsJsonSyntaxException() {
+    HttpResponse httpResponse =
+        HttpResponse.builder()
+            .setStatus(HttpStatus.OK)
+            .setHeaders(HttpHeaders.builder().build())
+            .setBodyBytes(ByteString.copyFromUtf8("not a json"))
+            .setResponseUrl(TEST_URL)
+            .build();
+
+    assertThrows(
+        JsonSyntaxException.class, () -> httpResponse.jsonFieldEqualsToValue("field", "value"));
+  }
+
+  @Test
+  public void jsonFieldEqualsToValue_whenJsonFieldContainsValue_returnsTrue() {
+    HttpResponse httpResponse =
+        HttpResponse.builder()
+            .setStatus(HttpStatus.OK)
+            .setHeaders(HttpHeaders.builder().build())
+            .setBodyBytes(ByteString.copyFromUtf8("{\"field\": \"value\"}"))
+            .setResponseUrl(TEST_URL)
+            .build();
+
+    assertTrue(httpResponse.jsonFieldEqualsToValue("field", "value"));
   }
 }
