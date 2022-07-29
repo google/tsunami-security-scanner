@@ -63,9 +63,17 @@ public final class PayloadGenerator {
    * @return the generated {@link Payload} based on the given {@code config}
    */
   public Payload generate(PayloadGeneratorConfig config) {
+    return generatePayload(config, /* enforceNoCallback= */ false);
+  }
+
+  public Payload generateNoCallback(PayloadGeneratorConfig config) {
+    return generatePayload(config, /* enforceNoCallback= */ true);
+  }
+
+  private Payload generatePayload(PayloadGeneratorConfig config, boolean enforceNoCallback) {
     PayloadDefinition selectedPayload = null;
 
-    if (tcsClient.isCallbackServerEnabled()) {
+    if (tcsClient.isCallbackServerEnabled() && !enforceNoCallback) {
       for (PayloadDefinition candidate : payloads) {
         if (isMatchingPayload(candidate, config) && candidate.getUsesCallbackServer().getValue()) {
           selectedPayload = candidate;

@@ -64,6 +64,8 @@ public final class PayloadGeneratorWithCallbackServerTest {
               PayloadGeneratorConfig.InterpretationEnvironment.INTERPRETATION_ANY)
           .setExecutionEnvironment(PayloadGeneratorConfig.ExecutionEnvironment.EXEC_ANY)
           .build();
+  private static final String CORRECT_PRINTF =
+      "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
 
   @Before
   public void setUp() throws IOException {
@@ -91,6 +93,14 @@ public final class PayloadGeneratorWithCallbackServerTest {
     assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
     assertThat(payload.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
     assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void generate_withLinuxConfiguration_returnsPrintfPayload() {
+    Payload payload = payloadGenerator.generateNoCallback(LINUX_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_PRINTF);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
   @Test

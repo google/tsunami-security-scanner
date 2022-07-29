@@ -87,6 +87,14 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
   }
 
   @Test
+  public void getNonCallbackPayload_withLinuxConfiguration_returnsPrintfPayload() {
+    Payload payload = payloadGenerator.generateNoCallback(LINUX_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_PRINTF);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
   public void getPayload_withLinuxConfiguration_returnsPrintfPayload() {
     Payload payload = payloadGenerator.generate(LINUX_REFLECTIVE_RCE_CONFIG);
 
