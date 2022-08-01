@@ -17,6 +17,7 @@ from concurrent import futures
 from typing import cast
 
 from absl import logging
+
 from tsunami.plugin_server.py import tsunami_plugin
 from tsunami.proto import detection_pb2
 from tsunami.proto import plugin_representation_pb2
@@ -24,6 +25,9 @@ from tsunami.proto import plugin_service_pb2
 from tsunami.proto import plugin_service_pb2_grpc
 
 RunResponse = plugin_service_pb2.RunResponse
+ListPluginsRequest = plugin_service_pb2.ListPluginsRequest
+ListPluginsResponse = plugin_service_pb2.ListPluginsResponse
+_PluginServiceServicer = plugin_service_pb2_grpc.PluginServiceServicer
 _PluginType = plugin_representation_pb2.PluginInfo.PluginType
 
 _DETECTION_TIMEOUT = 60
@@ -70,4 +74,12 @@ class PluginServiceServicer(plugin_service_pb2_grpc.PluginServiceServicer):
 
     response = RunResponse()
     response.reports.CopyFrom(report_list)
+    return response
+
+  def ListPlugins(
+      self, request: ListPluginsRequest,
+      servicer_context: _PluginServiceServicer) -> ListPluginsResponse:
+    response = ListPluginsResponse()
+    response.plugins.MergeFrom(
+        [plugin.GetPluginDefinition() for plugin in self.py_plugins])
     return response

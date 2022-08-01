@@ -19,6 +19,7 @@ import grpc_testing
 import ipaddr
 
 from google.protobuf import timestamp_pb2
+from net.proto2.contrib.pyutil import compare
 from testing.pybase import googletest
 from tsunami.plugin_server.py import plugin_service
 from tsunami.plugin_server.py import tsunami_plugin
@@ -38,6 +39,7 @@ _AddressFamily = network_pb2.AddressFamily
 _ServiceDescriptor = plugin_service_pb2.DESCRIPTOR.services_by_name[
     'PluginService']
 _RunMethod = _ServiceDescriptor.methods_by_name['Run']
+_ListPluginsMethod = _ServiceDescriptor.methods_by_name['ListPlugins']
 MAX_WORKERS = 1
 
 
@@ -97,6 +99,15 @@ class PluginServiceTest(googletest.TestCase):
     response, _, _, _ = rpc.termination()
 
     self.assertEmpty(response.reports.detection_reports)
+
+  def test_list_plugins_plugins_registered_returns_valid_response(self):
+    request = plugin_service.ListPluginsRequest()
+    rpc = self._server.invoke_unary_unary(_ListPluginsMethod, (), request, None)
+    response, _, _, _ = rpc.termination()
+    compare.assertProto2Equal(
+        self,
+        plugin_service.ListPluginsResponse(
+            plugins=[self.test_plugin.GetPluginDefinition()]), response)
 
 
 def _build_network_endpoint(ip: str, port: int) -> _NetworkEndpoint:
