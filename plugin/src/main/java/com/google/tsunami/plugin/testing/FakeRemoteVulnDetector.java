@@ -64,27 +64,33 @@ public final class FakeRemoteVulnDetector implements RemoteVulnDetector {
 
   @Override
   public DetectionReportList detect(TargetInfo target, ImmutableList<NetworkService> services) {
-    return DetectionReportList.newBuilder()
-        .addAllDetectionReports(
-            matchedPluginsToRun.stream()
-                .map(
-                    plugin ->
-                        DetectionReport.newBuilder()
-                            .setTargetInfo(target)
-                            .setNetworkService(plugin.getServices(0))
-                            .setDetectionTimestamp(Timestamps.fromMillis(1234567890L))
-                            .setDetectionStatus(DetectionStatus.VULNERABILITY_VERIFIED)
-                            .setVulnerability(
-                                Vulnerability.newBuilder()
-                                    .setMainId(
-                                        VulnerabilityId.newBuilder()
-                                            .setPublisher("GOOGLE")
-                                            .setValue("FakeRemoteVuln"))
-                                    .setSeverity(Severity.CRITICAL)
-                                    .setTitle("FakeTitle")
-                                    .setDescription("FakeRemoteDescription"))
-                            .build())
-                .collect(toImmutableList()))
+    ImmutableList<ImmutableList<DetectionReport>> detectionReports =
+        matchedPluginsToRun.stream()
+            .map(
+                plugin ->
+                    plugin.getServicesList().stream()
+                        .map(service -> getFakeDetectionReport(target, service))
+                        .collect(toImmutableList()))
+            .collect(toImmutableList());
+    var reportListBuilder = DetectionReportList.newBuilder();
+    detectionReports.forEach(reportListBuilder::addAllDetectionReports);
+    return reportListBuilder.build();
+  }
+
+  public static DetectionReport getFakeDetectionReport(
+      TargetInfo targetInfo, NetworkService networkService) {
+    return DetectionReport.newBuilder()
+        .setTargetInfo(targetInfo)
+        .setNetworkService(networkService)
+        .setDetectionTimestamp(Timestamps.fromMillis(1234567890L))
+        .setDetectionStatus(DetectionStatus.VULNERABILITY_VERIFIED)
+        .setVulnerability(
+            Vulnerability.newBuilder()
+                .setMainId(
+                    VulnerabilityId.newBuilder().setPublisher("GOOGLE").setValue("FakeRemoteVuln"))
+                .setSeverity(Severity.CRITICAL)
+                .setTitle("FakeTitle")
+                .setDescription("FakeRemoteDescription"))
         .build();
   }
 

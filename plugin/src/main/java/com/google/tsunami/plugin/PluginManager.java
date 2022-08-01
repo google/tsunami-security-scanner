@@ -17,6 +17,7 @@ package com.google.tsunami.plugin;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.tsunami.common.data.NetworkServiceUtils.isWebService;
+import static java.util.Arrays.stream;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
@@ -25,7 +26,6 @@ import com.google.common.collect.Streams;
 import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.ReconnaissanceReport;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -161,14 +161,25 @@ public class PluginManager {
             .addAllMatchedServices(reconnaissanceReport.getNetworkServicesList());
     for (com.google.tsunami.proto.PluginDefinition remotePluginDefinition :
         remoteVulnDetector.getAllPlugins()) {
-      var matchedPlugin =
-          MatchedPlugin.newBuilder()
-              // PluginDefinition proto of the language-specific detector.
-              .setPlugin(remotePluginDefinition)
-              // TODO(b/239439169): Add plugin matching logic for remote plugins.
-              .addAllServices(reconnaissanceReport.getNetworkServicesList())
-              .build();
-      remoteVulnDetector.addMatchedPluginToDetect(matchedPlugin);
+      var matchedPluginBuilder = MatchedPlugin.newBuilder();
+      if (!remotePluginDefinition.hasTargetServiceName()
+          && !remotePluginDefinition.hasTargetSoftware()
+          && !remotePluginDefinition.getForWebService()) {
+        matchedPluginBuilder
+            .setPlugin(remotePluginDefinition)
+            .addAllServices(reconnaissanceReport.getNetworkServicesList());
+      } else {
+        matchedPluginBuilder
+            .setPlugin(remotePluginDefinition)
+            .addAllServices(
+                reconnaissanceReport.getNetworkServicesList().stream()
+                    .filter(
+                        networkService ->
+                            hasMatchingServiceName(networkService, remotePluginDefinition)
+                                || hasMatchingSoftware(networkService, remotePluginDefinition))
+                    .collect(toImmutableList()));
+      }
+      remoteVulnDetector.addMatchedPluginToDetect(matchedPluginBuilder.build());
     }
     return Optional.of(builder.build());
   }
@@ -179,11 +190,26 @@ public class PluginManager {
     boolean hasServiceNameMatch =
         pluginDefinition.targetServiceName().isPresent()
             && (serviceName.isEmpty()
-                || Arrays.stream(pluginDefinition.targetServiceName().get().value())
+                || stream(pluginDefinition.targetServiceName().get().value())
                     .anyMatch(
                         targetServiceName ->
                             Ascii.equalsIgnoreCase(targetServiceName, serviceName)));
     boolean hasWebServiceMatch = pluginDefinition.isForWebService() && isWebService(networkService);
+    return hasServiceNameMatch || hasWebServiceMatch;
+  }
+
+  private static boolean hasMatchingServiceName(
+      NetworkService networkService, com.google.tsunami.proto.PluginDefinition pluginDefinition) {
+    String serviceName = networkService.getServiceName();
+    boolean hasServiceNameMatch =
+        pluginDefinition.hasTargetServiceName()
+            && (serviceName.isEmpty()
+                || pluginDefinition.getTargetServiceName().getValueList().stream()
+                    .anyMatch(
+                        targetServiceName ->
+                            Ascii.equalsIgnoreCase(targetServiceName, serviceName)));
+    boolean hasWebServiceMatch =
+        pluginDefinition.getForWebService() && isWebService(networkService);
     return hasServiceNameMatch || hasWebServiceMatch;
   }
 
@@ -194,6 +220,15 @@ public class PluginManager {
         && (softwareName.isEmpty()
             || Ascii.equalsIgnoreCase(
                 pluginDefinition.targetSoftware().get().name(), softwareName));
+  }
+
+  private static boolean hasMatchingSoftware(
+      NetworkService networkService, com.google.tsunami.proto.PluginDefinition pluginDefinition) {
+    String softwareName = networkService.getSoftware().getName();
+    return pluginDefinition.hasTargetSoftware()
+        && (softwareName.isEmpty()
+            || Ascii.equalsIgnoreCase(
+                pluginDefinition.getTargetSoftware().getName(), softwareName));
   }
 
   /** Matched {@link TsunamiPlugin}s based on certain criteria. */
