@@ -17,8 +17,10 @@ package com.google.tsunami.plugin;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
@@ -40,11 +42,15 @@ import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule2;
 import com.google.tsunami.proto.DetectionReportList;
 import com.google.tsunami.proto.FingerprintingReport;
+import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.ReconnaissanceReport;
 import com.google.tsunami.proto.Software;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.TargetServiceName;
+import com.google.tsunami.proto.TargetSoftware;
 import com.google.tsunami.proto.TransportProtocol;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -471,6 +477,163 @@ public class PluginManagerTest {
         .containsExactly(FakeRemoteVulnDetector.class, FakeRemoteVulnDetector.class);
   }
 
+  @Test
+  public void
+      getVulnDetectors_whenRemoteDetectorServiceNameFilterHasMatchingService_returnsMatchedService() {
+    NetworkService httpService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .build();
+    NetworkService httpsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(httpService)
+            .addNetworkServices(httpsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeFilteringRemoteDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    ImmutableList<MatchedPlugin> matchedResult =
+        ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
+    assertThat(matchedResult).isNotEmpty();
+    assertThat(matchedResult.get(0).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getHttpServiceDefinition());
+    assertThat(matchedResult.get(0).getServicesList()).containsExactly(httpService, noNameService);
+  }
+
+  @Test
+  public void getVulnDetectors_whenRemoteDetectorWithServiceNameHasNoMatch_returnsNoServices() {
+    NetworkService httpsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(httpsService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeFilteringRemoteDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    ImmutableList<MatchedPlugin> matchedResult =
+        ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
+    assertThat(matchedResult.get(0).getServicesList()).isEmpty();
+  }
+
+  @Test
+  public void
+      getVulnDetectors_whenRemoteDetectorSoftwareFilterHasMatchingService_returnsMatchedService() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    NetworkService jenkinsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("Jenkins"))
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(wordPressService)
+            .addNetworkServices(jenkinsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeFilteringRemoteDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    ImmutableList<MatchedPlugin> matchedResult =
+        ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
+    assertThat(matchedResult).hasSize(2);
+    assertThat(matchedResult.get(1).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getJenkinsServiceDefinition());
+    assertThat(matchedResult.get(1).getServicesList())
+        .containsExactly(jenkinsService, noNameService);
+  }
+
+  @Test
+  public void
+      getVulnDetectors_whenRemoteDetectorWithSoftwareFilterHasNoMatchingService_returnsNoServices() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(wordPressService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeFilteringRemoteDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    ImmutableList<MatchedPlugin> matchedResult =
+        ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
+    assertThat(matchedResult).hasSize(2);
+    assertThat(matchedResult.get(0).getServicesCount()).isEqualTo(0);
+    assertThat(matchedResult.get(1).getServicesCount()).isEqualTo(0);
+  }
+
   @PluginInfo(
       type = PluginType.SERVICE_FINGERPRINT,
       name = "NoAnnotationFingerprinter",
@@ -577,6 +740,81 @@ public class PluginManagerTest {
       @Override
       protected void configurePlugin() {
         registerPlugin(FakeSoftwareFilteringDetector.class);
+      }
+    }
+  }
+
+  @PluginInfo(
+      type = PluginType.REMOTE_VULN_DETECTION,
+      name = "FakeFilteringRemoteDetector",
+      version = "v0.1",
+      description = "A fake RemoteVulnDetector.",
+      author = "fake",
+      bootstrapModule =
+          FakeFilteringRemoteDetector.FakeFilteringRemoteDetectorBootstrapModule.class)
+  private static final class FakeFilteringRemoteDetector implements RemoteVulnDetector {
+
+    private final List<MatchedPlugin> matchedPlugins;
+
+    FakeFilteringRemoteDetector() {
+      matchedPlugins = Lists.newArrayList();
+    }
+
+    public ImmutableList<MatchedPlugin> getMatchedPlugins() {
+      return ImmutableList.copyOf(matchedPlugins);
+    }
+
+    @Override
+    public DetectionReportList detect(
+        TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
+      return null;
+    }
+
+    @Override
+    public ImmutableList<com.google.tsunami.proto.PluginDefinition> getAllPlugins() {
+      return ImmutableList.of(getHttpServiceDefinition(), getJenkinsServiceDefinition());
+    }
+
+    @Override
+    public void addMatchedPluginToDetect(MatchedPlugin plugin) {
+      matchedPlugins.add(plugin);
+    }
+
+    static com.google.tsunami.proto.PluginDefinition getHttpServiceDefinition() {
+      return com.google.tsunami.proto.PluginDefinition.newBuilder()
+          .setInfo(
+              com.google.tsunami.proto.PluginInfo.newBuilder()
+                  .setType(com.google.tsunami.proto.PluginInfo.PluginType.VULN_DETECTION)
+                  .setName("FakeHttpServiceVuln")
+                  .setVersion("v0.1")
+                  .setDescription("A fake VulnDetector.")
+                  .setAuthor("fake"))
+          .setTargetServiceName(TargetServiceName.newBuilder().addValue("http"))
+          .build();
+    }
+
+    static com.google.tsunami.proto.PluginDefinition getJenkinsServiceDefinition() {
+      return com.google.tsunami.proto.PluginDefinition.newBuilder()
+          .setInfo(
+              com.google.tsunami.proto.PluginInfo.newBuilder()
+                  .setType(com.google.tsunami.proto.PluginInfo.PluginType.VULN_DETECTION)
+                  .setName("FakeJenkinsVuln")
+                  .setVersion("v0.1")
+                  .setDescription("A fake VulnDetector")
+                  .setAuthor("fake"))
+          .setTargetSoftware(TargetSoftware.newBuilder().setName("Jenkins"))
+          .build();
+    }
+
+    static FakeFilteringRemoteDetectorBootstrapModule getModule() {
+      return new FakeFilteringRemoteDetectorBootstrapModule();
+    }
+
+    private static final class FakeFilteringRemoteDetectorBootstrapModule
+        extends PluginBootstrapModule {
+      @Override
+      protected void configurePlugin() {
+        registerPlugin(FakeFilteringRemoteDetector.class);
       }
     }
   }
