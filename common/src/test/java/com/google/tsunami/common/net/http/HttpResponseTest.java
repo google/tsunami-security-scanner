@@ -134,4 +134,16 @@ public final class HttpResponseTest {
 
     assertTrue(httpResponse.jsonFieldEqualsToValue("field", "value"));
   }
+
+  @Test
+  public void bodyJson_whenHttpStatusInvalid_parseSucceeds() {
+    HttpResponse httpResponse =
+        HttpResponse.builder()
+            .setStatus(HttpStatus.HTTP_STATUS_UNSPECIFIED)
+            .setHeaders(HttpHeaders.builder().build())
+            .setResponseUrl(TEST_URL)
+            .build();
+
+    assertFalse(httpResponse.status().isSuccess());
+  }
 }

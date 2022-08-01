@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * HTTP Status Codes defined in RFC 2616, RFC 6585, RFC 4918 and RFC 7538.
@@ -35,6 +34,8 @@ import javax.annotation.Nullable;
  *     target="_top">https://tools.ietf.org/html/rfc7538</a>
  */
 public enum HttpStatus {
+  // Default
+  HTTP_STATUS_UNSPECIFIED(0, "Status Unspecified"),
 
   // Informational 1xx
   CONTINUE(100, "Continue"),
@@ -115,9 +116,9 @@ public enum HttpStatus {
    * @param code the HTTP status code.
    * @return the matching {@link HttpStatus} from the given status code.
    */
-  @Nullable
   public static HttpStatus fromCode(int code) {
-    return BY_CODE.get(code);
+    HttpStatus status = BY_CODE.get(code);
+    return status == null ? HTTP_STATUS_UNSPECIFIED : status;
   }
 
   private final int code;
