@@ -15,12 +15,11 @@
 
 import time
 
+from absl.testing import absltest
 import grpc_testing
 import ipaddr
 
 from google.protobuf import timestamp_pb2
-from net.proto2.contrib.pyutil import compare
-from testing.pybase import googletest
 from tsunami.plugin_server.py import plugin_service
 from tsunami.plugin_server.py import tsunami_plugin
 from tsunami.proto import detection_pb2
@@ -43,27 +42,25 @@ _ListPluginsMethod = _ServiceDescriptor.methods_by_name['ListPlugins']
 MAX_WORKERS = 1
 
 
-class PluginServiceTest(googletest.TestCase):
+class PluginServiceTest(absltest.TestCase):
 
-  @classmethod
-  def setUpClass(cls):
-    super().setUpClass()
-    cls.test_plugin = FakeVulnDetector()
-    cls._time = grpc_testing.strict_fake_time(time.time())
-    cls._server = grpc_testing.server_from_dictionary(
+  def setUp(self):
+    super().setUp()
+    self.test_plugin = FakeVulnDetector()
+    self._time = grpc_testing.strict_fake_time(time.time())
+    self._server = grpc_testing.server_from_dictionary(
         {
             _ServiceDescriptor:
                 plugin_service.PluginServiceServicer(
-                    py_plugins=[cls.test_plugin], max_workers=MAX_WORKERS),
-        }, cls._time)
+                    py_plugins=[self.test_plugin], max_workers=MAX_WORKERS),
+        }, self._time)
 
-    cls._channel = grpc_testing.channel(
-        plugin_service_pb2.DESCRIPTOR.services_by_name.values(), cls._time)
+    self._channel = grpc_testing.channel(
+        plugin_service_pb2.DESCRIPTOR.services_by_name.values(), self._time)
 
-  @classmethod
-  def tearDownClass(cls):
-    cls._channel.close()
-    super().tearDownClass()
+  def tearDown(self):
+    self._channel.close()
+    super().tearDown()
 
   def test_run_plugins_registered_returns_valid_response(self):
     plugin_to_test = FakeVulnDetector()
@@ -104,8 +101,7 @@ class PluginServiceTest(googletest.TestCase):
     request = plugin_service.ListPluginsRequest()
     rpc = self._server.invoke_unary_unary(_ListPluginsMethod, (), request, None)
     response, _, _, _ = rpc.termination()
-    compare.assertProto2Equal(
-        self,
+    self.assertEqual(
         plugin_service.ListPluginsResponse(
             plugins=[self.test_plugin.GetPluginDefinition()]), response)
 
@@ -166,4 +162,4 @@ class FakeVulnDetector(tsunami_plugin.VulnDetector):
 # TODO(b/239628051): Add a failed VulnDetector class to test failed cases.
 
 if __name__ == '__main__':
-  googletest.main()
+  absltest.main()
