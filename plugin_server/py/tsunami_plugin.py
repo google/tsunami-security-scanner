@@ -19,9 +19,9 @@ from tsunami.proto import network_service_pb2
 from tsunami.proto import plugin_representation_pb2
 from tsunami.proto import reconnaissance_pb2
 
-_TargetInfo = reconnaissance_pb2.TargetInfo
-_NetworkService = network_service_pb2.NetworkService
-_DetectionReportList = detection_pb2.DetectionReportList
+TargetInfo = reconnaissance_pb2.TargetInfo
+NetworkService = network_service_pb2.NetworkService
+DetectionReportList = detection_pb2.DetectionReportList
 PluginDefinition = plugin_representation_pb2.PluginDefinition
 
 
@@ -46,12 +46,12 @@ class VulnDetector(TsunamiPlugin):
   """
 
   @abc.abstractmethod
-  def Detect(self, target: _TargetInfo,
-             matched_services: list[_NetworkService]) -> _DetectionReportList:
+  def Detect(self, target: TargetInfo,
+             matched_services: list[NetworkService]) -> DetectionReportList:
     """Run detection logic for the target.
 
     Args:
-      target: Information abouut the scanning target itself.
+      target: Information about the scanning target itself.
       matched_services: A list of network services whose vulnerabilities could
         be detected by this plugin.
 
