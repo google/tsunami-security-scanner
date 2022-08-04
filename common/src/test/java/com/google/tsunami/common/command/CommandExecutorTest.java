@@ -39,6 +39,17 @@ public final class CommandExecutorTest {
   }
 
   @Test
+  public void executeWithNoStreamCollection_always_startsProcessAndReturnsProcessInstance()
+      throws IOException, InterruptedException, ExecutionException {
+    CommandExecutor executor = new CommandExecutor("/bin/sh", "-c", "echo 1");
+
+    Process process = executor.executeWithNoStreamCollection();
+    process.waitFor();
+
+    assertThat(process.exitValue()).isEqualTo(0);
+  }
+
+  @Test
   public void getOutput_always_returnsExpect()
       throws IOException, InterruptedException, ExecutionException {
     CommandExecutor executor = new CommandExecutor("/bin/sh", "-c", "echo 1");

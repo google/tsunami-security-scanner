@@ -91,6 +91,21 @@ public class CommandExecutor {
     return process;
   }
 
+  /**
+   * Starts the command without collecting output and error streams.
+   *
+   * @return Started {@link Process} object.
+   * @throws IOException if an I/O error occurs when starting the command executing process.
+   * @throws InterruptedException if interrupted while starting the command executing process.
+   * @throws ExecutionException if the command execution failed.
+   */
+  public Process executeWithNoStreamCollection()
+      throws IOException, InterruptedException, ExecutionException {
+    logger.atInfo().log("Executing the following command: '%s'", COMMAND_ARGS_JOINER.join(args));
+    process = processBuilder.start();
+    return process;
+  }
+
   @Nullable
   public String getOutput() {
     return output;
