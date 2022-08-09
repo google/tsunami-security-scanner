@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.google.gson.JsonSyntaxException;
 import com.google.protobuf.ByteString;
 import okhttp3.HttpUrl;
 import org.junit.Test;
@@ -69,7 +68,7 @@ public final class HttpResponseTest {
   }
 
   @Test
-  public void bodyJson_whenNonJsonResponseBody_throwsJsonSyntaxException() {
+  public void bodyJson_whenNonJsonResponseBody_returnsEmptyOptional() {
     HttpResponse httpResponse =
         HttpResponse.builder()
             .setStatus(HttpStatus.OK)
@@ -78,7 +77,7 @@ public final class HttpResponseTest {
             .setResponseUrl(TEST_URL)
             .build();
 
-    assertThrows(JsonSyntaxException.class, httpResponse::bodyJson);
+    assertThat(httpResponse.bodyJson()).isEmpty();
   }
 
   @Test
@@ -109,7 +108,7 @@ public final class HttpResponseTest {
   }
 
   @Test
-  public void jsonFieldEqualsToValue_whenNonJsonResponseBody_throwsJsonSyntaxException() {
+  public void jsonFieldEqualsToValue_whenNonJsonResponseBody_returnsEmptyOptional() {
     HttpResponse httpResponse =
         HttpResponse.builder()
             .setStatus(HttpStatus.OK)
@@ -118,8 +117,7 @@ public final class HttpResponseTest {
             .setResponseUrl(TEST_URL)
             .build();
 
-    assertThrows(
-        JsonSyntaxException.class, () -> httpResponse.jsonFieldEqualsToValue("field", "value"));
+    assertThat(httpResponse.bodyJson()).isEmpty();
   }
 
   @Test

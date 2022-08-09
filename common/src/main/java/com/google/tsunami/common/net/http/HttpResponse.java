@@ -51,13 +51,18 @@ public abstract class HttpResponse {
 
   /**
    * Tries to parse the response body as json and returns the parsing result as {@link JsonElement}.
-   * If parsing failed, {@link com.google.gson.JsonSyntaxException} will be thrown.
+   * If parsing failed, an empty optional is returned.
    *
    * @return HTTP response body as a Gson {@link JsonElement} object.
    */
   @Memoized
   public Optional<JsonElement> bodyJson() {
-    return bodyString().map(JsonParser::parseString);
+    try {
+      return bodyString().map(JsonParser::parseString);
+    } catch (RuntimeException e) {
+      // Do best-effort parsing and ignore Json parsing errors
+      return Optional.empty();
+    }
   }
 
   /**
