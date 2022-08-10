@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -27,6 +28,7 @@ import com.google.tsunami.common.config.ConfigModule;
 import com.google.tsunami.common.config.TsunamiConfig;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
+import com.google.tsunami.main.cli.server.RemoteServerLoaderModule;
 import com.google.tsunami.plugin.testing.FailedVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePluginExecutionModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
@@ -105,6 +107,7 @@ public final class TsunamiCliTest {
                   install(new FakeServiceFingerprinterBootstrapModule());
                   install(new FakeVulnDetectorBootstrapModule());
                   install(new FakeVulnDetectorBootstrapModule2());
+                  install(new RemoteServerLoaderModule(ImmutableList.of()));
                 }
               })
           .injectMembers(this);
@@ -281,6 +284,7 @@ public final class TsunamiCliTest {
                   install(new FakePluginExecutionModule());
                   install(new FakePortScannerBootstrapModule());
                   install(new FailedVulnDetectorBootstrapModule());
+                  install(new RemoteServerLoaderModule(ImmutableList.of()));
                 }
               })
           .injectMembers(this);
