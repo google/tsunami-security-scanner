@@ -15,6 +15,7 @@ dependencies {
     compile deps.protobuf
     compile deps.protobuf_util
     compile deps.grpc_core
+    compile deps.grpc_netty
     compile deps.grpc_testing
     compile deps.grpc_context
     compile deps.grpc_services

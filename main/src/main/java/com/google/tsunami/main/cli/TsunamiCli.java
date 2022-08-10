@@ -23,7 +23,9 @@ import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetwork
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.flogger.GoogleLogger;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -37,10 +39,14 @@ import com.google.tsunami.common.config.YamlConfigLoader;
 import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.reflection.ClassGraphModule;
+import com.google.tsunami.common.server.ServerPortCommand;
 import com.google.tsunami.common.time.SystemUtcClockModule;
 import com.google.tsunami.main.cli.option.MainCliOptions;
+import com.google.tsunami.main.cli.server.RemoteServerLoader;
+import com.google.tsunami.main.cli.server.RemoteServerLoaderModule;
 import com.google.tsunami.plugin.PluginExecutionModule;
 import com.google.tsunami.plugin.PluginLoadingModule;
+import com.google.tsunami.plugin.RemoteVulnDetectorLoadingModule;
 import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.ScanStatus;
@@ -51,6 +57,7 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
@@ -62,15 +69,18 @@ public final class TsunamiCli {
   private final DefaultScanningWorkflow scanningWorkflow;
   private final ScanResultsArchiver scanResultsArchiver;
   private final MainCliOptions mainCliOptions;
+  private final RemoteServerLoader remoteServerLoader;
 
   @Inject
   TsunamiCli(
       DefaultScanningWorkflow scanningWorkflow,
       ScanResultsArchiver scanResultsArchiver,
-      MainCliOptions mainCliOptions) {
+      MainCliOptions mainCliOptions,
+      RemoteServerLoader remoteServerLoader) {
     this.scanningWorkflow = checkNotNull(scanningWorkflow);
     this.scanResultsArchiver = checkNotNull(scanResultsArchiver);
     this.mainCliOptions = checkNotNull(mainCliOptions);
+    this.remoteServerLoader = checkNotNull(remoteServerLoader);
   }
 
   public boolean run()
@@ -78,7 +88,10 @@ public final class TsunamiCli {
     String logId = (mainCliOptions.logId == null) ? "" : (mainCliOptions.logId + ": ");
     // TODO(b/171405612): Find a way to print the log ID at every log line.
     logger.atInfo().log("%sTsunamiCli starting...", logId);
+
+    ImmutableList<Process> languageServerProcesses = remoteServerLoader.runServerProcesses();
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
+    languageServerProcesses.forEach(Process::destroy);
 
     logger.atInfo().log("Tsunami scan finished, saving results.");
     saveResults(scanResults);
@@ -139,6 +152,10 @@ public final class TsunamiCli {
     protected void configure() {
       // TODO(b/171405612): Find a way to use the log ID extracted by the CLI options.
       String logId = extractLogId(args);
+
+      // TODO(b/241964583): Only use LanguageServerOptions to extract language server args.
+      ImmutableList<ServerPortCommand> commands = extractPluginServerArgs(args);
+
       install(new ClassGraphModule(classScanResult));
       install(new ConfigModule(classScanResult, tsunamiConfig));
       install(new CliOptionsModule(classScanResult, "TsunamiCli", args));
@@ -150,6 +167,41 @@ public final class TsunamiCli {
       install(new PluginExecutionModule());
       install(new PluginLoadingModule(classScanResult));
       install(new PayloadGeneratorModule(new SecureRandom()));
+      install(new RemoteServerLoaderModule(commands));
+      install(new RemoteVulnDetectorLoadingModule(commands));
+    }
+
+    private ImmutableList<ServerPortCommand> extractPluginServerArgs(String[] args) {
+      var paths = extractPluginServerPaths(args);
+      var ports = extractPluginServerPorts(args);
+      if (paths.size() == ports.size()) {
+        List<ServerPortCommand> commands = Lists.newArrayList();
+        for (int i = 0; i < paths.size(); ++i) {
+          commands.add(ServerPortCommand.create(paths.get(i), ports.get(i)));
+        }
+        return ImmutableList.copyOf(commands);
+      }
+      return ImmutableList.of();
+    }
+
+    private ImmutableList<String> extractPluginServerPaths(String[] args) {
+      for (int i = 0; i < args.length; ++i) {
+        if (args[i].startsWith("--plugin-server-paths=")) {
+          var paths = Iterables.get(Splitter.on('=').split(args[i]), 1);
+          return ImmutableList.copyOf(Splitter.on(',').split(paths));
+        }
+      }
+      return ImmutableList.of();
+    }
+
+    private ImmutableList<String> extractPluginServerPorts(String[] args) {
+      for (int i = 0; i < args.length; ++i) {
+        if (args[i].startsWith("--plugin-server-ports=")) {
+          var ports = Iterables.get(Splitter.on('=').split(args[i]), 1);
+          return ImmutableList.copyOf(Splitter.on(',').split(ports));
+        }
+      }
+      return ImmutableList.of();
     }
 
     private String extractLogId(String[] args) {
@@ -182,7 +234,6 @@ public final class TsunamiCli {
       if (!injector.getInstance(TsunamiCli.class).run()) {
         System.exit(1);
       }
-
       logger.atInfo().log("Full Tsunami scan took %s.", stopwatch.stop());
     } catch (Throwable e) {
       logger.atSevere().withCause(e).log("Exiting due to workflow execution exceptions.");

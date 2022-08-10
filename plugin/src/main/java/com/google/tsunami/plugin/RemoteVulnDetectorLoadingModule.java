@@ -16,6 +16,7 @@
 package com.google.tsunami.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.value.AutoAnnotation;
 import com.google.auto.value.AutoBuilder;
@@ -23,20 +24,26 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import com.google.tsunami.common.server.ServerPortCommand;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import io.grpc.Channel;
+import io.grpc.netty.NegotiationType;
+import io.grpc.netty.NettyChannelBuilder;
 
 /** A Guice module that loads all {@link RemoteVulnDetector RemoteVulnDetectors} at runtime. */
 public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
+  private static final int MAX_MESSAGE_SIZE =
+      10 * 1000 * 1000; // Max incoming gRPC message size 10MB.
 
-  private final ImmutableList<Channel> availableChannels;
+  private final ImmutableList<ServerPortCommand> availableServerPorts;
 
-  public RemoteVulnDetectorLoadingModule(ImmutableList<Channel> channels) {
-    this.availableChannels = checkNotNull(channels);
+  public RemoteVulnDetectorLoadingModule(ImmutableList<ServerPortCommand> serverPorts) {
+    this.availableServerPorts = checkNotNull(serverPorts);
   }
 
   @Override
   protected void configure() {
+    ImmutableList<Channel> availableChannels = getLanguageServerChannels(availableServerPorts);
     MapBinder<PluginDefinition, TsunamiPlugin> tsunamiPluginBinder =
         MapBinder.newMapBinder(binder(), PluginDefinition.class, TsunamiPlugin.class);
     availableChannels.forEach(
@@ -44,6 +51,18 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
             tsunamiPluginBinder
                 .addBinding(getRemoteVulnDetectorPluginDefinition(channel.hashCode()))
                 .toInstance(new RemoteVulnDetectorImpl(channel)));
+  }
+
+  private ImmutableList<Channel> getLanguageServerChannels(
+      ImmutableList<ServerPortCommand> commands) {
+    return commands.stream()
+        .map(
+            command ->
+                NettyChannelBuilder.forTarget("localhost:" + command.port())
+                    .negotiationType(NegotiationType.PLAINTEXT)
+                    .maxInboundMessageSize(MAX_MESSAGE_SIZE)
+                    .build())
+        .collect(toImmutableList());
   }
 
   // TODO(b/239095108): Change channelIds to something more meaningful to identify

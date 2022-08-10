@@ -18,6 +18,7 @@ package com.google.tsunami.main.cli.server;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.tsunami.common.server.ServerPortCommand;
 import java.util.List;
 
 /** Installs {@link RemoteServerLoaderModule}. */

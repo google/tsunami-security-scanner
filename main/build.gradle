@@ -14,9 +14,8 @@ dependencies {
     compile deps.flogger_google_ext
     compile deps.guava
     compile deps.jsoup
-    compile deps.autovalue
+    compile deps.grpc_netty
     runtime deps.jaxb_runtime
-    annotationProcessor deps.autovalue_annotation_processor
 
     testCompile deps.junit
     testCompile deps.mockito

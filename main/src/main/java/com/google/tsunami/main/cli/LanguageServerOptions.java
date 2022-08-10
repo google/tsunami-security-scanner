@@ -56,7 +56,7 @@ public final class LanguageServerOptions implements CliOption {
       if (pluginServerPorts != null && !pluginServerPorts.isEmpty()) {
         for (String pluginServerPort : pluginServerPorts) {
           try {
-            var port = Integer.parseInt(pluginServerPort);
+            var port = Integer.parseInt(pluginServerPort, 10);
             if (!(port <= NetworkEndpointUtils.MAX_PORT_NUMBER && port > 0)) {
               throw new ParameterException(
                   String.format(
@@ -71,14 +71,14 @@ public final class LanguageServerOptions implements CliOption {
         }
       }
 
-      if ((pluginServerFilenames != null && pluginServerPorts == null)
-          || (pluginServerFilenames == null && pluginServerPorts != null)
-          || (pluginServerFilenames.size() != pluginServerPorts.size())) {
+      var pathCounts = pluginServerFilenames == null ? 0 : pluginServerFilenames.size();
+      var portCounts = pluginServerPorts == null ? 0 : pluginServerPorts.size();
+      if (pathCounts != portCounts) {
         throw new ParameterException(
             String.format(
                 "Number of plugin server paths must be equal to number of plugin server ports."
                     + " Paths: %s. Ports: %s.",
-                pluginServerFilenames.size(), pluginServerPorts.size()));
+                pathCounts, portCounts));
       }
     }
   }

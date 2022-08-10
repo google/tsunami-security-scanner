@@ -67,6 +67,7 @@ subprojects {
                 grpc_core: "io.grpc:grpc-core:${grpcVersion}",
                 grpc_services: "io.grpc:grpc-services:${grpcVersion}",
                 grpc_testing: "io.grpc:grpc-testing:${grpcVersion}",
+                grpc_netty: "io.grpc:grpc-netty:${grpcVersion}",
                 javax_annotations: "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}",
                 gson: "com.google.code.gson:gson:${gsonVersion}",
                 jaxb_runtime: "org.glassfish.jaxb:jaxb-runtime:${jaxbVersion}",

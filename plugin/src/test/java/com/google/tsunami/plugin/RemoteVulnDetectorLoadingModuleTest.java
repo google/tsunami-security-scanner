@@ -21,8 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Key;
 import com.google.inject.util.Types;
-import io.grpc.Channel;
-import io.grpc.inprocess.InProcessChannelBuilder;
+import com.google.tsunami.common.server.ServerPortCommand;
 import io.grpc.inprocess.InProcessServerBuilder;
 import java.util.Map;
 import org.junit.Test;
@@ -41,10 +40,6 @@ public final class RemoteVulnDetectorLoadingModuleTest {
     return InProcessServerBuilder.generateName();
   }
 
-  private static Channel generateChannel(String serverName) {
-    return InProcessChannelBuilder.forName(serverName).directExecutor().build();
-  }
-
   @Test
   public void configure_whenNoChannelsRegistered_loadsNoRemotePlugins() {
     Map<PluginDefinition, TsunamiPlugin> remotePlugins =
@@ -56,19 +51,13 @@ public final class RemoteVulnDetectorLoadingModuleTest {
 
   @Test
   public void configure_always_loadsAllRemotePlugins() {
-    var channelName0 = generateChannel(generateServerName());
-    var channelName1 = generateChannel(generateServerName());
+    var path0 = ServerPortCommand.create(generateServerName(), "34567");
+    var path1 = ServerPortCommand.create(generateServerName(), "34566");
     Map<PluginDefinition, TsunamiPlugin> remotePlugins =
         Guice.createInjector(
-                new RemoteVulnDetectorLoadingModule(ImmutableList.of(channelName0, channelName1)))
+                new RemoteVulnDetectorLoadingModule(ImmutableList.of(path0, path1)))
             .getInstance(PLUGIN_BINDING_KEY);
 
     assertThat(remotePlugins).hasSize(2);
-    assertThat(remotePlugins.keySet())
-        .containsExactly(
-            RemoteVulnDetectorLoadingModule.getRemoteVulnDetectorPluginDefinition(
-                channelName0.hashCode()),
-            RemoteVulnDetectorLoadingModule.getRemoteVulnDetectorPluginDefinition(
-                channelName1.hashCode()));
   }
 }

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.tsunami.common.command.CommandExecutor;
 import com.google.tsunami.common.command.CommandExecutorFactory;
+import com.google.tsunami.common.server.ServerPortCommand;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.util.List;
@@ -43,7 +44,7 @@ public class RemoteServerLoader {
   }
 
   public ImmutableList<Process> runServerProcesses() {
-    logger.atInfo().log("Starting language server processes...");
+    logger.atInfo().log("Starting language server processes (if any)...");
     return commands.stream()
         .map(
             command ->
