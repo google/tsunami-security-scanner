@@ -15,11 +15,16 @@
  */
 package com.google.tsunami.common.net;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import okhttp3.HttpUrl;
 
@@ -112,6 +117,20 @@ public final class UrlUtils {
    */
   public static String removeTrailingSlashes(String path) {
     return TRAILING_SLASH_PATTERN.matcher(path).replaceFirst("");
+  }
+
+  /**
+   * Encodes the given String using URL-encoding.
+   *
+   * @param raw the raw String to be encoded.
+   * @return the URL-encoded version of the provided String if it was valid UTF-8.
+   */
+  public static Optional<String> urlEncode(String raw) {
+    try {
+      return Optional.of(URLEncoder.encode(raw, UTF_8.toString()));
+    } catch (UnsupportedEncodingException e) {
+      return Optional.empty();
+    }
   }
 
   private UrlUtils() {}
