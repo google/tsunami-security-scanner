@@ -37,6 +37,8 @@ public abstract class HttpRequest {
   public abstract HttpHeaders headers();
   public abstract Optional<ByteString> requestBody();
 
+  public abstract Builder toBuilder();
+
   /**
    * Creates a {@link Builder} object for configuring {@link HttpRequest}.
    *
