@@ -53,14 +53,14 @@ public final class FuzzingUtils {
   private static ImmutableList<HttpRequest> fuzzGetParameters(
       HttpRequest request, String payload, Optional<String> defaultParameter) {
     URI parsedUrl = URI.create(request.url());
-    ImmutableList<HttpQueryParams> queryParams = parseQuery(parsedUrl.getQuery());
+    ImmutableList<HttpQueryParameter> queryParams = parseQuery(parsedUrl.getQuery());
     if (queryParams.isEmpty() && defaultParameter.isPresent()) {
       return ImmutableList.of(
           request.toBuilder()
               .setUrl(
                   assembleUrlWithQueries(
                       parsedUrl,
-                      ImmutableList.of(HttpQueryParams.create(defaultParameter.get(), payload))))
+                      ImmutableList.of(HttpQueryParameter.create(defaultParameter.get(), payload))))
               .build());
     }
     return fuzzParams(queryParams, payload).stream()
@@ -69,40 +69,40 @@ public final class FuzzingUtils {
         .collect(toImmutableList());
   }
 
-  private static ImmutableSet<ImmutableList<HttpQueryParams>> fuzzParams(
-      ImmutableList<HttpQueryParams> params, String payload) {
-    ImmutableSet.Builder<ImmutableList<HttpQueryParams>> fuzzedParamsbuilder =
+  private static ImmutableSet<ImmutableList<HttpQueryParameter>> fuzzParams(
+      ImmutableList<HttpQueryParameter> params, String payload) {
+    ImmutableSet.Builder<ImmutableList<HttpQueryParameter>> fuzzedParamsbuilder =
         ImmutableSet.builder();
 
     for (int i = 0; i < params.size(); i++) {
-      List<HttpQueryParams> paramsWithPayload = new ArrayList<>(params);
-      paramsWithPayload.set(i, HttpQueryParams.create(params.get(i).name(), payload));
+      List<HttpQueryParameter> paramsWithPayload = new ArrayList<>(params);
+      paramsWithPayload.set(i, HttpQueryParameter.create(params.get(i).name(), payload));
       fuzzedParamsbuilder.add(ImmutableList.copyOf(paramsWithPayload));
     }
 
     return fuzzedParamsbuilder.build();
   }
 
-  private static ImmutableList<HttpQueryParams> parseQuery(String query) {
+  public static ImmutableList<HttpQueryParameter> parseQuery(String query) {
     if (isNullOrEmpty(query)) {
       return ImmutableList.of();
     }
-    ImmutableList.Builder<HttpQueryParams> queryParamsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<HttpQueryParameter> queryParamsBuilder = ImmutableList.builder();
     for (String param : Splitter.on('&').split(query)) {
       int equalPosition = param.indexOf("=");
       if (equalPosition > -1) {
         String name = param.substring(0, equalPosition);
         String value = param.substring(equalPosition + 1);
-        queryParamsBuilder.add(HttpQueryParams.create(name, value));
+        queryParamsBuilder.add(HttpQueryParameter.create(name, value));
       } else {
-        queryParamsBuilder.add(HttpQueryParams.create(param, ""));
+        queryParamsBuilder.add(HttpQueryParameter.create(param, ""));
       }
     }
     return queryParamsBuilder.build();
   }
 
   private static String assembleUrlWithQueries(
-      URI parsedUrl, ImmutableList<HttpQueryParams> params) {
+      URI parsedUrl, ImmutableList<HttpQueryParameter> params) {
     String query = assembleQueryParams(params);
     StringBuilder urlBuilder = new StringBuilder();
     urlBuilder.append(parsedUrl.getScheme()).append("://").append(parsedUrl.getRawAuthority());
@@ -118,20 +118,21 @@ public final class FuzzingUtils {
     return urlBuilder.toString();
   }
 
-  private static String assembleQueryParams(ImmutableList<HttpQueryParams> params) {
+  private static String assembleQueryParams(ImmutableList<HttpQueryParameter> params) {
     return params.stream()
         .map(param -> String.format("%s=%s", param.name(), param.value()))
         .collect(joining("&"));
   }
 
+  /** URL Query parameter name and value pair. */
   @AutoValue
-  abstract static class HttpQueryParams {
-    abstract String name();
+  public abstract static class HttpQueryParameter {
+    public abstract String name();
 
-    abstract String value();
+    public abstract String value();
 
-    public static HttpQueryParams create(String name, String value) {
-      return new AutoValue_FuzzingUtils_HttpQueryParams(name, value);
+    public static HttpQueryParameter create(String name, String value) {
+      return new AutoValue_FuzzingUtils_HttpQueryParameter(name, value);
     }
   }
 
