@@ -39,7 +39,18 @@ public final class FuzzingUtils {
    */
   public static ImmutableList<HttpRequest> fuzzGetParametersWithDefaultParameter(
       HttpRequest request, String payload, String defaultParameter) {
-    return fuzzGetParameters(request, payload, Optional.of(defaultParameter));
+    return fuzzGetParameters(request, payload, Optional.of(defaultParameter), ImmutableSet.of());
+  }
+
+  /**
+   * Fuzz GET parameters by replacing values with the provided payload. Payloads are expected to
+   * represent paths. If encountered, file extesions and path prefixes are kept and provided via
+   * additional exploit requests. If no GET parameter is found, return an empty list.
+   */
+  public static ImmutableList<HttpRequest> fuzzGetParametersExpectingPathValues(
+      HttpRequest request, String payload) {
+    return fuzzGetParameters(
+        request, payload, Optional.empty(), ImmutableSet.of(FuzzingModifier.FUZZING_PATHS));
   }
 
   /**
@@ -47,11 +58,14 @@ public final class FuzzingUtils {
    * found, return an empty list.
    */
   public static ImmutableList<HttpRequest> fuzzGetParameters(HttpRequest request, String payload) {
-    return fuzzGetParameters(request, payload, Optional.empty());
+    return fuzzGetParameters(request, payload, Optional.empty(), ImmutableSet.of());
   }
 
   private static ImmutableList<HttpRequest> fuzzGetParameters(
-      HttpRequest request, String payload, Optional<String> defaultParameter) {
+      HttpRequest request,
+      String payload,
+      Optional<String> defaultParameter,
+      ImmutableSet<FuzzingModifier> modifiers) {
     URI parsedUrl = URI.create(request.url());
     ImmutableList<HttpQueryParameter> queryParams = parseQuery(parsedUrl.getQuery());
     if (queryParams.isEmpty() && defaultParameter.isPresent()) {
@@ -63,24 +77,66 @@ public final class FuzzingUtils {
                       ImmutableList.of(HttpQueryParameter.create(defaultParameter.get(), payload))))
               .build());
     }
-    return fuzzParams(queryParams, payload).stream()
+    return fuzzParams(queryParams, payload, modifiers).stream()
         .map(fuzzedParams -> assembleUrlWithQueries(parsedUrl, fuzzedParams))
         .map(fuzzedUrl -> request.toBuilder().setUrl(fuzzedUrl).build())
         .collect(toImmutableList());
   }
 
+  private static ImmutableList<HttpQueryParameter> setFuzzedParams(
+      ImmutableList<HttpQueryParameter> params, int index, String payload) {
+    List<HttpQueryParameter> paramsWithPayload = new ArrayList<>(params);
+    paramsWithPayload.set(index, HttpQueryParameter.create(params.get(index).name(), payload));
+    return ImmutableList.copyOf(paramsWithPayload);
+  }
+
+  private static void fuzzParamsWithExtendedPathPayloads(
+      ImmutableSet.Builder<ImmutableList<HttpQueryParameter>> builder,
+      ImmutableList<HttpQueryParameter> params,
+      int index,
+      String payload) {
+    int dotLocation = params.get(index).value().lastIndexOf('.');
+    if (dotLocation != -1) {
+      builder.add(
+          setFuzzedParams(
+              params, index, payload + "%00" + params.get(index).value().substring(dotLocation)));
+    }
+
+    int slashLocation = params.get(index).value().lastIndexOf('/');
+    if (slashLocation != -1) {
+      builder.add(
+          setFuzzedParams(
+              params, index, params.get(index).value().substring(0, slashLocation + 1) + payload));
+    }
+
+    if (dotLocation != -1 && slashLocation != -1 && slashLocation < dotLocation) {
+      builder.add(
+          setFuzzedParams(
+              params,
+              index,
+              params.get(index).value().substring(0, slashLocation + 1)
+                  + payload
+                  + "%00"
+                  + params.get(index).value().substring(dotLocation)));
+    }
+  }
+
   private static ImmutableSet<ImmutableList<HttpQueryParameter>> fuzzParams(
-      ImmutableList<HttpQueryParameter> params, String payload) {
-    ImmutableSet.Builder<ImmutableList<HttpQueryParameter>> fuzzedParamsbuilder =
+      ImmutableList<HttpQueryParameter> params,
+      String payload,
+      ImmutableSet<FuzzingModifier> modifiers) {
+    ImmutableSet.Builder<ImmutableList<HttpQueryParameter>> fuzzedParamsBuilder =
         ImmutableSet.builder();
 
     for (int i = 0; i < params.size(); i++) {
-      List<HttpQueryParameter> paramsWithPayload = new ArrayList<>(params);
-      paramsWithPayload.set(i, HttpQueryParameter.create(params.get(i).name(), payload));
-      fuzzedParamsbuilder.add(ImmutableList.copyOf(paramsWithPayload));
+      fuzzedParamsBuilder.add(setFuzzedParams(params, i, payload));
+
+      if (modifiers.contains(FuzzingModifier.FUZZING_PATHS)) {
+        fuzzParamsWithExtendedPathPayloads(fuzzedParamsBuilder, params, i, payload);
+      }
     }
 
-    return fuzzedParamsbuilder.build();
+    return fuzzedParamsBuilder.build();
   }
 
   public static ImmutableList<HttpQueryParameter> parseQuery(String query) {
@@ -134,6 +190,10 @@ public final class FuzzingUtils {
     public static HttpQueryParameter create(String name, String value) {
       return new AutoValue_FuzzingUtils_HttpQueryParameter(name, value);
     }
+  }
+
+  enum FuzzingModifier {
+    FUZZING_PATHS;
   }
 
   private FuzzingUtils() {}

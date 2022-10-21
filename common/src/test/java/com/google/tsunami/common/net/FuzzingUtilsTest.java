@@ -70,6 +70,65 @@ public final class FuzzingUtilsTest {
   }
 
   @Test
+  public void
+      fuzzGetParametersExpectingPathValues_whenGetParameterValueHasFileExtension_appendsFileExtensionToPayload() {
+    HttpRequest requestWithFileExtension =
+        HttpRequest.get("https://google.com?key=value.jpg").withEmptyHeaders().build();
+    HttpRequest requestWithFuzzedGetParameterWithFileExtension =
+        HttpRequest.get("https://google.com?key=<payload>%00.jpg").withEmptyHeaders().build();
+
+    assertThat(
+            FuzzingUtils.fuzzGetParametersExpectingPathValues(
+                requestWithFileExtension, "<payload>"))
+        .contains(requestWithFuzzedGetParameterWithFileExtension);
+  }
+
+  @Test
+  public void
+      fuzzGetParametersExpectingPathValues_whenGetParameterValueHasPathPrefix_prefixesPayload() {
+    HttpRequest requestWithPathPrefix =
+        HttpRequest.get("https://google.com?key=resources/value").withEmptyHeaders().build();
+    HttpRequest requestWithFuzzedGetParameterWithPathPrefix =
+        HttpRequest.get("https://google.com?key=resources/<payload>").withEmptyHeaders().build();
+
+    assertThat(
+            FuzzingUtils.fuzzGetParametersExpectingPathValues(requestWithPathPrefix, "<payload>"))
+        .contains(requestWithFuzzedGetParameterWithPathPrefix);
+  }
+
+  @Test
+  public void
+      fuzzGetParametersExpectingPathValues_whenGetParameterValueHasPathPrefixAndFileExtension_prefixesPayloadAndAppendsFileExtension() {
+    HttpRequest requestWithPathPrefixAndFileExtension =
+        HttpRequest.get("https://google.com?key=resources/value.jpg").withEmptyHeaders().build();
+    HttpRequest requestWithFuzzedGetParameterWithPathPrefixAndFileExtension =
+        HttpRequest.get("https://google.com?key=resources/<payload>%00.jpg")
+            .withEmptyHeaders()
+            .build();
+
+    assertThat(
+            FuzzingUtils.fuzzGetParametersExpectingPathValues(
+                requestWithPathPrefixAndFileExtension, "<payload>"))
+        .contains(requestWithFuzzedGetParameterWithPathPrefixAndFileExtension);
+  }
+
+  @Test
+  public void
+      fuzzGetParametersExpectingPathValues_whenGetParameterValueHasPathPrefixOrFileExtension_prefixesPayloadOrAppendsFileExtension() {
+    HttpRequest requestWithPathPrefixOrFileExtension =
+        HttpRequest.get("https://google.com?key=resources./value").withEmptyHeaders().build();
+    HttpRequest requestWithFuzzedGetParameterWithPathPrefixAndFileExtension =
+        HttpRequest.get("https://google.com?key=resources./<payload>%00./value")
+            .withEmptyHeaders()
+            .build();
+
+    assertThat(
+            FuzzingUtils.fuzzGetParametersExpectingPathValues(
+                requestWithPathPrefixOrFileExtension, "<payload>"))
+        .doesNotContain(requestWithFuzzedGetParameterWithPathPrefixAndFileExtension);
+  }
+
+  @Test
   public void fuzzGetParameters_whenNoGetParameters_returnsEmptyList() {
     assertThat(FuzzingUtils.fuzzGetParameters(REQUEST_WITHOUT_GET_PARAMETERS, "<payload>"))
         .isEmpty();
