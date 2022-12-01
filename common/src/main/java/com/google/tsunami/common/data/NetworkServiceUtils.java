@@ -49,6 +49,7 @@ public final class NetworkServiceUtils {
           .put("radan-http", true) // Port 8088, Hadoop Yarn web UI identified as this.
           .put("ssl/http", false)
           .put("ssl/https", false)
+          .put("ssl/http-proxy", false)
           .build();
 
   private NetworkServiceUtils() {}
