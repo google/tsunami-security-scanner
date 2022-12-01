@@ -23,14 +23,13 @@ payloads:
     vulnerability_type:
       - SSRF
   - name: general_ssrf_no_callback
-    # We use http://google.com for SSRF validation without the callback server because we can count
-    # on the 404 response being stable with good uptime, but detectors could break if this changed.
+    # Detectors could break if this page changes or goes down.
     interpretation_environment: INTERPRETATION_ANY
     execution_environment: EXEC_ANY
     uses_callback_server: false
-    payload_string: http://google.com/page-does-not-exist
-    validationType: VALIDATION_REGEX
-    validationRegex: (?s).*Error 404 \(Not Found\)!!1.*
+    payload_string: http://public-firing-range.appspot.com/
+    validation_type: VALIDATION_REGEX
+    validation_regex: (?s).*What is the Firing Range?.*
     vulnerability_type:
       - SSRF
   - name: linux_callback
@@ -55,7 +54,7 @@ payloads:
     executionEnvironment: EXEC_INTERPRETATION_ENVIRONMENT
     usesCallbackServer: false
     payloadString: String.format("%s%s%s", "TSUNAMI_PAYLOAD_START", "$TSUNAMI_PAYLOAD_TOKEN_RANDOM", "TSUNAMI_PAYLOAD_END")
-    validationType: VALIDATION_REGEX
-    validationRegex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
+    validation_type: VALIDATION_REGEX
+    validation_regex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
     vulnerabilityType:
       - REFLECTIVE_RCE

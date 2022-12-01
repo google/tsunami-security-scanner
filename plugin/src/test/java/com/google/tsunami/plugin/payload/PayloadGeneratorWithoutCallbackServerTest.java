@@ -152,7 +152,7 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
   public void getPayload_withSsrfConfiguration_returnsGooglePayload() {
     Payload payload = payloadGenerator.generate(ANY_SSRF_CONFIG);
 
-    assertThat(payload.getPayload()).isEqualTo("http://google.com/page-does-not-exist");
+    assertThat(payload.getPayload()).isEqualTo("http://public-firing-range.appspot.com/");
     assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
@@ -160,7 +160,7 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
   public void checkIfExecuted_withSsrfConfiguration_andCorrectInput_returnsTrue() {
     Payload payload = payloadGenerator.generate(ANY_SSRF_CONFIG);
 
-    assertTrue(payload.checkIfExecuted("<title>Error 404 (Not Found)!!1</title>"));
+    assertTrue(payload.checkIfExecuted("<h1>What is the Firing Range?</h1>"));
   }
 
   @Test
