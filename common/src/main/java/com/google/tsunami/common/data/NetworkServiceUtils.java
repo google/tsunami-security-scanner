@@ -12,7 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * For any utility update, please consider if Python's network service utils
+ * (plugin_server/py/common/data/network_service_utils.py) also needs the modification.
  */
+
 package com.google.tsunami.common.data;
 
 import static com.google.common.base.Preconditions.checkArgument;
