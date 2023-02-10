@@ -27,6 +27,7 @@ import com.google.protobuf.StringValue;
 import com.google.tsunami.common.net.http.HttpClient;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.TcsClient;
+import com.google.tsunami.plugin.TcsClientCliOptions;
 import com.google.tsunami.plugin.TcsConfigProperties;
 import com.google.tsunami.proto.PayloadDefinition;
 import com.google.tsunami.proto.PayloadGeneratorConfig.ExecutionEnvironment;
@@ -48,8 +49,19 @@ import org.junit.runners.Parameterized.Parameters;
 /** Tests for {@link PayloadGeneratorModule} */
 @RunWith(Parameterized.class)
 public final class PayloadGeneratorModuleTest {
+  private static final String DOMAIN_1 = "mydomain1.com";
+  private static final Integer PORT_1 = 1111;
+  private static final String POLLING_URI_1 = String.format("http://%s:%d", DOMAIN_1, PORT_1);
+
+  private static final String DOMAIN_2 = "http://mydomain2.com:2222";
+  private static final Integer PORT_2 = 2222;
+  private static final String POLLING_URI_2 = String.format("http://%s:%d", DOMAIN_2, PORT_2);
 
   @Inject private HttpClient httpClient;
+
+  private TcsClientCliOptions cliOptions;
+  private TcsConfigProperties configProperties;
+
   private PayloadGeneratorModule module;
 
   private final PayloadDefinition.Builder goodCallbackDefinition =
@@ -76,30 +88,40 @@ public final class PayloadGeneratorModuleTest {
   public void setUp() {
     Guice.createInjector(new HttpClientModule.Builder().build()).injectMembers(this);
     this.module = new PayloadGeneratorModule(new SecureRandom());
+    cliOptions = new TcsClientCliOptions();
+    configProperties = new TcsConfigProperties();
   }
 
   @Test
   public void providesTcsClient_withNoConfig_returnsInvalidTcsClient() {
-    TcsConfigProperties config = new TcsConfigProperties();
-    config.callbackAddress = null;
-    config.callbackPort = null;
-    config.pollingUri = null;
-
-    TcsClient client = module.providesTcsClient(config, httpClient);
+    TcsClient client = module.providesTcsClient(null, null, null, httpClient);
 
     assertFalse(client.isCallbackServerEnabled());
   }
 
   @Test
   public void providesTcsClient_withGoodConfig_returnsValidTcsClient() {
-    TcsConfigProperties config = new TcsConfigProperties();
-    config.callbackAddress = "mydomain.com";
-    config.callbackPort = 1111;
-    config.pollingUri = "mydomain.com";
-
-    TcsClient client = module.providesTcsClient(config, httpClient);
+    TcsClient client = module.providesTcsClient(DOMAIN_1, PORT_1, POLLING_URI_1, httpClient);
 
     assertTrue(client.isCallbackServerEnabled());
+  }
+
+  @Test
+  public void providesTcsClient_withConfigPropertiesAndCliOptions_prioritizesCliOptions() {
+    configProperties.callbackAddress = DOMAIN_2;
+    configProperties.callbackPort = PORT_2;
+    configProperties.pollingUri = POLLING_URI_2;
+    cliOptions.callbackAddress = DOMAIN_1;
+    cliOptions.callbackPort = PORT_1;
+    cliOptions.pollingUri = POLLING_URI_1;
+
+    String callbackAddress = module.providesCallbackAddress(configProperties, cliOptions);
+    Integer callbackPort = module.providesCallbackPort(configProperties, cliOptions);
+    String pollingUri = module.providesCallbackPollingUri(configProperties, cliOptions);
+
+    assertThat(callbackAddress).isEqualTo(DOMAIN_1);
+    assertThat(callbackPort).isEqualTo(PORT_1);
+    assertThat(pollingUri).isEqualTo(POLLING_URI_1);
   }
 
   @Parameter(0)
@@ -128,12 +150,11 @@ public final class PayloadGeneratorModuleTest {
 
   @Test
   public void providesTcsClient_withBadConfig_throwsException() {
-    TcsConfigProperties config = new TcsConfigProperties();
-    config.callbackAddress = this.callbackAddress;
-    config.callbackPort = this.callbackPort;
-    config.pollingUri = this.pollingUri;
-
-    assertThrows(this.exceptionClass, () -> module.providesTcsClient(config, httpClient));
+    assertThrows(
+        this.exceptionClass,
+        () ->
+            module.providesTcsClient(
+                this.callbackAddress, this.callbackPort, this.pollingUri, httpClient));
   }
 
   @Test

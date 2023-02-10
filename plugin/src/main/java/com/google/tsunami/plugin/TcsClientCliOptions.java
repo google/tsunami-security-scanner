@@ -15,17 +15,27 @@
  */
 package com.google.tsunami.plugin;
 
-import com.google.tsunami.common.config.annotations.ConfigProperties;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.tsunami.common.cli.CliOption;
 
-/** Configuration properties for Tsunami callbackserver. */
-@ConfigProperties("plugin.callbackserver")
-public final class TcsConfigProperties {
-  /** Address (ip or domain) of TCS http service. */
+/** Command line arguments for the Tsunami callbackserver. */
+@Parameters(separators = "=")
+public final class TcsClientCliOptions implements CliOption {
+  @Parameter(
+      names = "--callback-address",
+      description = "Address (ip or domain) of TCS http service.")
   public String callbackAddress;
 
-  /** Port of TCS http service. */
+  @Parameter(names = "--callback-port", description = "Port of TCS http service.")
   public Integer callbackPort;
 
-  /** Uri (ip/domain + port) of TCS polling service. */
+  @Parameter(
+      names = "--callback-polling-uri",
+      description = "Uri (ip/domain + port) of TCS polling service.")
   public String pollingUri;
+
+  // Validations are done in {@link PayloadGeneratorModule}.
+  @Override
+  public void validate() {}
 }

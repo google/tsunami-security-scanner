@@ -29,15 +29,22 @@ import com.google.inject.Provides;
 import com.google.protobuf.util.JsonFormat;
 import com.google.tsunami.common.net.http.HttpClient;
 import com.google.tsunami.plugin.TcsClient;
+import com.google.tsunami.plugin.TcsClientCliOptions;
 import com.google.tsunami.plugin.TcsConfigProperties;
 import com.google.tsunami.proto.PayloadDefinition;
 import com.google.tsunami.proto.PayloadGeneratorConfig;
 import com.google.tsunami.proto.PayloadLibrary;
 import com.google.tsunami.proto.PayloadValidationType;
 import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
+import javax.inject.Qualifier;
 import javax.inject.Singleton;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
@@ -50,28 +57,70 @@ public final class PayloadGeneratorModule extends AbstractModule {
     this.secureRng = secureRng;
   }
 
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface CallbackAddress {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface CallbackPort {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface CallbackPollingUri {}
+
   @Provides
-  TcsClient providesTcsClient(TcsConfigProperties config, HttpClient httpClient) {
+  @CallbackAddress
+  String providesCallbackAddress(TcsConfigProperties config, TcsClientCliOptions cliOptions) {
+
+    if (cliOptions.callbackAddress != null) {
+      return cliOptions.callbackAddress;
+    }
+    return config.callbackAddress;
+  }
+
+  @Provides
+  @CallbackPort
+  Integer providesCallbackPort(TcsConfigProperties config, TcsClientCliOptions cliOptions) {
+    if (cliOptions.callbackPort != null) {
+      return cliOptions.callbackPort;
+    }
+    return config.callbackPort;
+  }
+
+  @Provides
+  @CallbackPollingUri
+  String providesCallbackPollingUri(TcsConfigProperties config, TcsClientCliOptions cliOptions) {
+    if (cliOptions.pollingUri != null) {
+      return cliOptions.pollingUri;
+    }
+    return config.pollingUri;
+  }
+
+  @Provides
+  TcsClient providesTcsClient(
+      @Nullable @CallbackAddress String callbackAddress,
+      @Nullable @CallbackPort Integer callbackPort,
+      @Nullable @CallbackPollingUri String pollingUri,
+      HttpClient httpClient) {
     // when all tcs config are not set, we provide an invalid {@link TcsClient}
     // so that {@link TcsClient#isCallbackServerEnabled} returns false.
-    if (config.callbackAddress == null
-        && config.callbackPort == null
-        && config.pollingUri == null) {
+    if (callbackAddress == null && callbackPort == null && pollingUri == null) {
       return new TcsClient("", 0, "", checkNotNull(httpClient));
     }
 
-    checkNotNull(config.callbackAddress);
-    checkNotNull(config.callbackPort);
-    checkNotNull(config.pollingUri);
+    checkNotNull(callbackAddress);
+    checkNotNull(callbackPort);
+    checkNotNull(pollingUri);
     checkArgument(
-        InetAddresses.isInetAddress(config.callbackAddress)
-            || InternetDomainName.isValid(config.callbackAddress),
+        InetAddresses.isInetAddress(callbackAddress) || InternetDomainName.isValid(callbackAddress),
         "Invalid callback address specified");
-    checkArgument(
-        config.callbackPort > 0 && config.callbackPort < 65536, "Invalid port number specified");
+    checkArgument(callbackPort > 0 && callbackPort < 65536, "Invalid port number specified");
 
-    return new TcsClient(
-        config.callbackAddress, config.callbackPort, config.pollingUri, checkNotNull(httpClient));
+    return new TcsClient(callbackAddress, callbackPort, pollingUri, checkNotNull(httpClient));
   }
 
   @Provides
