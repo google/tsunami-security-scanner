@@ -3,12 +3,11 @@
 import enum
 
 
-class HttpMethod(enum.Enum):
+class HttpMethod(str, enum.Enum):
   """HTTP request type.
 
   Attributes:
     string: HTTP method.
-    to_string: Get the HTTP method string.
   """
   GET = "GET"
   HEAD = "HEAD"
@@ -18,6 +17,3 @@ class HttpMethod(enum.Enum):
 
   def __init__(self, string):
     self.string = string
-
-  def to_string(self):
-    return self.string

@@ -3,9 +3,7 @@
 import collections
 import re
 from typing import Optional
-from tsunami.plugin_server.py.common.net.http import http_header_fields
-
-HttpHeaderFields = http_header_fields.HttpHeaderFields
+from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
 
 
 class HttpHeaders:
@@ -14,37 +12,46 @@ class HttpHeaders:
   Please use Builder() to create instances of this class.
 
   Attributes:
-    raw_headers: Collection of header fields and values. Each field
-      could have multiple values.
-    names: Get the list of unique header field names.
-    get: Get the first value for a specified HTTP field name or none if there is
-      no match.
-    get_all: Get all values for a specified HTTP field name. Values are in the
-      order they were added to the builder.
+    raw_headers: Collection of header fields and values. Each field could have
+      multiple values.
   """
 
   def __init__(self):
     self.raw_headers = collections.defaultdict(list)
 
   def names(self) -> set[str]:
+    """Get the list of unique header field names."""
     return set(self.raw_headers.keys())
 
   def get(self, name: str) -> Optional[str]:
-    if name is None:
-      raise ValueError('Name cannot be null.')
+    """Get the first value for a specified HTTP field name."""
     values = self.get_all(name)
     if not values:
       return None
     return values[0]
 
   def get_all(self, name: str) -> list[str]:
+    """Get all values for a specified HTTP field name.
+
+    Values are in the order they were added to the builder.
+
+    Args:
+      name: header name
+
+    Returns:
+      List of matched header values.
+    """
     if name is None:
-      raise ValueError('Name cannot be null.')
+      raise ValueError('Name cannot be None.')
     values = self.raw_headers.get(name, [])
     if values:
       return values
     canonicalized_name = _canonicalize(name)
     return self.raw_headers.get(canonicalized_name, [])
+
+  @classmethod
+  def builder(cls) -> 'Builder':
+    return Builder()
 
 
 class Builder:
@@ -52,8 +59,6 @@ class Builder:
 
   Attributes:
     http_headers: Collection of header field names and corresponding values.
-    build: Build and return the HTTP headers object.
-    add_header: Add HTTP header key/value pair.
   """
   # RFC 2616 section 4.2.
   # Allow printable graphic characters except for colon
@@ -80,13 +85,13 @@ class Builder:
       The builder object.
 
     Raises:
-      ValueError: If name or value is null. If header name or value pair does
+      ValueError: If name or value is None. If header name or value pair does
       not comply with standards.
     """
     if name is None:
-      raise ValueError('Name cannot be null.')
+      raise ValueError('Name cannot be None.')
     if value is None:
-      raise ValueError('Value cannot be null.')
+      raise ValueError('Value cannot be None.')
     if canonicalize:
       name = self._canonicalize_header_name(name, value)
     self.http_headers.raw_headers[name].append(value)

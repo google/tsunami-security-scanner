@@ -36,9 +36,9 @@ class HttpHeadersTest(parameterized.TestCase):
     self.assertEqual(headers.raw_headers, expected)
 
   @parameterized.named_parameters(
-      ('with_null_name', None, 'en', 'Name cannot be null.'),
-      ('with_null_value', HttpHeaderFields.ACCEPT_LANGUAGE.value, None,
-       'Value cannot be null.'),
+      ('with_no_name', None, 'en', 'Name cannot be None.'),
+      ('with_no_value', HttpHeaderFields.ACCEPT_LANGUAGE.value, None,
+       'Value cannot be None.'),
       ('with_illegal_header_name', ':::', 'en', 'Illegal header name :::.'),
       ('with_illegal_header_value', HttpHeaderFields.ACCEPT_LANGUAGE.value,
        chr(1), 'Illegal header value %s.' % chr(1)),
@@ -80,12 +80,12 @@ class HttpHeadersTest(parameterized.TestCase):
                                                 'app/xml').build()
     self.assertIsNone(headers.get('cookie'))
 
-  def test_get_with_null_header_name_raise_error(self):
+  def test_get_with_none_header_name_raise_error(self):
     headers = http_headers.Builder().add_header(HttpHeaderFields.ACCEPT.value,
                                                 'app/xml').build()
     with self.assertRaises(ValueError) as exc:
       headers.get(None)
-    self.assertEqual('Name cannot be null.', str(exc.exception))
+    self.assertEqual('Name cannot be None.', str(exc.exception))
 
   def test_get_all_always_returns_requested_values(self):
     headers = http_headers.Builder().add_header(
@@ -113,12 +113,12 @@ class HttpHeadersTest(parameterized.TestCase):
                                     'image/webp').build()
     self.assertEmpty(headers.get_all('cookie'))
 
-  def test_get_all_with_null_header_name_raise_error(self):
+  def test_get_all_with_none_header_name_raise_error(self):
     headers = http_headers.Builder().add_header(HttpHeaderFields.ACCEPT.value,
                                                 'app/xml').build()
     with self.assertRaises(ValueError) as exc:
       headers.get_all(None)
-    self.assertEqual('Name cannot be null.', str(exc.exception))
+    self.assertEqual('Name cannot be None.', str(exc.exception))
 
 if __name__ == '__main__':
   absltest.main()
