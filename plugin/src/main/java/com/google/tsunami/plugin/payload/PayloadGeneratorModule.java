@@ -46,6 +46,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
@@ -134,7 +135,7 @@ public final class PayloadGeneratorModule extends AbstractModule {
   ImmutableList<PayloadDefinition> provideParsedPayloads() throws IOException {
     // It is only safe to use SnakeYaml with SafeConstructor.
     // Parse the YAML by converting it into JSON and then into the proto message
-    Yaml yaml = new Yaml(new SafeConstructor());
+    Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
     Map<String, Object> rawYamlData =
         yaml.load(
             Resources.toString(

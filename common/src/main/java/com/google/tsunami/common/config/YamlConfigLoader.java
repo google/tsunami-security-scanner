@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
@@ -34,7 +35,7 @@ public final class YamlConfigLoader implements ConfigLoader {
 
   @Override
   public TsunamiConfig loadConfig() {
-    Yaml yaml = new Yaml(new SafeConstructor());
+    Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
     Map<String, Object> rawYamlData = yaml.load(configFileReader());
     return TsunamiConfig.fromYamlData(rawYamlData);
   }
