@@ -55,6 +55,7 @@ public final class NetworkServiceUtils {
           .put("ssl/https", false)
           .put("ssl/http-proxy", false)
           .put("ssl/tungsten-https", false) // Port 9443, WSO2 Identity Server & WSO2 API Manager.
+          .put("ssl/wso2esb-console", false) // Port 9444, WSO2 Identity Server Analytics.
           .build();
 
   private NetworkServiceUtils() {}
