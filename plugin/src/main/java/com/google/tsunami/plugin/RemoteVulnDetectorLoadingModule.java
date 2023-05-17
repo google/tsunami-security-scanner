@@ -24,7 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.google.tsunami.common.server.ServerPortCommand;
+import com.google.tsunami.common.server.LanguageServerCommand;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import io.grpc.Channel;
 import io.grpc.netty.NegotiationType;
@@ -35,9 +35,9 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
   private static final int MAX_MESSAGE_SIZE =
       10 * 1000 * 1000; // Max incoming gRPC message size 10MB.
 
-  private final ImmutableList<ServerPortCommand> availableServerPorts;
+  private final ImmutableList<LanguageServerCommand> availableServerPorts;
 
-  public RemoteVulnDetectorLoadingModule(ImmutableList<ServerPortCommand> serverPorts) {
+  public RemoteVulnDetectorLoadingModule(ImmutableList<LanguageServerCommand> serverPorts) {
     this.availableServerPorts = checkNotNull(serverPorts);
   }
 
@@ -54,7 +54,7 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
   }
 
   private ImmutableList<Channel> getLanguageServerChannels(
-      ImmutableList<ServerPortCommand> commands) {
+      ImmutableList<LanguageServerCommand> commands) {
     return commands.stream()
         .map(
             command ->

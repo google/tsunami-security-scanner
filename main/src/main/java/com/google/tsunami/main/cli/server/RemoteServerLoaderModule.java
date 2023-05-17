@@ -15,24 +15,25 @@
  */
 package com.google.tsunami.main.cli.server;
 
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.tsunami.common.server.ServerPortCommand;
+import com.google.tsunami.common.server.LanguageServerCommand;
 import java.util.List;
 
 /** Installs {@link RemoteServerLoaderModule}. */
 public final class RemoteServerLoaderModule extends AbstractModule {
 
-  private final ImmutableList<ServerPortCommand> commands;
+  private final ImmutableList<LanguageServerCommand> commands;
 
-  public RemoteServerLoaderModule(ImmutableList<ServerPortCommand> commands) {
+  public RemoteServerLoaderModule(ImmutableList<LanguageServerCommand> commands) {
     this.commands = commands;
   }
 
   @Provides
-  @RemoteServerLoader.ServerPortCommands
-  List<ServerPortCommand> provideServerPortCommands() {
+  @RemoteServerLoader.LanguageServerCommands
+  List<LanguageServerCommand> provideLanguageServerCommands() {
     return commands;
   }
 }

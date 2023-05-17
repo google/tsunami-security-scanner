@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.tsunami.common.command.CommandExecutor;
 import com.google.tsunami.common.command.CommandExecutorFactory;
-import com.google.tsunami.common.server.ServerPortCommand;
+import com.google.tsunami.common.server.LanguageServerCommand;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.util.List;
@@ -36,10 +36,10 @@ import javax.inject.Qualifier;
 public class RemoteServerLoader {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  private final List<ServerPortCommand> commands;
+  private final List<LanguageServerCommand> commands;
 
   @Inject
-  RemoteServerLoader(@ServerPortCommands List<ServerPortCommand> commands) {
+  RemoteServerLoader(@LanguageServerCommands List<LanguageServerCommand> commands) {
     this.commands = checkNotNull(commands);
   }
 
@@ -50,10 +50,21 @@ public class RemoteServerLoader {
             command ->
                 runProcess(
                     CommandExecutorFactory.create(
-                        command.serverCommand(), "--port=" + command.port())))
+                        command.serverCommand(),
+                        "--port=" + command.port(),
+                        getLogIdCommand(command),
+                        "--trust_all_ssl_cert=" + command.trustAllSslCert(),
+                        "--timeout_seconds=" + command.timeoutSeconds().getSeconds(),
+                        "--callback_address=" + command.callbackAddress(),
+                        "--callback_port=" + command.callbackPort(),
+                        "--polling_uri=" + command.pollingUri())))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(toImmutableList());
+  }
+
+  private String getLogIdCommand(LanguageServerCommand command) {
+    return command.logId().isEmpty() ? "" : "--log_id=" + command.logId();
   }
 
   private Optional<Process> runProcess(CommandExecutor executor) {
@@ -65,8 +76,8 @@ public class RemoteServerLoader {
     return Optional.empty();
   }
 
-  /** Guice interface for injecting {@link ServerPortCommand} object lists. */
+  /** Guice interface for injecting {@link LanguageServerCommand} object lists. */
   @Qualifier
   @Retention(RUNTIME)
-  public @interface ServerPortCommands {}
+  public @interface LanguageServerCommands {}
 }

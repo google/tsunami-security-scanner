@@ -38,7 +38,7 @@ public final class TsunamiConfig {
     this.rawConfigData = checkNotNull(rawConfigData);
   }
 
-  ImmutableMap<String, Object> getRawConfigData() {
+  public ImmutableMap<String, Object> getRawConfigData() {
     return rawConfigData;
   }
 

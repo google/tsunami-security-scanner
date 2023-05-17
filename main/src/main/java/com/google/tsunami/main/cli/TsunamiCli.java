@@ -39,7 +39,7 @@ import com.google.tsunami.common.config.YamlConfigLoader;
 import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.reflection.ClassGraphModule;
-import com.google.tsunami.common.server.ServerPortCommand;
+import com.google.tsunami.common.server.LanguageServerCommand;
 import com.google.tsunami.common.time.SystemUtcClockModule;
 import com.google.tsunami.main.cli.option.MainCliOptions;
 import com.google.tsunami.main.cli.server.RemoteServerLoader;
@@ -57,9 +57,12 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /** Command line interface for the Tsunami Security Scanner. */
@@ -154,7 +157,8 @@ public final class TsunamiCli {
       String logId = extractLogId(args);
 
       // TODO(b/241964583): Only use LanguageServerOptions to extract language server args.
-      ImmutableList<ServerPortCommand> commands = extractPluginServerArgs(args);
+      ImmutableList<LanguageServerCommand> commands =
+          extractPluginServerArgs(args, logId, tsunamiConfig);
 
       install(new ClassGraphModule(classScanResult));
       install(new ConfigModule(classScanResult, tsunamiConfig));
@@ -171,34 +175,57 @@ public final class TsunamiCli {
       install(new RemoteVulnDetectorLoadingModule(commands));
     }
 
-    private ImmutableList<ServerPortCommand> extractPluginServerArgs(String[] args) {
-      var paths = extractPluginServerPaths(args);
-      var ports = extractPluginServerPorts(args);
+    private ImmutableList<LanguageServerCommand> extractPluginServerArgs(
+        String[] args, String logId, TsunamiConfig tsunamiConfig) {
+      Object callbackConfig =
+          ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
+      Object httpClientConfig =
+          ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
+      boolean trustAllSslCertConfig =
+          (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
+      Boolean trustAllSslCertCli = extractCliTrustAllSslCert(args);
+      var paths = extractCliPluginServerArgs(args, "--plugin-server-paths=");
+      var ports = extractCliPluginServerArgs(args, "--plugin-server-ports=");
       if (paths.size() == ports.size()) {
-        List<ServerPortCommand> commands = Lists.newArrayList();
+        List<LanguageServerCommand> commands = Lists.newArrayList();
         for (int i = 0; i < paths.size(); ++i) {
-          commands.add(ServerPortCommand.create(paths.get(i), ports.get(i)));
+          commands.add(
+              LanguageServerCommand.create(
+                  paths.get(i),
+                  ports.get(i),
+                  logId,
+                  trustAllSslCertCli == null
+                      ? trustAllSslCertConfig
+                      : trustAllSslCertCli.booleanValue(),
+                  Duration.ofSeconds((int) ((Map) httpClientConfig).get("connect_timeout_seconds")),
+                  (String) ((Map) callbackConfig).get("callback_address"),
+                  (Integer) ((Map) callbackConfig).get("callback_port"),
+                  (String) ((Map) callbackConfig).get("polling_uri")));
         }
         return ImmutableList.copyOf(commands);
       }
       return ImmutableList.of();
     }
 
-    private ImmutableList<String> extractPluginServerPaths(String[] args) {
+    @Nullable
+    private Boolean extractCliTrustAllSslCert(String[] args) {
       for (int i = 0; i < args.length; ++i) {
-        if (args[i].startsWith("--plugin-server-paths=")) {
-          var paths = Iterables.get(Splitter.on('=').split(args[i]), 1);
-          return ImmutableList.copyOf(Splitter.on(',').split(paths));
+        if (args[i].startsWith("--http-client-trust-all-certificates")) {
+          if (args[i].contains("=")) {
+            return Boolean.valueOf(Iterables.get(Splitter.on('=').split(args[i]), 1));
+          } else {
+            return true;
+          }
         }
       }
-      return ImmutableList.of();
+      return null;
     }
 
-    private ImmutableList<String> extractPluginServerPorts(String[] args) {
+    private ImmutableList<String> extractCliPluginServerArgs(String[] args, String flag) {
       for (int i = 0; i < args.length; ++i) {
-        if (args[i].startsWith("--plugin-server-ports=")) {
-          var ports = Iterables.get(Splitter.on('=').split(args[i]), 1);
-          return ImmutableList.copyOf(Splitter.on(',').split(ports));
+        if (args[i].startsWith(flag)) {
+          var count = Iterables.get(Splitter.on('=').split(args[i]), 1);
+          return ImmutableList.copyOf(Splitter.on(',').split(count));
         }
       }
       return ImmutableList.of();
