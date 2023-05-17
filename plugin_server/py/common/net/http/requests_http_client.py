@@ -1,11 +1,9 @@
-
 """HTTP client using requests."""
 
 import asyncio
 import concurrent.futures
 import functools
 from typing import Optional
-from absl import flags
 from absl import logging
 import requests
 from tsunami.plugin_server.py.common.data import network_service_utils
@@ -24,12 +22,8 @@ _DEFAULT_ALLOW_REDIRECT = True
 _DEFAULT_POOL_CONNECTIONS = 5
 _DEFAULT_POOL_MAXSIZE = 10
 _DEFAULT_MAX_WORKERS = 64
-_TIMEOUT_SEC = flags.DEFINE_float(
-    'timeout_sec', 10, 'Timeout in seconds for complete HTTP calls.'
-)
-_VERIFY_SSL = flags.DEFINE_boolean(
-    'verify_ssl', True, 'Check all SSL certificates on HTTPS traffic.'
-)
+_TIMEOUT_SEC = 10
+_VERIFY_SSL = True
 
 
 class RequestsHttpClient(HttpClient):
@@ -192,9 +186,9 @@ class RequestsHttpClientBuilder(Builder):
   def __init__(self):
     self.log_id = None
     # SSL certification verification.
-    self.verify_ssl = _VERIFY_SSL.value
+    self.verify_ssl = _VERIFY_SSL
     # How long to wait for the server to send data before giving up.
-    self.timeout_sec = _TIMEOUT_SEC.value
+    self.timeout_sec = _TIMEOUT_SEC
     # Whether requests may be redirected.
     self.allow_redirects = _DEFAULT_ALLOW_REDIRECT
     # Maximum number of threads to execute concurrently.

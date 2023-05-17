@@ -1,7 +1,6 @@
 """Tests for google3.third_party.java_src.tsunami.plugin_server.py.common.net.requests_http_client."""
 
 from absl.testing import absltest
-from absl.testing import flagsaver
 import requests
 import requests_mock
 
@@ -281,56 +280,6 @@ class RequestsHttpClientTest(absltest.TestCase):
     self.assertEqual(client.timeout_sec, 1.1)
     self.assertEqual(client.max_workers, 2)
     response = client.build().send(
-        HttpRequest().get(url).with_empty_headers().build(),
-        network_service=network_service,
-    )
-    expected = self._create_expected_response(
-        url, headers=HttpHeaders.builder().build()
-    )
-    self._assert_response_is_expected(response, expected)
-
-  @flagsaver.flagsaver(verify_ssl=False, timeout_sec=3.2)
-  @requests_mock.mock()
-  def test_send_with_cli_flags_returns_expected_http_response(self, mock):
-    url = 'http://example.com/post/test-path'
-    network_endpoint = network_endpoint_utils.for_ip_and_hostname(
-        '127.0.0.1', 'proxy.com'
-    )
-    network_service = network_service_pb2.NetworkService(
-        network_endpoint=network_endpoint,
-        transport_protocol=network_pb2.TransportProtocol.TCP,
-    )
-    mock.register_uri(HttpMethod.GET, url)
-    client = RequestsHttpClientBuilder().build()
-    self.assertTrue(client.allow_redirects)
-    self.assertFalse(client.verify_ssl)
-    self.assertEqual(client.timeout_sec, 3.2)
-    response = client.send(
-        HttpRequest().get(url).with_empty_headers().build(),
-        network_service=network_service,
-    )
-    expected = self._create_expected_response(
-        url, headers=HttpHeaders.builder().build()
-    )
-    self._assert_response_is_expected(response, expected)
-
-  @flagsaver.flagsaver(verify_ssl=False, timeout_sec=3.2)
-  @requests_mock.mock()
-  def test_modify(self, mock):
-    url = 'http://example.com/post/test-path'
-    network_endpoint = network_endpoint_utils.for_ip_and_hostname(
-        '127.0.0.1', 'proxy.com'
-    )
-    network_service = network_service_pb2.NetworkService(
-        network_endpoint=network_endpoint,
-        transport_protocol=network_pb2.TransportProtocol.TCP,
-    )
-    mock.register_uri(HttpMethod.GET, url)
-    client = RequestsHttpClientBuilder().build()
-    self.assertTrue(client.allow_redirects)
-    self.assertFalse(client.verify_ssl)
-    self.assertEqual(client.timeout_sec, 3.2)
-    response = client.send(
         HttpRequest().get(url).with_empty_headers().build(),
         network_service=network_service,
     )

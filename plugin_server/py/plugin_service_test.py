@@ -22,6 +22,12 @@ import ipaddr
 from google.protobuf import timestamp_pb2
 from tsunami.plugin_server.py import plugin_service
 from tsunami.plugin_server.py import tsunami_plugin
+from tsunami.plugin_server.py.common.net.http.http_client import HttpClient
+from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
+from tsunami.plugin_server.py.plugin.payload.payload_generator import PayloadGenerator
+from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from tsunami.plugin_server.py.plugin.payload.payload_utility import get_parsed_payload
+from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
 from tsunami.proto import detection_pb2
 from tsunami.proto import network_pb2
 from tsunami.proto import network_service_pb2
@@ -29,6 +35,7 @@ from tsunami.proto import plugin_representation_pb2
 from tsunami.proto import plugin_service_pb2
 from tsunami.proto import reconnaissance_pb2
 from tsunami.proto import vulnerability_pb2
+
 
 _NetworkEndpoint = network_pb2.NetworkEndpoint
 _NetworkService = network_service_pb2.NetworkService
@@ -46,37 +53,56 @@ class PluginServiceTest(absltest.TestCase):
 
   def setUp(self):
     super().setUp()
-    self.test_plugin = FakeVulnDetector()
+    # payload generator and client setup
+    self.request_client = RequestsHttpClientBuilder().build()
+    psg = PayloadSecretGenerator()
+    callback_client = TcsClient(
+        '127.0.0.1', 8000, 'http://127.0.0.1:8000/test', self.request_client
+    )
+    self.payload_generator = PayloadGenerator(
+        psg, get_parsed_payload(), callback_client
+    )
+    self.test_plugin = FakeVulnDetector(
+        self.request_client, self.payload_generator
+    )
     self._time = grpc_testing.strict_fake_time(time.time())
     self._server = grpc_testing.server_from_dictionary(
         {
-            _ServiceDescriptor:
-                plugin_service.PluginServiceServicer(
-                    py_plugins=[self.test_plugin], max_workers=MAX_WORKERS),
-        }, self._time)
+            _ServiceDescriptor: plugin_service.PluginServiceServicer(
+                py_plugins=[self.test_plugin], max_workers=MAX_WORKERS
+            ),
+        },
+        self._time,
+    )
 
     self._channel = grpc_testing.channel(
-        plugin_service_pb2.DESCRIPTOR.services_by_name.values(), self._time)
+        plugin_service_pb2.DESCRIPTOR.services_by_name.values(), self._time
+    )
 
   def tearDown(self):
     self._channel.close()
     super().tearDown()
 
   def test_run_plugins_registered_returns_valid_response(self):
-    plugin_to_test = FakeVulnDetector()
+    plugin_to_test = FakeVulnDetector(
+        self.request_client, self.payload_generator
+    )
     endpoint = _build_network_endpoint('1.1.1.1', 80)
     service = _NetworkService(
         network_endpoint=endpoint,
         transport_protocol=network_pb2.TCP,
-        service_name='http')
+        service_name='http',
+    )
     target = _TargetInfo(network_endpoints=[endpoint])
     services = [service]
     request = plugin_service_pb2.RunRequest(
         target=target,
         plugins=[
             plugin_service_pb2.MatchedPlugin(
-                services=services, plugin=plugin_to_test.GetPluginDefinition())
-        ])
+                services=services, plugin=plugin_to_test.GetPluginDefinition()
+            )
+        ],
+    )
 
     rpc = self._server.invoke_unary_unary(_RunMethod, (), request, None)
     response, _, _, _ = rpc.termination()
@@ -120,11 +146,19 @@ def _get_address_family(ip: str) -> _AddressFamily:
   elif inet_addr.version == 6:
     return _AddressFamily.IPV6
   else:
-    raise ValueError('Unknown IP address family for IP \'%s\'' % ip)
+    raise ValueError("Unknown IP address family for IP '%s'" % ip)
 
 
 class FakeVulnDetector(tsunami_plugin.VulnDetector):
   """Fake Vulnerability detector class for testing only."""
+
+  def __init__(
+      self,
+      http_client: HttpClient,
+      payload_generator: PayloadGenerator,
+  ):
+    self.http_client = http_client
+    self.payload_generator = payload_generator
 
   def GetPluginDefinition(self):
     return tsunami_plugin.PluginDefinition(

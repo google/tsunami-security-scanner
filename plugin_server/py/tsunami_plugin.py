@@ -13,7 +13,6 @@
 # limitations under the License.
 """Interface that all Python TsunamiPlugins will need to implement to run detection."""
 import abc
-
 from tsunami.proto import detection_pb2
 from tsunami.proto import network_service_pb2
 from tsunami.proto import plugin_representation_pb2
@@ -45,9 +44,14 @@ class VulnDetector(TsunamiPlugin):
   specific vulnerability, and reports the detection results.
   """
 
+  @classmethod
+  def __init_subclass__(cls, **kwargs):
+    super().__init_subclass__(**kwargs)
+
   @abc.abstractmethod
-  def Detect(self, target: TargetInfo,
-             matched_services: list[NetworkService]) -> DetectionReportList:
+  def Detect(
+      self, target: TargetInfo, matched_services: list[NetworkService]
+  ) -> DetectionReportList:
     """Run detection logic for the target.
 
     Args:

@@ -110,7 +110,7 @@ class PayloadGenerator:
     """Create payload from the selected payload definition."""
     secret = self.payload_secret_generator.generate(self.SECRET_LENGTH)
     if bool(payload.uses_callback_server.ByteSize()):
-      payload_string = str(payload.payload_string).replace(
+      payload_string = payload.payload_string.value.replace(
           self.TOKEN_CALLBACK_SERVER_URL,
           self.tcs_client.get_callback_uri(secret),
       )

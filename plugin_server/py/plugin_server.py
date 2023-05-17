@@ -30,26 +30,54 @@ from grpc_reflection.v1alpha import reflection
 
 from tsunami.plugin_server.py import plugin_service
 from tsunami.plugin_server.py import tsunami_plugin
+from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
+from tsunami.plugin_server.py.plugin.payload.payload_generator import PayloadGenerator
+from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from tsunami.plugin_server.py.plugin.payload.payload_utility import get_parsed_payload
+from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
 from tsunami.proto import plugin_service_pb2
 from tsunami.proto import plugin_service_pb2_grpc
 
-_HOST = 'localhost'
 
+_HOST = 'localhost'
 _PORT = flags.DEFINE_integer('port', 34567, 'port to listen on')
 _THREADS = flags.DEFINE_integer('threads', 10,
                                 'number of worker threads in thread pool')
 _OUTPUT = flags.DEFINE_string('log_output', '/tmp',
                               'server execution log directory')
+_TIMEOUT_SEC = flags.DEFINE_float(
+    'timeout_seconds', 10, 'Timeout in seconds for complete HTTP calls.'
+)
+_LOG_ID = flags.DEFINE_string('log_id', '',
+                              'id to track logs for all outgoing HTTP calls')
+_TRUST_ALL_SSL_CERT = flags.DEFINE_boolean(
+    'trust_all_ssl_cert', True, 'Trust all SSL certificates on HTTPS traffic.'
+)
+_CALLBACK_ADDRESS = flags.DEFINE_string(
+    'callback_address',
+    '127.0.0.1',
+    'Hostname or IP address of the callback server.',
+)
+_CALLBACK_PORT = flags.DEFINE_integer(
+    'callback_port', 8881, 'Callback server port for HTTP logging service.'
+)
+_CALLBACK_POLLING_URI = flags.DEFINE_string(
+    'polling_uri',
+    'http://127.0.0.1:8880',
+    'Callback server URI for log polling service.',
+)
 
 
 def main(unused_argv):
   logging.use_absl_handler()
-  logging.get_absl_handler().use_absl_log_file('py_plugin_server',
-                                               _OUTPUT.value)
+  logging.get_absl_handler().use_absl_log_file(
+      'py_plugin_server', _OUTPUT.value
+  )
   logging.set_verbosity(logging.INFO)
   # Load plugins from tsunami_plugins repository.
   plugin_pkg = importlib.import_module(
-      'py_plugins')
+      'py_plugins'
+  )
   _import_py_plugins(plugin_pkg)
 
   server_addr = f'{_HOST}:{_PORT.value}'
@@ -89,10 +117,30 @@ def _import_py_plugins(plugin_pkg: types.ModuleType):
 
 def _configure_plugin_service(server):
   """Configures the main plugin service for handling plugin related gRPC requests."""
+  http_client = (
+      RequestsHttpClientBuilder()
+      .set_timeout_sec(_TIMEOUT_SEC.value)
+      .set_verify_ssl(not _TRUST_ALL_SSL_CERT.value)
+      .set_log_id(_LOG_ID.value)
+      .build()
+  )
+  callback_client = TcsClient(
+      _CALLBACK_ADDRESS.value,
+      _CALLBACK_PORT.value,
+      _CALLBACK_POLLING_URI.value,
+      http_client,
+  )
+  payload_generator = PayloadGenerator(
+      PayloadSecretGenerator(), get_parsed_payload(), callback_client
+  )
   # Get all VulnDetector class implementations.
-  plugins = [cls() for cls in tsunami_plugin.VulnDetector.__subclasses__()]
+  plugins = [
+      cls(http_client, payload_generator)
+      for cls in tsunami_plugin.VulnDetector.__subclasses__()
+  ]
   servicer = plugin_service.PluginServiceServicer(
-      py_plugins=plugins, max_workers=_THREADS.value)
+      py_plugins=plugins, max_workers=_THREADS.value
+  )
   plugin_service_pb2_grpc.add_PluginServiceServicer_to_server(servicer, server)
 
 
