@@ -20,13 +20,14 @@ import static com.google.common.truth.Truth8.assertThat;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.testing.FakeTicker;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.tsunami.plugin.PluginExecutor.PluginExecutorConfig;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
 import com.google.tsunami.plugin.testing.FakePortScanner;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,8 +41,8 @@ public final class PluginExecutorImplTest {
           .setPluginDefinition(PluginDefinition.forPlugin(FakePortScanner.class))
           .build();
   private static final Duration TICK_DURATION = Duration.ofSeconds(1);
-  private static final ListeningExecutorService PLUGIN_EXECUTION_THREAD_POOL =
-      MoreExecutors.newDirectExecutorService();
+  private static final ListeningScheduledExecutorService PLUGIN_EXECUTION_THREAD_POOL =
+      MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1));
 
   private final FakeTicker ticker = new FakeTicker().setAutoIncrementStep(TICK_DURATION);
   private final Stopwatch executionStopWatch = Stopwatch.createUnstarted(ticker);

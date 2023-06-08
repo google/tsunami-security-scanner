@@ -15,11 +15,12 @@
  */
 package com.google.tsunami.plugin.testing;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.AbstractModule;
 import com.google.tsunami.plugin.PluginExecutionThreadPool;
 import com.google.tsunami.plugin.PluginExecutorModule;
+import java.util.concurrent.Executors;
 
 /** Installs dependencies used for plugin executions in unit tests. */
 public final class FakePluginExecutionModule extends AbstractModule {
@@ -27,8 +28,8 @@ public final class FakePluginExecutionModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new PluginExecutorModule());
-    bind(ListeningExecutorService.class)
+    bind(ListeningScheduledExecutorService.class)
         .annotatedWith(PluginExecutionThreadPool.class)
-        .toInstance(MoreExecutors.newDirectExecutorService());
+        .toInstance(MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(1)));
   }
 }
