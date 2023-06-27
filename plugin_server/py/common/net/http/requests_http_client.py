@@ -70,7 +70,8 @@ class RequestsHttpClient(HttpClient):
     req = self._prepare_request(http_request)
     resp = self.session.send(
         request=req,
-        proxies=self._get_proxies(network_service),
+        # TODO(b/288615444) handle host-based routing support for load balancers
+        # proxies=self._get_proxies(network_service),
         verify=self.verify_ssl,
         timeout=self.timeout_sec,
         allow_redirects=self.allow_redirects)

@@ -58,7 +58,7 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
     return commands.stream()
         .map(
             command ->
-                NettyChannelBuilder.forTarget("localhost:" + command.port())
+                NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
                     .negotiationType(NegotiationType.PLAINTEXT)
                     .maxInboundMessageSize(MAX_MESSAGE_SIZE)
                     .build())
