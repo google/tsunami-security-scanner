@@ -174,54 +174,37 @@ public final class TsunamiCli {
       install(new RemoteServerLoaderModule(commands));
       install(new RemoteVulnDetectorLoadingModule(commands));
     }
-    
+
     private ImmutableList<LanguageServerCommand> extractPluginServerArgs(
         String[] args, String logId, TsunamiConfig tsunamiConfig) {
-      List<LanguageServerCommand> commands = Lists.newArrayList();
+      Object callbackConfig =
+          ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
+      Object httpClientConfig =
+          ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
+      boolean trustAllSslCertConfig =
+          (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
       Boolean trustAllSslCertCli = extractCliTrustAllSslCert(args);
       var paths = extractCliPluginServerArgs(args, "--plugin-server-paths=");
       var ports = extractCliPluginServerArgs(args, "--plugin-server-ports=");
-      if (tsunamiConfig.getRawConfigData().isEmpty()) {
+      if (paths.size() == ports.size()) {
+        List<LanguageServerCommand> commands = Lists.newArrayList();
         for (int i = 0; i < paths.size(); ++i) {
           commands.add(
               LanguageServerCommand.create(
                   paths.get(i),
                   ports.get(i),
                   logId,
-                  trustAllSslCertCli == null ? false : trustAllSslCertCli.booleanValue(),
-                  Duration.ofSeconds(0),
-                  "",
-                  0,
-                  ""));
+                  trustAllSslCertCli == null
+                      ? trustAllSslCertConfig
+                      : trustAllSslCertCli.booleanValue(),
+                  Duration.ofSeconds((int) ((Map) httpClientConfig).get("connect_timeout_seconds")),
+                  (String) ((Map) callbackConfig).get("callback_address"),
+                  (Integer) ((Map) callbackConfig).get("callback_port"),
+                  (String) ((Map) callbackConfig).get("polling_uri")));
         }
         return ImmutableList.copyOf(commands);
-      } else {
-        Object callbackConfig =
-            ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
-        Object httpClientConfig =
-            ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
-        boolean trustAllSslCertConfig =
-            (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
-        if (paths.size() == ports.size()) {
-          for (int i = 0; i < paths.size(); ++i) {
-            commands.add(
-                LanguageServerCommand.create(
-                    paths.get(i),
-                    ports.get(i),
-                    logId,
-                    trustAllSslCertCli == null
-                        ? trustAllSslCertConfig
-                        : trustAllSslCertCli.booleanValue(),
-                    Duration.ofSeconds(
-                        (int) ((Map) httpClientConfig).get("connect_timeout_seconds")),
-                    (String) ((Map) callbackConfig).get("callback_address"),
-                    (Integer) ((Map) callbackConfig).get("callback_port"),
-                    (String) ((Map) callbackConfig).get("polling_uri")));
-          }
-          return ImmutableList.copyOf(commands);
-        }
-        return ImmutableList.of();
       }
+      return ImmutableList.of();
     }
 
     @Nullable

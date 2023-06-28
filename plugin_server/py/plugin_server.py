@@ -39,17 +39,17 @@ from tsunami.proto import plugin_service_pb2
 from tsunami.proto import plugin_service_pb2_grpc
 
 
-_HOST = '127.0.0.1'
-_PORT = flags.DEFINE_integer('port', 34567, 'port to listen on.')
+_HOST = 'localhost'
+_PORT = flags.DEFINE_integer('port', 34567, 'port to listen on')
 _THREADS = flags.DEFINE_integer('threads', 10,
-                                'number of worker threads in thread pool.')
+                                'number of worker threads in thread pool')
 _OUTPUT = flags.DEFINE_string('log_output', '/tmp',
-                              'server execution log directory.')
+                              'server execution log directory')
 _TIMEOUT_SEC = flags.DEFINE_float(
     'timeout_seconds', 10, 'Timeout in seconds for complete HTTP calls.'
 )
 _LOG_ID = flags.DEFINE_string('log_id', '',
-                              'id to track logs for all outgoing HTTP calls.')
+                              'id to track logs for all outgoing HTTP calls')
 _TRUST_ALL_SSL_CERT = flags.DEFINE_boolean(
     'trust_all_ssl_cert', True, 'Trust all SSL certificates on HTTPS traffic.'
 )
