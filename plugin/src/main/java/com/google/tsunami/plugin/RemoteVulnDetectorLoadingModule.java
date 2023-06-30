@@ -58,7 +58,8 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
     return commands.stream()
         .map(
             command ->
-                NettyChannelBuilder.forTarget("localhost:" + command.port())
+                // TODO(b/289462738): Support IPv6 loopback (::1) interface
+                NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
                     .negotiationType(NegotiationType.PLAINTEXT)
                     .maxInboundMessageSize(MAX_MESSAGE_SIZE)
                     .build())

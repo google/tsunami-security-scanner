@@ -51,20 +51,20 @@ public class RemoteServerLoader {
                 runProcess(
                     CommandExecutorFactory.create(
                         command.serverCommand(),
-                        "--port=" + command.port(),
-                        getLogIdCommand(command),
+                        getCommand("--port=", command.port()),
+                        getCommand("--log_id=", command.logId()),
                         "--trust_all_ssl_cert=" + command.trustAllSslCert(),
-                        "--timeout_seconds=" + command.timeoutSeconds().getSeconds(),
-                        "--callback_address=" + command.callbackAddress(),
-                        "--callback_port=" + command.callbackPort(),
-                        "--polling_uri=" + command.pollingUri())))
+                        getCommand("--timeout_seconds=", command.timeoutSeconds().getSeconds()),
+                        getCommand("--callback_address=", command.callbackAddress()),
+                        getCommand("--callback_port=", command.callbackPort()),
+                        getCommand("--polling_uri=", command.pollingUri()))))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(toImmutableList());
   }
 
-  private String getLogIdCommand(LanguageServerCommand command) {
-    return command.logId().isEmpty() ? "" : "--log_id=" + command.logId();
+  private String getCommand(String flag, Object command) {
+    return command.toString().isEmpty() || command.toString().equals("0") ? "" : flag + command;
   }
 
   private Optional<Process> runProcess(CommandExecutor executor) {

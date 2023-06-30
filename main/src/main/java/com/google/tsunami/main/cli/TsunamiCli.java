@@ -21,6 +21,7 @@ import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndHostname;
 import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetworkService;
 
+import com.beust.jcommander.ParameterException;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -174,20 +175,44 @@ public final class TsunamiCli {
       install(new RemoteServerLoaderModule(commands));
       install(new RemoteVulnDetectorLoadingModule(commands));
     }
-
+    
     private ImmutableList<LanguageServerCommand> extractPluginServerArgs(
         String[] args, String logId, TsunamiConfig tsunamiConfig) {
-      Object callbackConfig =
-          ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
-      Object httpClientConfig =
-          ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
-      boolean trustAllSslCertConfig =
-          (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
+      List<LanguageServerCommand> commands = Lists.newArrayList();
       Boolean trustAllSslCertCli = extractCliTrustAllSslCert(args);
       var paths = extractCliPluginServerArgs(args, "--plugin-server-paths=");
       var ports = extractCliPluginServerArgs(args, "--plugin-server-ports=");
-      if (paths.size() == ports.size()) {
-        List<LanguageServerCommand> commands = Lists.newArrayList();
+      if (paths.size() != ports.size()) {
+        throw new ParameterException(
+            String.format(
+                "Number of plugin server paths must be equal to number of plugin server ports."
+                    + " Paths: %s. Ports: %s.",
+                paths.size(), ports.size()));
+      }
+      if (paths.size() == 0) {
+        return ImmutableList.of();
+      }
+      if (tsunamiConfig.getRawConfigData().isEmpty()) {
+        for (int i = 0; i < paths.size(); ++i) {
+          commands.add(
+              LanguageServerCommand.create(
+                  paths.get(i),
+                  ports.get(i),
+                  logId,
+                  trustAllSslCertCli != null && trustAllSslCertCli.booleanValue(),
+                  Duration.ZERO,
+                  "",
+                  0,
+                  ""));
+        }
+        return ImmutableList.copyOf(commands);
+      } else {
+        Object callbackConfig =
+            ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
+        Object httpClientConfig =
+            ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
+        boolean trustAllSslCertConfig =
+            (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
         for (int i = 0; i < paths.size(); ++i) {
           commands.add(
               LanguageServerCommand.create(
@@ -204,7 +229,6 @@ public final class TsunamiCli {
         }
         return ImmutableList.copyOf(commands);
       }
-      return ImmutableList.of();
     }
 
     @Nullable

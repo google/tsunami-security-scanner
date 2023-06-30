@@ -38,7 +38,9 @@ import java.util.concurrent.ExecutionException;
 final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   // Default duration deadline for all RPC calls
-  private static final Deadline DEFAULT_DEADLINE = Deadline.after(120, SECONDS);
+  // Remote detectors, especially ones using the callback server, require additional buffer to send
+  // requests and responses.
+  private static final Deadline DEFAULT_DEADLINE = Deadline.after(150, SECONDS);
 
   private final PluginServiceClient service;
   private final Set<MatchedPlugin> pluginsToRun;
