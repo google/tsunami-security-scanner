@@ -39,7 +39,9 @@ subprojects {
         javaxInjectVersion = '1'
         jcommanderVersion = '1.48'
         jsoupVersion = '1.9.2'
+        mysqlVersion='8.0.33'
         okhttpVersion = '3.12.0'
+        postgresqlVersion = '42.6.0'
         protobufVersion = '3.11.4'
         protocVersion = protobufVersion
         snakeyamlVersion = '1.26'
@@ -74,7 +76,9 @@ subprojects {
                 javax_inject: "javax.inject:javax.inject:${javaxInjectVersion}",
                 jcommander: "com.beust:jcommander:${jcommanderVersion}",
                 jsoup: "org.jsoup:jsoup:${jsoupVersion}",
+                mysql: "com.mysql:mysql-connector-j:${mysqlVersion}",
                 okhttp: "com.squareup.okhttp3:okhttp:${okhttpVersion}",
+                postgresql:"org.postgresql:postgresql:${postgresqlVersion}",
                 protobuf: "com.google.protobuf:protobuf-java:${protobufVersion}",
                 protobuf_lite: "com.google.protobuf:protobuf-javalite:${protobufVersion}",
                 protobuf_util: "com.google.protobuf:protobuf-java-util:${protobufVersion}",

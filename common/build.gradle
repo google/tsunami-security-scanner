@@ -13,6 +13,8 @@ dependencies {
     compile deps.okhttp
     compile deps.snakeyaml
     compile deps.truth
+    runtime deps.mysql
+    runtime deps.postgresql
     annotationProcessor deps.autovalue_annotation_processor
 
     testCompile deps.guava_testlib
