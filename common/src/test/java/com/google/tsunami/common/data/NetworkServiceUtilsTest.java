@@ -188,6 +188,34 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void getWebServiceName_whenWebServiceWithSoftware_returnsWebServiceName() {
+    assertThat(
+            NetworkServiceUtils.getWebServiceName(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8080))
+                    .setServiceName("http")
+                    .setServiceContext(
+                        ServiceContext.newBuilder()
+                            .setWebServiceContext(
+                                WebServiceContext.newBuilder()
+                                    .setSoftware(Software.newBuilder().setName("jenkins"))))
+                    .build()))
+        .isEqualTo("jenkins");
+  }
+
+  @Test
+  public void getServiceName_whenWebServiceNoContext_returnsServiceName() {
+    assertThat(
+            NetworkServiceUtils.getWebServiceName(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8080))
+                    .setServiceName("http")
+                    .setSoftware(Software.newBuilder().setName("nothttp"))
+                    .build()))
+        .isEqualTo("http");
+  }
+
+  @Test
   public void buildWebApplicationRootUrl_whenHttpWithoutRoot_buildsExpectedUrl() {
     assertThat(
             NetworkServiceUtils.buildWebApplicationRootUrl(

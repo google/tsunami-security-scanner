@@ -85,6 +85,15 @@ public final class NetworkServiceUtils {
     return Ascii.toLowerCase(networkService.getServiceName());
   }
 
+  public static String getWebServiceName(NetworkService networkService) {
+    if (isWebService(networkService)
+        && networkService.getServiceContext().getWebServiceContext().hasSoftware()) {
+      return Ascii.toLowerCase(
+          networkService.getServiceContext().getWebServiceContext().getSoftware().getName());
+    }
+    return Ascii.toLowerCase(networkService.getServiceName());
+  }
+
   public static NetworkService buildUriNetworkService(String uriString) {
     try {
       URI uri = new URI(uriString);
