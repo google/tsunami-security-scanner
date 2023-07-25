@@ -4,13 +4,14 @@ import asyncio
 import concurrent.futures
 import functools
 from typing import Optional
+
 from absl import logging
 import requests
-from tsunami.plugin_server.py.common.data import network_service_utils
+
 from tsunami.plugin_server.py.common.data.network_service_utils import NetworkService
+from tsunami.plugin_server.py.common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
 from tsunami.plugin_server.py.common.net.http.http_client import Builder
 from tsunami.plugin_server.py.common.net.http.http_client import HttpClient
-
 from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
 from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
 from tsunami.plugin_server.py.common.net.http.http_request import HttpRequest
@@ -44,14 +45,14 @@ class RequestsHttpClient(HttpClient):
 
   def __init__(
       self,
+      session: requests.Session,
       allow_redirects: Optional[bool],
       log_id: Optional[str],
       max_workers: Optional[int],
-      session: Optional[requests.Session],
       timeout_sec: Optional[float],
       verify_ssl: Optional[bool],
   ):
-    self.session = session or requests.Session()
+    self.session = session
     self.allow_redirects = allow_redirects
     self.log_id = log_id
     self.max_workers = max_workers
@@ -70,11 +71,11 @@ class RequestsHttpClient(HttpClient):
     req = self._prepare_request(http_request)
     resp = self.session.send(
         request=req,
-        # TODO(b/288615444) handle host-based routing support for load balancers
-        # proxies=self._get_proxies(network_service),
+        ip=self._get_ip(network_service),
         verify=self.verify_ssl,
         timeout=self.timeout_sec,
-        allow_redirects=self.allow_redirects)
+        allow_redirects=self.allow_redirects,
+    )
     return self._parse_response(resp)
 
   def send_async(
@@ -86,7 +87,7 @@ class RequestsHttpClient(HttpClient):
                  http_request.method, http_request.url)
     req = self._prepare_request(http_request)
     loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(self._prepare_future(network_service, req))
+    future = asyncio.ensure_future(self._prepare_future(req, network_service))
     loop.run_until_complete(future)
     res = future.result()
     return self._parse_response(res)
@@ -102,17 +103,6 @@ class RequestsHttpClient(HttpClient):
       headers_builder.add_header(field, headers[field])
     return headers_builder.build()
 
-  def _get_proxies(
-      self, network_service: Optional[NetworkService] = None
-  ) -> dict[str, str]:
-    if not network_service:
-      return {}
-    uri = network_service_utils.build_web_uri_authority(network_service)
-    return {
-        'http': uri,
-        'https': uri,
-    }
-
   def _parse_response(self, res: requests.Response) -> HttpResponse:
     response_header = self._build_response_headers(res.headers)
     status = HttpStatus.from_code(res.status_code)
@@ -127,8 +117,8 @@ class RequestsHttpClient(HttpClient):
 
   async def _prepare_future(
       self,
-      network_service: Optional[NetworkService],
       req: requests.PreparedRequest,
+      network_service: Optional[NetworkService],
   ):
     """Prepare async request to include configuration."""
     loop = asyncio.get_event_loop()
@@ -137,7 +127,7 @@ class RequestsHttpClient(HttpClient):
         functools.partial(
             self.session.send,
             request=req,
-            proxies=self._get_proxies(network_service),
+            ip=self._get_ip(network_service),
             verify=self.verify_ssl,
             timeout=self.timeout_sec,
             allow_redirects=self.allow_redirects,
@@ -179,6 +169,11 @@ class RequestsHttpClient(HttpClient):
     serialized_headers[
         HttpHeaderFields.USER_AGENT.value] = self.TSUNAMI_USER_AGENT
     return serialized_headers
+
+  def _get_ip(self, network_service: Optional[NetworkService]) -> Optional[str]:
+    if not network_service:
+      return None
+    return network_service.network_endpoint.ip_address.address
 
 
 class RequestsHttpClientBuilder(Builder):
@@ -233,8 +228,9 @@ class RequestsHttpClientBuilder(Builder):
 
   def build(self) -> RequestsHttpClient:
     session = requests.Session()
-    adapter = requests.adapters.HTTPAdapter(
-        pool_maxsize=self.pool_maxsize, pool_connections=self.pool_connections
+    adapter = HostResolverHttpAdapter(
+        pool_maxsize=self.pool_maxsize,
+        pool_connections=self.pool_connections,
     )
     session.mount('http://', adapter)
     session.mount('https://', adapter)

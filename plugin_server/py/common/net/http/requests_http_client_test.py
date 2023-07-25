@@ -1,10 +1,13 @@
 """Tests for google3.third_party.java_src.tsunami.plugin_server.py.common.net.requests_http_client."""
 
+import unittest
+
 from absl.testing import absltest
 import requests
 import requests_mock
 
 from tsunami.plugin_server.py.common.data import network_endpoint_utils
+from tsunami.plugin_server.py.common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
 from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
 from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
 from tsunami.plugin_server.py.common.net.http.http_method import HttpMethod
@@ -206,7 +209,7 @@ class RequestsHttpClientTest(absltest.TestCase):
     self._assert_response_is_expected(response, expected)
 
   @requests_mock.mock()
-  def test_send_with_hostname_and_ip_as_proxy(self, mock):
+  def test_send_with_hostname_and_ip_use_hostname_as_proxy(self, mock):
     url = 'http://example.com/post/test-path'
     network_endpoint = network_endpoint_utils.for_ip_and_hostname(
         '127.0.0.1', 'proxy.com'
@@ -215,6 +218,8 @@ class RequestsHttpClientTest(absltest.TestCase):
         network_endpoint=network_endpoint,
         transport_protocol=network_pb2.TransportProtocol.TCP,
     )
+    adapter = HostResolverHttpAdapter(5, 10)
+    requests.Session.get_adapter = unittest.mock.MagicMock(return_value=adapter)
     mock.register_uri(HttpMethod.GET, url)
     response = self.client.send(
         HttpRequest()
@@ -229,7 +234,7 @@ class RequestsHttpClientTest(absltest.TestCase):
     self._assert_response_is_expected(response, expected)
 
   @requests_mock.mock()
-  def test_send_async_with_hostname_and_ip_as_proxy(self, mock):
+  def test_send_async_with_hostname_and_ip_use_hostname_as_proxy(self, mock):
     url = 'http://example.com/post/test-path'
     network_endpoint = network_endpoint_utils.for_ip_and_hostname(
         '127.0.0.1', 'proxy.com'
@@ -238,6 +243,8 @@ class RequestsHttpClientTest(absltest.TestCase):
         network_endpoint=network_endpoint,
         transport_protocol=network_pb2.TransportProtocol.TCP,
     )
+    adapter = HostResolverHttpAdapter(5, 10)
+    requests.Session.get_adapter = unittest.mock.MagicMock(return_value=adapter)
     mock.register_uri(HttpMethod.GET, url)
     response = self.client.send_async(
         HttpRequest()
@@ -301,38 +308,6 @@ class RequestsHttpClientTest(absltest.TestCase):
       self.client.send_async(
           HttpRequest().delete(url).with_empty_headers().build()
       )
-
-  def test__get_proxies_with_hostname_and_ip_returns_hostname_for_proxy(self):
-    network_endpoint = network_endpoint_utils.for_ip_and_hostname(
-        '127.0.0.1', 'proxy.com'
-    )
-    network_service = network_service_pb2.NetworkService(
-        network_endpoint=network_endpoint,
-        transport_protocol=network_pb2.TransportProtocol.TCP,
-    )
-    self.assertEqual(
-        self.client._get_proxies(
-            network_service=network_service
-        ),
-        {'http': 'proxy.com', 'https': 'proxy.com'},
-    )
-
-  def test__get_proxies_with_hostname_and_port_returns_hostname_port_for_proxy(
-      self,
-  ):
-    network_endpoint = network_endpoint_utils.for_hostname_and_port(
-        'google.com', 8000
-    )
-    network_service = network_service_pb2.NetworkService(
-        network_endpoint=network_endpoint,
-        transport_protocol=network_pb2.TransportProtocol.TCP,
-    )
-    self.assertEqual(
-        self.client._get_proxies(
-            network_service=network_service
-        ),
-        {'http': 'google.com:8000', 'https': 'google.com:8000'},
-    )
 
   def test__serialize_request_headers_include_custom_user_agent(self):
     field = HttpHeaderFields.CONTENT_TYPE.value
