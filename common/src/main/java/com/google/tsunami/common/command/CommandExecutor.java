@@ -92,6 +92,20 @@ public class CommandExecutor {
   }
 
   /**
+   * Starts the command and asynchronously collect output and error.
+   *
+   * @return Started {@link Process} object.
+   * @throws IOException if an I/O error occurs when starting the command executing process.
+   * @throws InterruptedException if interrupted while waiting for the command's output.
+   * @throws ExecutionException if the command execution failed.
+   */
+  public Process executeAsync() throws IOException, InterruptedException, ExecutionException {
+    logger.atInfo().log("Executing the following command: '%s'", COMMAND_ARGS_JOINER.join(args));
+    process = processBuilder.inheritIO().start();
+    return process;
+  }
+
+  /**
    * Starts the command without collecting output and error streams.
    *
    * @return Started {@link Process} object.

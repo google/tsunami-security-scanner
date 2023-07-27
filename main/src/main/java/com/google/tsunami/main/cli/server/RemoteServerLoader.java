@@ -69,7 +69,7 @@ public class RemoteServerLoader {
 
   private Optional<Process> runProcess(CommandExecutor executor) {
     try {
-      return Optional.of(executor.executeWithNoStreamCollection());
+      return Optional.of(executor.executeAsync());
     } catch (IOException | InterruptedException | ExecutionException e) {
       logger.atWarning().withCause(e).log("Could not execute language server binary.");
     }
