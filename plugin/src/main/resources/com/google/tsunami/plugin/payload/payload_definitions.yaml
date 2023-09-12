@@ -36,7 +36,7 @@ payloads:
     interpretation_environment: LINUX_SHELL
     execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
     uses_callback_server: true
-    payload_string: curl $TSUNAMI_PAYLOAD_TOKEN_URL
+    payload_string: curl $TSUNAMI_PAYLOAD_TOKEN_URL_LINUX_RCE
     vulnerability_type:
       - REFLECTIVE_RCE
       - BLIND_RCE

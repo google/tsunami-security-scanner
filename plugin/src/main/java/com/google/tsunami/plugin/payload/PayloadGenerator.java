@@ -18,6 +18,7 @@ package com.google.tsunami.plugin.payload;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.plugin.TcsClient;
@@ -31,8 +32,11 @@ import javax.inject.Qualifier;
 
 /** Holds the generate function to get a detection payload given config parameters */
 public final class PayloadGenerator {
+  @VisibleForTesting static final String UNDEF_VAL = "${TCS_UNDEF}";
   private static final int SECRET_LENGTH = 8;
   private static final String TOKEN_CALLBACK_SERVER_URL = "$TSUNAMI_PAYLOAD_TOKEN_URL";
+  private static final String TOKEN_CALLBACK_SERVER_URL_LINUX_RCE =
+      "$TSUNAMI_PAYLOAD_TOKEN_URL_LINUX_RCE";
   private static final String TOKEN_RANDOM_STRING = "$TSUNAMI_PAYLOAD_TOKEN_RANDOM";
 
   private final TcsClient tcsClient;
@@ -112,34 +116,42 @@ public final class PayloadGenerator {
   private Payload convertParsedPayload(PayloadDefinition p, PayloadGeneratorConfig c) {
     String secret = secretGenerator.generate(SECRET_LENGTH);
     if (p.getUsesCallbackServer().getValue()) {
+      String callbackUri = tcsClient.getCallbackUri(secret);
       return new Payload(
           p.getPayloadString()
               .getValue()
-              .replace(TOKEN_CALLBACK_SERVER_URL, tcsClient.getCallbackUri(secret)),
+              .replace(
+                  TOKEN_CALLBACK_SERVER_URL_LINUX_RCE, generateLinuxRceCallbackUri(callbackUri))
+              .replace(TOKEN_CALLBACK_SERVER_URL, callbackUri),
           (Validator) (unused) -> tcsClient.hasOobLog(secret),
           PayloadAttributes.newBuilder().setUsesCallbackServer(true).build(),
           c);
-    } else {
-      String payloadString = p.getPayloadString().getValue().replace(TOKEN_RANDOM_STRING, secret);
-      Validator v;
-      switch (p.getValidationType()) {
-        case VALIDATION_REGEX:
-          String processedRegex =
-              p.getValidationRegex().getValue().replace(TOKEN_RANDOM_STRING, secret);
-          v =
-              (Validator)
-                  (Optional<ByteString> input) ->
-                      input.map(i -> i.toStringUtf8().matches(processedRegex)).orElse(false);
-          return new Payload(
-              payloadString,
-              v,
-              PayloadAttributes.newBuilder().setUsesCallbackServer(false).build(),
-              c);
-        default:
-          throw new NotImplementedException(
-              "Validation type %s not implemented.", p.getValidationType());
-      }
     }
+    String payloadString = p.getPayloadString().getValue().replace(TOKEN_RANDOM_STRING, secret);
+    Validator v;
+    switch (p.getValidationType()) {
+      case VALIDATION_REGEX:
+        String processedRegex =
+            p.getValidationRegex().getValue().replace(TOKEN_RANDOM_STRING, secret);
+        v =
+            (Validator)
+                (Optional<ByteString> input) ->
+                    input.map(i -> i.toStringUtf8().matches(processedRegex)).orElse(false);
+        return new Payload(
+            payloadString,
+            v,
+            PayloadAttributes.newBuilder().setUsesCallbackServer(false).build(),
+            c);
+      default:
+        throw new NotImplementedException(
+            "Validation type %s not implemented.", p.getValidationType());
+    }
+  }
+
+  private static String generateLinuxRceCallbackUri(String callbackUri) {
+    return callbackUri.substring(0, callbackUri.length() / 2)
+        + UNDEF_VAL
+        + callbackUri.substring(callbackUri.length() / 2);
   }
 
   /** Guice interface for injecting parsed payloads from payload_definitions.yaml */
