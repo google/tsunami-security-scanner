@@ -15,9 +15,7 @@ class PayloadGenerator:
 
   SECRET_LENGTH = 8
   TOKEN_CALLBACK_SERVER_URL = '$TSUNAMI_PAYLOAD_TOKEN_URL'
-  TOKEN_CALLBACK_SERVER_URL_LINUX_RCE = '$TSUNAMI_PAYLOAD_TOKEN_URL_LINUX_RCE'
   TOKEN_RANDOM_STRING = '$TSUNAMI_PAYLOAD_TOKEN_RANDOM'
-  UNDEF_VAL = '${TCS_UNDEF}'
 
   def __init__(
       self,
@@ -112,13 +110,9 @@ class PayloadGenerator:
     """Create payload from the selected payload definition."""
     secret = self.payload_secret_generator.generate(self.SECRET_LENGTH)
     if bool(payload.uses_callback_server.ByteSize()):
-      callback_uri = self.tcs_client.get_callback_uri(secret)
       payload_string = payload.payload_string.value.replace(
-          self.TOKEN_CALLBACK_SERVER_URL_LINUX_RCE,
-          _generate_linux_rce_callback_uri(callback_uri),
-      ).replace(
           self.TOKEN_CALLBACK_SERVER_URL,
-          callback_uri,
+          self.tcs_client.get_callback_uri(secret),
       )
       validator = type(
           'PayloadValidator',
@@ -131,32 +125,32 @@ class PayloadGenerator:
           pg.PayloadAttributes(uses_callback_server=True),
           config,
       )
-
-    payload_string = payload.payload_string.value.replace(
-        self.TOKEN_RANDOM_STRING, secret
-    )
-    if payload.validation_type != pg.PayloadValidationType.Value(
-        'VALIDATION_REGEX'
-    ):
-      raise NotImplementedError(
-          'Validation type %s not supported.'
-          % pg.PayloadGeneratorConfig.VulnerabilityType.Name(
-              config.vulnerability_type)
-          )
-    regex = payload.validation_regex.value.replace(
-        self.TOKEN_RANDOM_STRING, secret
-    )
-    validator = type(
-        'PayloadValidator',
-        (Validator,),
-        {'is_executed': _is_executed(regex)},
-    )()
-    return Payload(
-        payload_string,
-        validator,
-        pg.PayloadAttributes(uses_callback_server=False),
-        config,
-    )
+    else:
+      payload_string = payload.payload_string.value.replace(
+          self.TOKEN_RANDOM_STRING, secret
+      )
+      if payload.validation_type != pg.PayloadValidationType.Value(
+          'VALIDATION_REGEX'
+      ):
+        raise NotImplementedError(
+            'Validation type %s not supported.'
+            % pg.PayloadGeneratorConfig.VulnerabilityType.Name(
+                config.vulnerability_type)
+            )
+      regex = payload.validation_regex.value.replace(
+          self.TOKEN_RANDOM_STRING, secret
+      )
+      validator = type(
+          'PayloadValidator',
+          (Validator,),
+          {'is_executed': _is_executed(regex)},
+      )()
+      return Payload(
+          payload_string,
+          validator,
+          pg.PayloadAttributes(uses_callback_server=False),
+          config,
+      )
 
   def _payload_matches_config(
       self,
@@ -183,11 +177,3 @@ def _is_executed(regex: str) -> Callable[[Any, Optional[bytes]], bool]:
     return bool(re.compile(regex).search(string)) or False
 
   return check_payload_execution
-
-
-def _generate_linux_rce_callback_uri(callback_uri: str) -> str:
-  return (
-      callback_uri[0 : len(callback_uri) // 2]
-      + PayloadGenerator.UNDEF_VAL
-      + callback_uri[len(callback_uri) // 2 :]
-  )

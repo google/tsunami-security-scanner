@@ -43,11 +43,7 @@ class PayloadGeneratorWithCallbackTest(parameterized.TestCase):
     self.assertTrue(self.payload_generator.is_callback_server_enabled())
 
   @parameterized.named_parameters(
-      (
-          'linux_config',
-          LINUX_REFLECTIVE_RCE_CONFIG,
-          'curl',
-      ),
+      ('linux_config', LINUX_REFLECTIVE_RCE_CONFIG, 'curl'),
       (
           'ssrf_config',
           ANY_SSRF_CONFIG,
@@ -59,15 +55,9 @@ class PayloadGeneratorWithCallbackTest(parameterized.TestCase):
   ):
     payload = self.payload_generator.generate(config)
     self.assertIn(expected_payload, payload.payload)
-    self.assertIn(
-        _IP_ADDRESS, payload.payload.replace(PayloadGenerator.UNDEF_VAL, '')
-    )
+    self.assertIn(_IP_ADDRESS, payload.payload)
     self.assertIn(str(_PORT), payload.payload)
     self.assertTrue(payload.get_payload_attributes().uses_callback_server)
-
-  def test_generate_with_callback_returns_undef_val_placeholder(self):
-    payload = self.payload_generator.generate(LINUX_REFLECTIVE_RCE_CONFIG)
-    self.assertIn(PayloadGenerator.UNDEF_VAL, payload.payload)
 
   @parameterized.named_parameters(
       (

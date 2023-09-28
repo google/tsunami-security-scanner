@@ -16,7 +16,6 @@
 package com.google.tsunami.plugin.payload;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.tsunami.plugin.payload.PayloadGenerator.UNDEF_VAL;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -91,7 +90,6 @@ public final class PayloadGeneratorWithCallbackServerTest {
     Payload payload = payloadGenerator.generate(LINUX_REFLECTIVE_RCE_CONFIG);
 
     assertThat(payload.getPayload()).contains("curl");
-    assertThat(payload.getPayload()).contains(UNDEF_VAL);
     assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
     assertThat(payload.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
     assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
@@ -102,7 +100,6 @@ public final class PayloadGeneratorWithCallbackServerTest {
     Payload payload = payloadGenerator.generateNoCallback(LINUX_REFLECTIVE_RCE_CONFIG);
 
     assertThat(payload.getPayload()).isEqualTo(CORRECT_PRINTF);
-    assertThat(payload.getPayload()).doesNotContain(UNDEF_VAL);
     assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
   }
 
