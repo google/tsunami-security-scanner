@@ -119,7 +119,9 @@ public final class HttpClientModuleTest {
         SSLHandshakeException.class,
         () -> httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build()));
 
-    mockWebServer.shutdown();
+    // Note: b/314642696 - After this point, the socket in mockWebServer was closed when the
+    //                     exception was raised. So working with the mockWebServer would be
+    //                     hazardous.
   }
 
   @Test
@@ -137,7 +139,9 @@ public final class HttpClientModuleTest {
         SSLHandshakeException.class,
         () -> httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build()));
 
-    mockWebServer.shutdown();
+    // Note: b/314642696 - After this point, the socket in mockWebServer was closed when the
+    //                     exception was raised. So working with the mockWebServer would be
+    //                     hazardous.
   }
 
   @Test
