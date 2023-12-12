@@ -164,4 +164,4 @@ def _configure_health_service(server):
 
 if __name__ == '__main__':
   flags.set_default(logging.ALSOLOGTOSTDERR, True)
-  app.run(main)
+  app.run(main, change_root_and_user=False)
