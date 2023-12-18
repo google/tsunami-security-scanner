@@ -154,6 +154,17 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isPlainHttp_whenHttpServiceButHasSslVersions_returnsFalse() {
+    assertThat(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName("http")
+                    .addSupportedSslVersions("SSLV3")
+                    .build()))
+        .isFalse();
+  }
+
+  @Test
   public void getServiceName_whenNonWebService_returnsServiceName() {
     assertThat(
             NetworkServiceUtils.getServiceName(

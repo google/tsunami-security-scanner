@@ -56,7 +56,8 @@ message NetworkService {
   // in the uri binding representation, like: cpe:/a:openbsd:openssh:8.4p1
   repeated string cpes = 8;
 
-  // TODO(magl): add ssl related information.
+  // List of supported SSL versions (e.g. TLSv1, SSLv3, ...) on the service.
+  repeated string supported_ssl_versions = 9;
 }
 
 // Context information about a specific network service.
