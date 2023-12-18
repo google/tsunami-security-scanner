@@ -106,6 +106,17 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isWebService_whenHasAtLeastOneHttpMethod_returnsTrue() {
+    assertThat(
+            NetworkServiceUtils.isWebService(
+                NetworkService.newBuilder()
+                    .setServiceName("irrelevantService")
+                    .addSupportedHttpMethods("IrrelevantMethodName")
+                    .build()))
+        .isTrue();
+  }
+
+  @Test
   public void isWebService_whenNonWebService_returnsFalse() {
     assertThat(
             NetworkServiceUtils.isWebService(

@@ -68,7 +68,10 @@ public final class NetworkServiceUtils {
 
   public static boolean isWebService(NetworkService networkService) {
     checkNotNull(networkService);
-    return isWebService(Optional.of(networkService.getServiceName()));
+    // A web-service is a service that is either flagged as http by nmap or one that supports at
+    // least one HTTP method.
+    return (networkService.getSupportedHttpMethodsCount() > 0)
+        || isWebService(Optional.of(networkService.getServiceName()));
   }
 
   public static boolean isPlainHttp(NetworkService networkService) {

@@ -58,6 +58,9 @@ message NetworkService {
 
   // List of supported SSL versions (e.g. TLSv1, SSLv3, ...) on the service.
   repeated string supported_ssl_versions = 9;
+
+  // List of supported HTTP methods (e.g. POST, GET, ...) on the service.
+  repeated string supported_http_methods = 10;
 }
 
 // Context information about a specific network service.
