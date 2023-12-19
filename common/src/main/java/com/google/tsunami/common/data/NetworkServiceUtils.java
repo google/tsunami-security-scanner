@@ -76,11 +76,21 @@ public final class NetworkServiceUtils {
 
   public static boolean isPlainHttp(NetworkService networkService) {
     checkNotNull(networkService);
+
+    var isWebService = isWebService(networkService);
+    var isKnownServiceName = IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.containsKey(
+            Ascii.toLowerCase(networkService.getServiceName()));
+    var doesNotSupportAnySslVersion = networkService.getSupportedSslVersionsCount() == 0;
+
+    if (!isKnownServiceName) {
+      return isWebService && doesNotSupportAnySslVersion;
+    }
+
     var isKnownPlainHttpService =
         IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.getOrDefault(
             Ascii.toLowerCase(networkService.getServiceName()), false);
-    var doesNotSupportAnySslVersion = networkService.getSupportedSslVersionsCount() == 0;
-    return isWebService(networkService) && isKnownPlainHttpService && doesNotSupportAnySslVersion;
+
+    return isKnownPlainHttpService && doesNotSupportAnySslVersion;
   }
 
   public static String getServiceName(NetworkService networkService) {

@@ -176,6 +176,39 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isPlainHttp_whenNonHttpServiceButHasSslVersions_returnsFalse() {
+    assertThat(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName("ssh")
+                    .addSupportedSslVersions("SSLV3")
+                    .build()))
+        .isFalse();
+  }
+
+  @Test
+  public void isPlainHttp_whenHttpServiceFromHttpMethodsWithoutSslVersions_returnsTrue() {
+    assertThat(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName("ssh")
+                    .addSupportedHttpMethods("GET")
+                    .build()))
+        .isTrue();
+  }
+
+  @Test
+  public void isPlainHttp_whenHttpServiceWithSslVersions_returnsFalse() {
+    assertThat(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName("http")
+                    .addSupportedSslVersions("SSLV3")
+                    .build()))
+        .isFalse();
+  }
+
+  @Test
   public void getServiceName_whenNonWebService_returnsServiceName() {
     assertThat(
             NetworkServiceUtils.getServiceName(
