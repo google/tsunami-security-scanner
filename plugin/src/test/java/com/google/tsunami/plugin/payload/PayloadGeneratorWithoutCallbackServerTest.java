@@ -17,7 +17,6 @@ package com.google.tsunami.plugin.payload;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Guice;
@@ -25,10 +24,6 @@ import com.google.protobuf.ByteString;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.payload.testing.FakePayloadGeneratorModule;
 import com.google.tsunami.proto.PayloadGeneratorConfig;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import javax.inject.Inject;
-import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,20 +51,23 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
-  private static final PayloadGeneratorConfig JAVA_REFLECTIVE_RCE_CONFIG =
+ private static final PayloadGeneratorConfig JAVA_REFLECTIVE_RCE_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
           .setInterpretationEnvironment(PayloadGeneratorConfig.InterpretationEnvironment.JAVA)
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
-  private static final PayloadGeneratorConfig ANY_SSRF_CONFIG =
+ private static final PayloadGeneratorConfig ANY_SSRF_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.SSRF)
           .setInterpretationEnvironment(
               PayloadGeneratorConfig.InterpretationEnvironment.INTERPRETATION_ANY)
           .setExecutionEnvironment(PayloadGeneratorConfig.ExecutionEnvironment.EXEC_ANY)
           .build();
+  
+  private PayloadGenerator payloadGenerator;
+  
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
 
@@ -77,15 +75,15 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
   public void setUp() {
     Guice.createInjector(
             new HttpClientModule.Builder().build(),
-            FakePayloadGeneratorModule.builder().setSecureRng(testSecureRandom).build())
+            FakePayloadGeneratorModule.builder().build())
         .injectMembers(this);
   }
 
-  @Test
+   @Test
   public void isCallbackServerEnabled_returnsFalse() {
     assertFalse(payloadGenerator.isCallbackServerEnabled());
   }
-
+  
   @Test
   public void getNonCallbackPayload_withLinuxConfiguration_returnsPrintfPayload() {
     Payload payload = payloadGenerator.generateNoCallback(LINUX_REFLECTIVE_RCE_CONFIG);
@@ -210,7 +208,7 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
                     .build()));
   }
 
-  @Test
+ @Test
   public void generate_withoutConfig_throwsNotImplementedException() {
     assertThrows(
         NotImplementedException.class,
