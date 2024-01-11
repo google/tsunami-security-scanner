@@ -81,11 +81,11 @@ To quickly get started with Tsunami scans,
     docker run --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
     ```
 
-1.  installing debug tools in the Tsunami image.
+1.  debugging issues with Tsunami container. The tsunami container is based on Debian which means
+    you you can exec into the container and install debug tools:
 
     ```shell
-    docker exec -it tsunami bash -c "apt-get update && apt-get install -y dnsutils net-tools procps"
-    docker exec -it tsunami bach -c "ping hostname"
+    docker exec -it tsunami bash
     ```
 ## Contributing
 
