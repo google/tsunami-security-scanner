@@ -71,14 +71,21 @@ To quickly get started with Tsunami scans,
 
 1.  build the docker image for Tsunami:
 
-    ```
+    ```shell
     docker build -t tsunami .
     ```
 
-1. run the Tsunami image. The logs can be saved to the host machine by mounting a volume:
+1.  run the Tsunami image. The logs can be saved to the host machine by mounting a volume:
 
+    ```shell
+    docker run --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
     ```
-    docker run  --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
+
+1.  installing debug tools in the Tsunami image.
+
+    ```shell
+    docker exec -it tsunami bash -c "apt-get update && apt-get install -y dnsutils net-tools procps"
+    docker exec -it tsunami bach -c "ping hostname"
     ```
 ## Contributing
 
