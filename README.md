@@ -81,8 +81,8 @@ To quickly get started with Tsunami scans,
     docker run --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
     ```
 
-1.  debugging issues with Tsunami container. The tsunami container is based on Debian which means
-    you you can exec into the container and install debug tools:
+1.  debugging issues with Tsunami container. The tsunami container is based on Debian. To run debug tools simply
+    exec into the container and install them:
 
     ```shell
     docker exec -it tsunami bash
