@@ -85,7 +85,7 @@ def main(unused_argv):
 
   _configure_plugin_service(server)
   _configure_health_service(server)
-  server.add_secure_port(server_addr, grpc.local_server_credentials())
+  server.add_insecure_port(server_addr)
 
   server.start()
   logging.info('Server started at %s.', server_addr)
