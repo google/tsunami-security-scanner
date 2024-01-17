@@ -2,7 +2,10 @@ FROM adoptopenjdk/openjdk13:debianslim
 
 # Install dependencies
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates
+ && apt-get install -y --no-install-recommends git ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/share/doc && rm -rf /usr/share/man \
+ && apt-get clean
 
 WORKDIR /usr/tsunami/repos
 
@@ -21,7 +24,7 @@ RUN mkdir /usr/tsunami/plugins \
 WORKDIR /usr/repos/tsunami-security-scanner
 COPY . .
 RUN ./gradlew shadowJar \
-    && cp $(find "./" -name 'tsunami-main-*-cli.jar') /usr/tsunami/tsunami.jar \
+    && cp "$(find "./" -name "tsunami-main-*-cli.jar")" /usr/tsunami/tsunami.jar \
     && cp ./tsunami.yaml /usr/tsunami
 
 # Stage 2: Release
@@ -30,6 +33,8 @@ FROM adoptopenjdk/openjdk13:debianslim-jre
 # Install dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends nmap ncrack ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/share/doc && rm -rf /usr/share/man \
     && apt-get clean \
     && mkdir logs/
 
