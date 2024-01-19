@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Main gRPC server to execute Python Tsunami plugins."""
+
 from concurrent import futures
 import importlib
 import pkgutil
@@ -69,11 +70,8 @@ _CALLBACK_POLLING_URI = flags.DEFINE_string(
 
 
 def main(unused_argv):
-  logging.use_absl_handler()
-  logging.get_absl_handler().use_absl_log_file(
-      'py_plugin_server', _OUTPUT.value
-  )
-  logging.set_verbosity(logging.INFO)
+  _configure_log()
+
   # Load plugins from tsunami_plugins repository.
   plugin_pkg = importlib.import_module(
       'py_plugins'
@@ -113,6 +111,20 @@ def _import_py_plugins(plugin_pkg: types.ModuleType):
       _import_py_plugins(pkg)
     else:
       logging.info('Loaded plugin module %s', full_name)
+
+
+def _configure_log():
+  """Store and print out log stream."""
+  logging.use_absl_handler()
+  logger = logging.get_absl_handler()
+  logger.use_absl_log_file(
+      'py_plugin_server', _OUTPUT.value
+  )
+  # Label the log record that comes from the python server for debugging.
+  logger.setFormatter(
+      logging.PythonFormatter('[Python Server] %(asctime)s %(message)s')
+  )
+  logging.set_verbosity(logging.INFO)
 
 
 def _configure_plugin_service(server):

@@ -59,6 +59,7 @@ final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
           .get()
           .getStatus()
           .equals(HealthCheckResponse.ServingStatus.SERVING)) {
+        logger.atInfo().log("Detecting with language server plugins...");
         return service
             .runWithDeadline(
                 RunRequest.newBuilder().setTarget(target).addAllPlugins(pluginsToRun).build(),
@@ -83,6 +84,7 @@ final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
           .get()
           .getStatus()
           .equals(HealthCheckResponse.ServingStatus.SERVING)) {
+        logger.atInfo().log("Getting language server plugins...");
         return ImmutableList.copyOf(
             service
                 .listPluginsWithDeadline(ListPluginsRequest.getDefaultInstance(), DEFAULT_DEADLINE)

@@ -38,7 +38,6 @@ class PluginServiceServicer(plugin_service_pb2_grpc.PluginServiceServicer):
 
   This class executes requests called by the Java client. All request types are
   given by the plugin_service proto definition.
-
   """
 
   def __init__(self, py_plugins: list[tsunami_plugin.TsunamiPlugin],
@@ -47,10 +46,11 @@ class PluginServiceServicer(plugin_service_pb2_grpc.PluginServiceServicer):
     self.max_workers = max_workers
 
   def Run(
-      self, request: plugin_service_pb2.RunRequest,
-      servicer_context: plugin_service_pb2_grpc.PluginServiceServicer
+      self,
+      request: plugin_service_pb2.RunRequest,
+      servicer_context: plugin_service_pb2_grpc.PluginServiceServicer,
   ) -> RunResponse:
-    logging.info('Received Run request = %s', request)
+    logging.info('Received Run request: %s', request)
     report_list = detection_pb2.DetectionReportList()
 
     detection_futures = []
@@ -77,8 +77,11 @@ class PluginServiceServicer(plugin_service_pb2_grpc.PluginServiceServicer):
     return response
 
   def ListPlugins(
-      self, request: ListPluginsRequest,
-      servicer_context: _PluginServiceServicer) -> ListPluginsResponse:
+      self,
+      request: ListPluginsRequest,
+      servicer_context: _PluginServiceServicer,
+  ) -> ListPluginsResponse:
+    logging.info('Received ListPlugins request: %s', request)
     response = ListPluginsResponse()
     response.plugins.MergeFrom(
         [plugin.GetPluginDefinition() for plugin in self.py_plugins])
