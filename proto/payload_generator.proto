@@ -38,6 +38,10 @@ message PayloadGeneratorConfig {
     BLIND_RCE = 2;
     // Server-Side Request Forgery
     SSRF = 3;
+    // Arbitrary File Write
+    ARBITRARY_FILE_WRITE = 4;
+    // RCE without output of the execution + File Read (needed to get confirmation string)
+    BLIND_RCE_FILE_READ = 5;
   }
 
   // The environment that processes the payload for execution e.g. a PHP-based
@@ -51,8 +55,12 @@ message PayloadGeneratorConfig {
     JAVA = 2;
     // Payload is interpreted wihin a PHP VM context
     PHP = 3;
+    // Payload is interpreted wihin crontab 
+    LINUX_ROOT_CRONTAB = 4;
+    // Payload is interpreted wihin a Windows shell environment 
+    WINDOWS_SHELL = 5;
     // Interpretation environment doesn't matter
-    INTERPRETATION_ANY = 4;
+    INTERPRETATION_ANY = 6;
   }
 
   // The actual runtime environment when the payload is run e.g. while a

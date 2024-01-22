@@ -56,6 +56,22 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
+  private static final PayloadGeneratorConfig LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.ARBITRARY_FILE_WRITE)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.LINUX_ROOT_CRONTAB)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();  
+  private static final PayloadGeneratorConfig LINUX_BLIND_RCE_FILE_READ_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.BLIND_RCE_FILE_READ)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.LINUX_SHELL)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();  
   private static final PayloadGeneratorConfig JAVA_REFLECTIVE_RCE_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
@@ -63,6 +79,14 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
+  private static final PayloadGeneratorConfig WINDOWS_REFLECTIVE_RCE_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.WINDOWS_SHELL)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();  
   private static final PayloadGeneratorConfig ANY_SSRF_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.SSRF)
@@ -72,6 +96,10 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
           .build();
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
+  private static final String CORRECT_CURL_TRACE =
+      "curl --trace /tmp/tsunami-rce -- tsunami-rce-ffffffffffffffff";
+  private static final String CORRECT_WINDOWS_ECHO =
+      "powershell -Command \"echo TSUNAMI_PAYLOAD_START$(echo ffffffffffffffff)TSUNAMI_PAYLOAD_END\"";
 
   @Before
   public void setUp() {
@@ -118,6 +146,80 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
 
     assertFalse(payload.checkIfExecuted(ByteString.copyFromUtf8(CORRECT_PRINTF)));
   }
+
+  @Test
+  public void generateNonCallbackPayload_withCrontabConfiguration_throwsNotImplementedException() {
+
+    assertThrows(
+      NotImplementedException.class,
+      () -> payloadGenerator.generateNoCallback(LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG));
+  }  
+
+  @Test
+  public void getNonCallbackPayload_withBlindRceReadConfiguration_returnsCurlTracePayload() {
+    Payload payload = payloadGenerator.generateNoCallback(LINUX_BLIND_RCE_FILE_READ_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_CURL_TRACE);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void getPayload_withBlindRceReadConfiguration_returnsCurlTracePayload() {
+    Payload payload = payloadGenerator.generate(LINUX_BLIND_RCE_FILE_READ_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_CURL_TRACE);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void checkIfExecuted_withBlindRceReadConfiguration_andCorrectInput_returnsTrue() {
+    Payload payload = payloadGenerator.generate(LINUX_BLIND_RCE_FILE_READ_CONFIG);
+
+    assertTrue(
+        payload.checkIfExecuted(
+            ByteString.copyFromUtf8(
+                "RANDOMOUTPUTtsunami-rce-ffffffffffffffff")));
+  }
+
+  @Test
+  public void checkIfExecuted_withBlindRceReadConfiguration_andIncorectInput_returnsFalse() {
+    Payload payload = payloadGenerator.generate(LINUX_BLIND_RCE_FILE_READ_CONFIG);
+
+    assertFalse(payload.checkIfExecuted(ByteString.copyFromUtf8("RANDOMINPUT")));
+  }  
+
+  @Test
+  public void getNonCallbackPayload_withWindowsConfiguration_returnsPrintfPayload() {
+    Payload payload = payloadGenerator.generateNoCallback(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_WINDOWS_ECHO);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void getPayload_withWindowsConfiguration_returnsEchoPayload() {
+    Payload payload = payloadGenerator.generate(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_WINDOWS_ECHO);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void checkIfExecuted_withWindowsConfiguration_andCorrectInput_returnsTrue() {
+    Payload payload = payloadGenerator.generate(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertTrue(
+        payload.checkIfExecuted(
+            ByteString.copyFromUtf8(
+                "RANDOMOUTPUTTSUNAMI_PAYLOAD_STARTffffffffffffffffTSUNAMI_PAYLOAD_END")));
+  }
+
+  @Test
+  public void checkIfExecuted_withWindowsConfiguration_andIncorectInput_returnsFalse() {
+    Payload payload = payloadGenerator.generate(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertFalse(payload.checkIfExecuted(ByteString.copyFromUtf8(CORRECT_PRINTF)));
+  }  
 
   @Test
   public void getPayload_withJavaConfiguration_returnsPrintfPayload() {
