@@ -37,6 +37,7 @@ public final class RemoteServerLoaderTest {
                 "/bin/sh",
                 "34567",
                 "34",
+                "/output-here",
                 false,
                 Duration.ofSeconds(10),
                 "157.34.0.2",

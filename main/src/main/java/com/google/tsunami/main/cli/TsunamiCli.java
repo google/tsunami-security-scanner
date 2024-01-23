@@ -57,6 +57,7 @@ import com.google.tsunami.workflow.ScanningWorkflowException;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.List;
@@ -198,6 +199,7 @@ public final class TsunamiCli {
               LanguageServerCommand.create(
                   paths.get(i),
                   ports.get(i),
+                  extractOutputDir(args),
                   logId,
                   trustAllSslCertCli != null && trustAllSslCertCli.booleanValue(),
                   Duration.ZERO,
@@ -219,6 +221,7 @@ public final class TsunamiCli {
                   paths.get(i),
                   ports.get(i),
                   logId,
+                  extractOutputDir(args),
                   trustAllSslCertCli == null
                       ? trustAllSslCertConfig
                       : trustAllSslCertCli.booleanValue(),
@@ -243,6 +246,16 @@ public final class TsunamiCli {
         }
       }
       return null;
+    }
+
+    private String extractOutputDir(String[] args) {
+      for (int i = 0; i < args.length; ++i) {
+        if (args[i].startsWith("--scan-results-local-output-filename=")) {
+          String filename = Iterables.get(Splitter.on('=').split(args[i]), 1) + ": ";
+          return Path.of(filename).getParent().toString();
+        }
+      }
+      return "";
     }
 
     private ImmutableList<String> extractCliPluginServerArgs(String[] args, String flag) {

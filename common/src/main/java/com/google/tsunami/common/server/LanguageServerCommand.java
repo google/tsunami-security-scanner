@@ -25,6 +25,7 @@ public abstract class LanguageServerCommand {
       String serverCommand,
       String port,
       String logId,
+      String outputDir,
       boolean trustAllSsl,
       Duration timeoutSeconds,
       String callbackAddress,
@@ -34,6 +35,7 @@ public abstract class LanguageServerCommand {
         serverCommand,
         port,
         logId,
+        outputDir,
         trustAllSsl,
         timeoutSeconds,
         callbackAddress,
@@ -46,6 +48,8 @@ public abstract class LanguageServerCommand {
   public abstract String port();
 
   public abstract String logId();
+
+  public abstract String outputDir();
 
   public abstract boolean trustAllSslCert();
 
