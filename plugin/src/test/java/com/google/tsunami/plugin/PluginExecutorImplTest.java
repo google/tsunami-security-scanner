@@ -16,10 +16,10 @@
 package com.google.tsunami.plugin;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.testing.FakeTicker;
+import com.google.common.truth.Truth8;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.tsunami.plugin.PluginExecutor.PluginExecutorConfig;
@@ -61,10 +61,10 @@ public final class PluginExecutorImplTest {
             .executeAsync(executorConfig)
             .get();
 
-    assertThat(executionResult.exception()).isEmpty();
+    Truth8.assertThat(executionResult.exception()).isEmpty();
     assertThat(executionResult.isSucceeded()).isTrue();
     assertThat(executionResult.executionStopwatch().elapsed()).isEqualTo(TICK_DURATION);
-    assertThat(executionResult.resultData()).hasValue("result data");
+    Truth8.assertThat(executionResult.resultData()).hasValue("result data");
   }
 
   @Test
@@ -84,12 +84,12 @@ public final class PluginExecutorImplTest {
             .executeAsync(executorConfig)
             .get();
 
-    assertThat(executionResult.exception()).isPresent();
+    Truth8.assertThat(executionResult.exception()).isPresent();
     assertThat(executionResult.exception().get()).hasCauseThat().isNull();
     assertThat(executionResult.exception().get()).hasMessageThat().contains("test exception");
     assertThat(executionResult.isSucceeded()).isFalse();
     assertThat(executionResult.executionStopwatch().elapsed()).isEqualTo(TICK_DURATION);
-    assertThat(executionResult.resultData()).isEmpty();
+    Truth8.assertThat(executionResult.resultData()).isEmpty();
   }
 
   @Test
@@ -109,7 +109,7 @@ public final class PluginExecutorImplTest {
             .executeAsync(executorConfig)
             .get();
 
-    assertThat(executionResult.exception()).isPresent();
+    Truth8.assertThat(executionResult.exception()).isPresent();
     assertThat(executionResult.exception().get())
         .hasCauseThat()
         .isInstanceOf(RuntimeException.class);
@@ -119,6 +119,6 @@ public final class PluginExecutorImplTest {
             String.format("Plugin execution error on '%s'.", FAKE_MATCHING_RESULT.pluginId()));
     assertThat(executionResult.isSucceeded()).isFalse();
     assertThat(executionResult.executionStopwatch().elapsed()).isEqualTo(TICK_DURATION);
-    assertThat(executionResult.resultData()).isEmpty();
+    Truth8.assertThat(executionResult.resultData()).isEmpty();
   }
 }

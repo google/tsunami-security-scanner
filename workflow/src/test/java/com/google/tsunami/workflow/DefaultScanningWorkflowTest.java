@@ -16,12 +16,12 @@
 package com.google.tsunami.workflow;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
 import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetworkService;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth8;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
@@ -84,7 +84,7 @@ public final class DefaultScanningWorkflowTest {
     assertThat(executionTracer.getSelectedServiceFingerprinters()).hasSize(1);
     assertThat(executionTracer.getSelectedServiceFingerprinters().get(0).tsunamiPlugin().getClass())
         .isEqualTo(FakeServiceFingerprinter.class);
-    assertThat(
+    Truth8.assertThat(
             executionTracer.getSelectedVulnDetectors().stream()
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(
@@ -100,7 +100,7 @@ public final class DefaultScanningWorkflowTest {
 
     assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
     assertThat(executionTracer.isDone()).isTrue();
-    assertThat(
+    Truth8.assertThat(
             executionTracer.getSelectedVulnDetectors().stream()
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(
@@ -176,7 +176,7 @@ public final class DefaultScanningWorkflowTest {
     assertThat(executionTracer.getSelectedPortScanners().get(0).tsunamiPlugin().getClass())
         .isEqualTo(FakePortScanner.class);
     assertThat(executionTracer.getSelectedServiceFingerprinters()).isEmpty();
-    assertThat(
+    Truth8.assertThat(
             executionTracer.getSelectedVulnDetectors().stream()
                 .map(selectedVulnDetector -> selectedVulnDetector.tsunamiPlugin().getClass()))
         .containsExactlyElementsIn(

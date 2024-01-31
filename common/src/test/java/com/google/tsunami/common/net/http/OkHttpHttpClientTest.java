@@ -24,7 +24,6 @@ import static com.google.common.net.HttpHeaders.HOST;
 import static com.google.common.net.HttpHeaders.LOCATION;
 import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static com.google.tsunami.common.net.http.HttpRequest.get;
 import static com.google.tsunami.common.net.http.HttpRequest.head;
 import static com.google.tsunami.common.net.http.HttpRequest.post;
@@ -32,6 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.net.MediaType;
+import com.google.common.truth.Truth8;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -511,7 +511,7 @@ public final class OkHttpHttpClientTest {
                 .addHeader(CONTENT_LENGTH, "0")
                 .addHeader(LOCATION, RedirectDispatcher.REDIRECT_DESTINATION_PATH)
                 .build());
-    assertThat(response.bodyString()).hasValue("");
+    Truth8.assertThat(response.bodyString()).hasValue("");
     assertThat(response)
         .isEqualTo(
             HttpResponse.builder()
@@ -550,7 +550,7 @@ public final class OkHttpHttpClientTest {
                 .addHeader(CONTENT_LENGTH, "0")
                 .addHeader(LOCATION, RedirectDispatcher.REDIRECT_DESTINATION_PATH)
                 .build());
-    assertThat(response.bodyString()).hasValue("");
+    Truth8.assertThat(response.bodyString()).hasValue("");
     assertThat(response)
         .isEqualTo(
             HttpResponse.builder()
@@ -667,7 +667,7 @@ public final class OkHttpHttpClientTest {
         httpClient.send(
             get(String.format("https://%s:%d", host, port)).withEmptyHeaders().build(),
             networkService);
-    assertThat(response.bodyString()).hasValue("body");
+    Truth8.assertThat(response.bodyString()).hasValue("body");
 
     mockWebServer.shutdown();
   }

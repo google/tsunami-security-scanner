@@ -16,11 +16,11 @@
 package com.google.tsunami.common.net.http;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static com.google.tsunami.common.net.http.HttpRequest.get;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.truth.Truth8;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -153,7 +153,7 @@ public final class HttpClientModuleTest {
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     HttpResponse response = httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build());
-    assertThat(response.bodyString()).hasValue("body");
+    Truth8.assertThat(response.bodyString()).hasValue("body");
 
     mockWebServer.shutdown();
   }
@@ -168,7 +168,7 @@ public final class HttpClientModuleTest {
     MockWebServer mockWebServer = startMockWebServerWithSsl();
 
     HttpResponse response = httpClient.send(get(mockWebServer.url("/")).withEmptyHeaders().build());
-    assertThat(response.bodyString()).hasValue("body");
+    Truth8.assertThat(response.bodyString()).hasValue("body");
 
     mockWebServer.shutdown();
   }
