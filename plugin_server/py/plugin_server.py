@@ -82,11 +82,13 @@ def main(unused_argv):
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=_THREADS.value))
 
   _configure_plugin_service(server)
-  _configure_health_service(server)
+  health_servicer = _register_health_service(server)
   server.add_insecure_port(server_addr)
 
   server.start()
   logging.info('Server started at %s.', server_addr)
+  # Set to SERVING after server proves its availability.
+  _set_health_service_to_serving(server, health_servicer)
 
   # Java Process.destroy() sends SIGTERM
   sig_term_received = threading.Event()
@@ -156,21 +158,25 @@ def _configure_plugin_service(server):
   plugin_service_pb2_grpc.add_PluginServiceServicer_to_server(servicer, server)
 
 
-def _configure_health_service(server):
-  """Configures gRPC health checking service for server health monitoring."""
+def _register_health_service(server):
+  """Add gRPC health checking service to server."""
   health_servicer = health.HealthServicer(
       experimental_non_blocking=True,
       experimental_thread_pool=futures.ThreadPoolExecutor(
           max_workers=_THREADS.value))
   health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
+  return health_servicer
 
+
+def _set_health_service_to_serving(server, health_servicer):
+  """Set gRPC health checking service to SERVING."""
   # Set all services to SERVING.
   services = tuple(service.full_name
                    for service in plugin_service_pb2.DESCRIPTOR.services_by_name
                    .values()) + (reflection.SERVICE_NAME, health.SERVICE_NAME)
   for service in services:
-    logging.info('Registering service %s', service)
     health_servicer.set(service, health_pb2.HealthCheckResponse.SERVING)
+    logging.info('Service %s is now SERVING', service)
   reflection.enable_server_reflection(services, server)
 
 
