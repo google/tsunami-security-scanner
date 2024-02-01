@@ -53,6 +53,7 @@ public class RemoteServerLoader {
                         command.serverCommand(),
                         getCommand("--port=", command.port()),
                         getCommand("--log_id=", command.logId()),
+                        getCommand("--log_output=", command.outputDir()),
                         "--trust_all_ssl_cert=" + command.trustAllSslCert(),
                         getCommand("--timeout_seconds=", command.timeoutSeconds().getSeconds()),
                         getCommand("--callback_address=", command.callbackAddress()),
