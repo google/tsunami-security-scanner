@@ -84,7 +84,7 @@ public final class RemoteVulnDetectorImplTest {
   public void detect_withServingServer_returnsSuccessfulDetectionReportList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.SERVING);
     registerSuccessfulRunService();
-
+  
     RemoteVulnDetector pluginToTest = getNewRemoteVulnDetectorInstance();
     var endpointToTest = NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80);
     var serviceToTest =
@@ -93,7 +93,7 @@ public final class RemoteVulnDetectorImplTest {
             .setTransportProtocol(TransportProtocol.TCP)
             .setServiceName("http")
             .build();
-
+  
     TargetInfo testTarget = TargetInfo.newBuilder().addNetworkEndpoints(endpointToTest).build();
     pluginToTest.addMatchedPluginToDetect(
         MatchedPlugin.newBuilder()
@@ -109,10 +109,10 @@ public final class RemoteVulnDetectorImplTest {
                 .build());
   }
 
-  @Test
+  @Test(timeout = 11000L)
   public void detect_withNonServingServer_returnsEmptyDetectionReportList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.NOT_SERVING);
-
+  
     RemoteVulnDetector pluginToTest = getNewRemoteVulnDetectorInstance();
     var endpointToTest = NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80);
     var serviceToTest =
@@ -121,7 +121,7 @@ public final class RemoteVulnDetectorImplTest {
             .setTransportProtocol(TransportProtocol.TCP)
             .setServiceName("http")
             .build();
-
+  
     TargetInfo testTarget = TargetInfo.newBuilder().addNetworkEndpoints(endpointToTest).build();
     pluginToTest.addMatchedPluginToDetect(
         MatchedPlugin.newBuilder()
@@ -132,7 +132,7 @@ public final class RemoteVulnDetectorImplTest {
         .isEmpty();
   }
 
-  @Test
+  @Test(timeout = 32000L)
   public void detect_withRpcError_throwsLanguageServerException() throws Exception {
     registerHealthCheckWithError();
 
@@ -146,7 +146,7 @@ public final class RemoteVulnDetectorImplTest {
   @Test
   public void getAllPlugins_withServingServer_returnsSuccessfulList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.SERVING);
-
+  
     var plugin = createSinglePluginDefinitionWithName("test");
     RemoteVulnDetector pluginToTest = getNewRemoteVulnDetectorInstance();
     serviceRegistry.addService(
@@ -158,19 +158,25 @@ public final class RemoteVulnDetectorImplTest {
             responseObserver.onCompleted();
           }
         });
-
+  
     assertThat(pluginToTest.getAllPlugins()).containsExactly(plugin);
   }
 
-  @Test
+  @Test(timeout = 32000L)
   public void getAllPlugins_withNonServingServer_returnsEmptyList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.NOT_SERVING);
     assertThat(getNewRemoteVulnDetectorInstance().getAllPlugins()).isEmpty();
   }
 
-  @Test
+  @Test(timeout = 32000L)
   public void getAllPlugins_withRpcError_throwsLanguageServerException() throws Exception {
     registerHealthCheckWithError();
+    assertThrows(LanguageServerException.class, getNewRemoteVulnDetectorInstance()::getAllPlugins);
+  }
+
+  @Test(timeout = 32000L)
+  public void getAllPlugins_withUnregisteredHealthService_throwsLanguageServerException()
+      throws Exception {
     assertThrows(LanguageServerException.class, getNewRemoteVulnDetectorInstance()::getAllPlugins);
   }
 

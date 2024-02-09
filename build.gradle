@@ -30,6 +30,7 @@ subprojects {
         errorproneVersion = '2.4.0'
         floggerVersion = '0.5.1'
         googleCloudStorageVersion = '1.103.1'
+        googleHttpClientVersion = '1.44.1'
         guavaVersion = '28.2-jre'
         guiceVersion = '4.2.3'
         grpcVersion = '1.60.0'
@@ -60,6 +61,7 @@ subprojects {
                 flogger_google_ext: "com.google.flogger:google-extensions:${floggerVersion}",
                 flogger_backend: "com.google.flogger:flogger-system-backend:${floggerVersion}",
                 google_cloud_storage: "com.google.cloud:google-cloud-storage:${googleCloudStorageVersion}",
+                google_http_client: "com.google.http-client:google-http-client:${googleHttpClientVersion}",
                 guava: "com.google.guava:guava:${guavaVersion}",
                 guice: "com.google.inject:guice:${guiceVersion}",
                 guice_assisted: "com.google.inject.extensions:guice-assistedinject:${guiceVersion}",
