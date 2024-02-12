@@ -20,7 +20,6 @@ import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.truth.Truth8;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
@@ -72,7 +71,7 @@ public class PluginManagerTest {
 
     ImmutableList<PluginMatchingResult<PortScanner>> portScanners = pluginManager.getPortScanners();
 
-    Truth8.assertThat(
+    assertThat(
             portScanners.stream()
                 .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
         .containsExactly(FakePortScanner.class, FakePortScanner2.class);
@@ -104,7 +103,7 @@ public class PluginManagerTest {
     Optional<PluginMatchingResult<PortScanner>> firstMatchedPortScanner =
         pluginManager.getPortScanner();
 
-    Truth8.assertThat(firstMatchedPortScanner).isPresent();
+    assertThat(firstMatchedPortScanner).isPresent();
     assertThat(firstMatchedPortScanner.get().pluginDefinition())
         .isEqualTo(allPortScanners.get(0).pluginDefinition());
     assertThat(firstMatchedPortScanner.get().tsunamiPlugin().getClass())
@@ -119,7 +118,7 @@ public class PluginManagerTest {
                 new FakeVulnDetectorBootstrapModule())
             .getInstance(PluginManager.class);
 
-    Truth8.assertThat(pluginManager.getPortScanner()).isEmpty();
+    assertThat(pluginManager.getPortScanner()).isEmpty();
   }
 
   @Test
@@ -138,7 +137,7 @@ public class PluginManagerTest {
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
         pluginManager.getServiceFingerprinter(httpService);
 
-    Truth8.assertThat(fingerprinter).isEmpty();
+    assertThat(fingerprinter).isEmpty();
   }
 
   @Test
@@ -157,7 +156,7 @@ public class PluginManagerTest {
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
         pluginManager.getServiceFingerprinter(httpService);
 
-    Truth8.assertThat(fingerprinter).isPresent();
+    assertThat(fingerprinter).isPresent();
     assertThat(fingerprinter.get().matchedServices()).containsExactly(httpService);
   }
 
@@ -177,7 +176,7 @@ public class PluginManagerTest {
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
         pluginManager.getServiceFingerprinter(httpsService);
 
-    Truth8.assertThat(fingerprinter).isEmpty();
+    assertThat(fingerprinter).isEmpty();
   }
 
   @Test
@@ -200,11 +199,11 @@ public class PluginManagerTest {
 
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
         pluginManager.getServiceFingerprinter(httpsService);
-    Truth8.assertThat(fingerprinter).isPresent();
+    assertThat(fingerprinter).isPresent();
     assertThat(fingerprinter.get().matchedServices()).containsExactly(httpsService);
 
     fingerprinter = pluginManager.getServiceFingerprinter(httpProxyService);
-    Truth8.assertThat(fingerprinter).isPresent();
+    assertThat(fingerprinter).isPresent();
     assertThat(fingerprinter.get().matchedServices()).containsExactly(httpProxyService);
   }
 
@@ -226,8 +225,8 @@ public class PluginManagerTest {
         Guice.createInjector(new FakePortScannerBootstrapModule(), FakeWebFingerprinter.getModule())
             .getInstance(PluginManager.class);
 
-    Truth8.assertThat(pluginManager.getServiceFingerprinter(sshService)).isEmpty();
-    Truth8.assertThat(pluginManager.getServiceFingerprinter(rdpService)).isEmpty();
+    assertThat(pluginManager.getServiceFingerprinter(sshService)).isEmpty();
+    assertThat(pluginManager.getServiceFingerprinter(rdpService)).isEmpty();
   }
 
   @Test
@@ -262,11 +261,11 @@ public class PluginManagerTest {
     ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
         pluginManager.getVulnDetectors(fakeReconnaissanceReport);
 
-    Truth8.assertThat(
+    assertThat(
             vulnDetectors.stream()
                 .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
         .containsExactly(FakeVulnDetector.class, FakeVulnDetector2.class);
-    Truth8.assertThat(vulnDetectors.stream().map(PluginMatchingResult::matchedServices))
+    assertThat(vulnDetectors.stream().map(PluginMatchingResult::matchedServices))
         .containsExactly(
             fakeReconnaissanceReport.getNetworkServicesList(),
             fakeReconnaissanceReport.getNetworkServicesList());
@@ -471,7 +470,7 @@ public class PluginManagerTest {
     ImmutableList<PluginMatchingResult<VulnDetector>> remotePlugins =
         pluginManager.getVulnDetectors(fakeReconnaissanceReport);
 
-    Truth8.assertThat(
+    assertThat(
             remotePlugins.stream()
                 .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
         .containsExactly(FakeRemoteVulnDetector.class, FakeRemoteVulnDetector.class);

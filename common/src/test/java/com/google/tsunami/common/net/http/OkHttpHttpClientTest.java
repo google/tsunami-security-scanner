@@ -31,7 +31,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.net.MediaType;
-import com.google.common.truth.Truth8;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -511,7 +510,7 @@ public final class OkHttpHttpClientTest {
                 .addHeader(CONTENT_LENGTH, "0")
                 .addHeader(LOCATION, RedirectDispatcher.REDIRECT_DESTINATION_PATH)
                 .build());
-    Truth8.assertThat(response.bodyString()).hasValue("");
+    assertThat(response.bodyString()).hasValue("");
     assertThat(response)
         .isEqualTo(
             HttpResponse.builder()
@@ -550,7 +549,7 @@ public final class OkHttpHttpClientTest {
                 .addHeader(CONTENT_LENGTH, "0")
                 .addHeader(LOCATION, RedirectDispatcher.REDIRECT_DESTINATION_PATH)
                 .build());
-    Truth8.assertThat(response.bodyString()).hasValue("");
+    assertThat(response.bodyString()).hasValue("");
     assertThat(response)
         .isEqualTo(
             HttpResponse.builder()
@@ -667,7 +666,7 @@ public final class OkHttpHttpClientTest {
         httpClient.send(
             get(String.format("https://%s:%d", host, port)).withEmptyHeaders().build(),
             networkService);
-    Truth8.assertThat(response.bodyString()).hasValue("body");
+    assertThat(response.bodyString()).hasValue("body");
 
     mockWebServer.shutdown();
   }

@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.truth.Truth8;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -116,7 +115,7 @@ public class HttpHeadersTest {
             .addHeader(com.google.common.net.HttpHeaders.CONTENT_TYPE, "text/html; charset=UTF-8")
             .build();
 
-    Truth8.assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.ACCEPT)).hasValue("*/*");
+    assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.ACCEPT)).hasValue("*/*");
   }
 
   @Test
@@ -128,7 +127,7 @@ public class HttpHeadersTest {
             .addHeader(com.google.common.net.HttpHeaders.ACCEPT, "text/html")
             .build();
 
-    Truth8.assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.ACCEPT)).hasValue("*/*");
+    assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.ACCEPT)).hasValue("*/*");
   }
 
   @Test
@@ -140,7 +139,7 @@ public class HttpHeadersTest {
             .addHeader(com.google.common.net.HttpHeaders.ACCEPT, "text/html")
             .build();
 
-    Truth8.assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.COOKIE)).isEmpty();
+    assertThat(httpHeaders.get(com.google.common.net.HttpHeaders.COOKIE)).isEmpty();
   }
 
   @Test

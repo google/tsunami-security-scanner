@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.truth.Truth8;
 import java.util.List;
 import java.util.Map;
 import org.junit.After;
@@ -56,12 +55,12 @@ public final class TsunamiConfigTest {
   public void getSystemProperty_whenPropertyExists_returnsPropertyValue() {
     System.setProperty(TEST_PROPERTY, "Test value");
 
-    Truth8.assertThat(TsunamiConfig.getSystemProperty(TEST_PROPERTY)).hasValue("Test value");
+    assertThat(TsunamiConfig.getSystemProperty(TEST_PROPERTY)).hasValue("Test value");
   }
 
   @Test
   public void getSystemProperty_whenPropertyNotExists_returnsEmptyOptional() {
-    Truth8.assertThat(TsunamiConfig.getSystemProperty(TEST_PROPERTY)).isEmpty();
+    assertThat(TsunamiConfig.getSystemProperty(TEST_PROPERTY)).isEmpty();
   }
 
   @Test
