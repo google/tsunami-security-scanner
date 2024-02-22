@@ -50,7 +50,13 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
   private static final int INITIAL_WAIT_TIME_MS = 200;
   private static final int MAX_WAIT_TIME_MS = 30000;
   private static final int WAIT_TIME_MULTIPLIER = 3;
-  private static final int MAX_ATTEMPTS = 3;
+  private static final int MAX_ATTEMPTS = 5;
+  // Exponential delay attempts (>24 seconds before taking randomization factor into account):
+  // ~200ms
+  // ~600ms
+  // ~1800ms
+  // ~5400ms
+  // ~16200ms
   private final ExponentialBackOff backoff =
       new ExponentialBackOff.Builder()
           .setInitialIntervalMillis(INITIAL_WAIT_TIME_MS)

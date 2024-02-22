@@ -109,7 +109,7 @@ public final class RemoteVulnDetectorImplTest {
                 .build());
   }
 
-  @Test(timeout = 11000L)
+  @Test
   public void detect_withNonServingServer_returnsEmptyDetectionReportList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.NOT_SERVING);
   
@@ -132,7 +132,7 @@ public final class RemoteVulnDetectorImplTest {
         .isEmpty();
   }
 
-  @Test(timeout = 32000L)
+  @Test(timeout = 30000L)
   public void detect_withRpcError_throwsLanguageServerException() throws Exception {
     registerHealthCheckWithError();
 
@@ -158,23 +158,23 @@ public final class RemoteVulnDetectorImplTest {
             responseObserver.onCompleted();
           }
         });
-  
+
     assertThat(pluginToTest.getAllPlugins()).containsExactly(plugin);
   }
 
-  @Test(timeout = 32000L)
+  @Test
   public void getAllPlugins_withNonServingServer_returnsEmptyList() throws Exception {
     registerHealthCheckWithStatus(ServingStatus.NOT_SERVING);
     assertThat(getNewRemoteVulnDetectorInstance().getAllPlugins()).isEmpty();
   }
 
-  @Test(timeout = 32000L)
+  @Test(timeout = 30000L)
   public void getAllPlugins_withRpcError_throwsLanguageServerException() throws Exception {
     registerHealthCheckWithError();
     assertThrows(LanguageServerException.class, getNewRemoteVulnDetectorInstance()::getAllPlugins);
   }
 
-  @Test(timeout = 32000L)
+  @Test(timeout = 30000L)
   public void getAllPlugins_withUnregisteredHealthService_throwsLanguageServerException()
       throws Exception {
     assertThrows(LanguageServerException.class, getNewRemoteVulnDetectorInstance()::getAllPlugins);
