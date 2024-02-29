@@ -10,6 +10,7 @@ dependencies {
     compile deps.flogger_google_ext
     compile deps.guava
     compile deps.guice
+    compile deps.gson
     compile deps.javax_inject
     compile deps.mock_web_server
     compile deps.protobuf

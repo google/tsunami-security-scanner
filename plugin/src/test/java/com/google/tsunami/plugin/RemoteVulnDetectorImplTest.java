@@ -18,6 +18,7 @@ package com.google.tsunami.plugin;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -56,6 +57,17 @@ public final class RemoteVulnDetectorImplTest {
   private static final String PLUGIN_VERSION = "0.0.1";
   private static final String PLUGIN_DESCRIPTION = "test description";
   private static final String PLUGIN_AUTHOR = "tester";
+  private static final int INITIAL_WAIT_TIME_MS = 20;
+  private static final int MAX_WAIT_TIME_MS = 30000;
+  private static final int WAIT_TIME_MULTIPLIER = 3;
+  private static final int MAX_ATTEMPTS = 3;
+  private static final ExponentialBackOff BACKOFF =
+      new ExponentialBackOff.Builder()
+          .setInitialIntervalMillis(INITIAL_WAIT_TIME_MS)
+          .setRandomizationFactor(0.1)
+          .setMultiplier(WAIT_TIME_MULTIPLIER)
+          .setMaxElapsedTimeMillis(MAX_WAIT_TIME_MS)
+          .build();
 
   private final MutableHandlerRegistry serviceRegistry = new MutableHandlerRegistry();
 
@@ -196,7 +208,9 @@ public final class RemoteVulnDetectorImplTest {
                 bind(RemoteVulnDetector.class)
                     .toInstance(
                         new RemoteVulnDetectorImpl(
-                            InProcessChannelBuilder.forName(serverName).directExecutor().build()));
+                            InProcessChannelBuilder.forName(serverName).directExecutor().build(),
+                            BACKOFF,
+                            MAX_ATTEMPTS));
               }
             })
         .getInstance(RemoteVulnDetector.class);

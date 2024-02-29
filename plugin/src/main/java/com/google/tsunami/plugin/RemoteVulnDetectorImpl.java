@@ -47,29 +47,17 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
   // Remote detectors, especially ones using the callback server, require additional buffer to send
   // requests and responses.
   private static final Deadline DEFAULT_DEADLINE = Deadline.after(150, SECONDS);
-  private static final int INITIAL_WAIT_TIME_MS = 200;
-  private static final int MAX_WAIT_TIME_MS = 30000;
-  private static final int WAIT_TIME_MULTIPLIER = 3;
-  private static final int MAX_ATTEMPTS = 5;
-  // Exponential delay attempts (>24 seconds before taking randomization factor into account):
-  // ~200ms
-  // ~600ms
-  // ~1800ms
-  // ~5400ms
-  // ~16200ms
-  private final ExponentialBackOff backoff =
-      new ExponentialBackOff.Builder()
-          .setInitialIntervalMillis(INITIAL_WAIT_TIME_MS)
-          .setRandomizationFactor(0.1)
-          .setMultiplier(WAIT_TIME_MULTIPLIER)
-          .setMaxElapsedTimeMillis(MAX_WAIT_TIME_MS)
-          .build();
+
   private final PluginServiceClient service;
   private final Set<MatchedPlugin> pluginsToRun;
+  private final ExponentialBackOff backoff;
+  private final int maxAttempts;
 
-  RemoteVulnDetectorImpl(Channel channel) {
+  RemoteVulnDetectorImpl(Channel channel, ExponentialBackOff backoff, int maxAttempts) {
     this.service = new PluginServiceClient(checkNotNull(channel));
     this.pluginsToRun = Sets.newHashSet();
+    this.backoff = backoff;
+    this.maxAttempts = maxAttempts;
   }
 
   @Override
@@ -116,7 +104,7 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
     // to implement exponential retries to manage those circumstances.
     backoff.reset();
     int attempt = 0;
-    while (attempt < MAX_ATTEMPTS) {
+    while (attempt < maxAttempts) {
       try {
         var healthy =
             service
@@ -139,7 +127,7 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
           // ignore
           logger.atWarning().log("Failed to sleep for %s", ioe.getCause().getMessage());
         }
-        if (attempt == MAX_ATTEMPTS) {
+        if (attempt == maxAttempts) {
           throw new LanguageServerException("Language service is not registered.", e.getCause());
         }
       }
