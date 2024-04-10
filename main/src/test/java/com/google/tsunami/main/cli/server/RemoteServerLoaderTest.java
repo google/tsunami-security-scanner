@@ -18,7 +18,6 @@ package com.google.tsunami.main.cli.server;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.tsunami.common.server.LanguageServerCommand;
 import java.time.Duration;
@@ -45,13 +44,7 @@ public final class RemoteServerLoaderTest {
                 "157.34.0.2:8881"));
 
     RemoteServerLoader loader =
-        Guice.createInjector(
-                new AbstractModule() {
-                  @Override
-                  protected void configure() {
-                    install(new RemoteServerLoaderModule(commands));
-                  }
-                })
+        Guice.createInjector(new RemoteServerLoaderModule(commands))
             .getInstance(RemoteServerLoader.class);
     var processList = loader.runServerProcesses();
     assertThat(processList).hasSize(1);
