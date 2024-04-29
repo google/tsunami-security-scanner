@@ -59,6 +59,11 @@ public final class HttpClientCliOptions implements CliOption {
               + " --http-client-connect-timeout-seconds.")
   Integer writeTimeoutSeconds;
 
+  @Parameter(
+      names = "--http-client-user-agent",
+      description = "User-Agent to use in HTTP requests.")
+  public String userAgent = HttpClient.TSUNAMI_USER_AGENT;
+
   @Override
   public void validate() {
     validateTimeout("--http-client-call-timeout-seconds", callTimeoutSeconds);

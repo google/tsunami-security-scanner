@@ -17,6 +17,7 @@ package com.google.tsunami.common.net.http;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.inject.AbstractModule;
@@ -139,9 +140,10 @@ public final class HttpClientModule extends AbstractModule {
       @TrustAllCertificates boolean trustAllCertificates,
       ConnectionFactory connectionFactory,
       @LogId String logId,
-      @ConnectTimeout Duration connectTimeout) {
+      @ConnectTimeout Duration connectTimeout,
+      @UserAgent String userAgent) {
     return new OkHttpHttpClient(
-        okHttpClient, trustAllCertificates, connectionFactory, logId, connectTimeout);
+        okHttpClient, trustAllCertificates, connectionFactory, logId, connectTimeout, userAgent);
   }
 
   @Provides
@@ -260,6 +262,15 @@ public final class HttpClientModule extends AbstractModule {
     return 10;
   }
 
+  @Provides
+  @UserAgent
+  String provideUserAgent(HttpClientCliOptions httpClientCliOptions) {
+    if (!isNullOrEmpty(httpClientCliOptions.userAgent)) {
+      return httpClientCliOptions.userAgent;
+    }
+    return HttpClient.TSUNAMI_USER_AGENT;
+  }
+
   @Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
@@ -309,6 +320,11 @@ public final class HttpClientModule extends AbstractModule {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
   @interface MaxRequests {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface UserAgent {}
 
   /** Builder for {@link HttpClientModule}. */
   public static final class Builder {

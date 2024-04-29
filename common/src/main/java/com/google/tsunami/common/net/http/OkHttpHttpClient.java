@@ -26,6 +26,7 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
 import com.google.tsunami.proto.NetworkService;
@@ -59,18 +60,21 @@ final class OkHttpHttpClient extends HttpClient {
   private final ConnectionFactory connectionFactory;
   private final String logId;
   private final Duration connectionTimeout;
+  private final String userAgent;
 
   OkHttpHttpClient(
       OkHttpClient okHttpClient,
       boolean trustAllCertificates,
       ConnectionFactory connectionFactory,
       String logId,
-      Duration connectionTimeout) {
+      Duration connectionTimeout,
+      String userAgent) {
     this.okHttpClient = checkNotNull(okHttpClient);
     this.trustAllCertificates = trustAllCertificates;
     this.connectionFactory = checkNotNull(connectionFactory);
     this.logId = logId;
     this.connectionTimeout = connectionTimeout;
+    this.userAgent = isNullOrEmpty(userAgent) ? TSUNAMI_USER_AGENT : userAgent;
   }
 
   /**
@@ -106,7 +110,7 @@ final class OkHttpHttpClient extends HttpClient {
                     .getAll(headerName)
                     .forEach(
                         headerValue -> connection.setRequestProperty(headerName, headerValue)));
-    connection.setRequestProperty(USER_AGENT, TSUNAMI_USER_AGENT);
+    connection.setRequestProperty(USER_AGENT, this.userAgent);
 
     if (ImmutableSet.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
         .contains(httpRequest.method())) {
@@ -164,7 +168,7 @@ final class OkHttpHttpClient extends HttpClient {
 
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     try (Response okHttpResponse =
-        callHttpClient.newCall(buildOkHttpRequest(httpRequest)).execute()) {
+        callHttpClient.newCall(buildOkHttpRequest(httpRequest, this.userAgent)).execute()) {
       return parseResponse(okHttpResponse);
     }
   }
@@ -197,7 +201,7 @@ final class OkHttpHttpClient extends HttpClient {
         logId, httpRequest.method(), httpRequest.url());
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
     SettableFuture<HttpResponse> responseFuture = SettableFuture.create();
-    Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest));
+    Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest, this.userAgent));
 
     try {
       requestCall.enqueue(
@@ -264,7 +268,7 @@ final class OkHttpHttpClient extends HttpClient {
         .build();
   }
 
-  private static Request buildOkHttpRequest(HttpRequest httpRequest) {
+  private static Request buildOkHttpRequest(HttpRequest httpRequest, String userAgent) {
     Request.Builder okRequestBuilder = new Request.Builder().url(httpRequest.url());
 
     httpRequest.headers().names().stream()
@@ -275,7 +279,7 @@ final class OkHttpHttpClient extends HttpClient {
                     .headers()
                     .getAll(headerName)
                     .forEach(headerValue -> okRequestBuilder.addHeader(headerName, headerValue)));
-    okRequestBuilder.addHeader(USER_AGENT, TSUNAMI_USER_AGENT);
+    okRequestBuilder.addHeader(USER_AGENT, userAgent);
 
     switch (httpRequest.method()) {
       case GET:
@@ -352,6 +356,7 @@ final class OkHttpHttpClient extends HttpClient {
     private final ConnectionFactory connectionFactory;
     private String logId;
     private Duration connectionTimeout;
+    private String userAgent;
 
     private OkHttpHttpClientBuilder(OkHttpHttpClient okHttpHttpClient) {
       this.okHttpClient = okHttpHttpClient.okHttpClient;
@@ -360,6 +365,7 @@ final class OkHttpHttpClient extends HttpClient {
       this.connectionFactory = okHttpHttpClient.connectionFactory;
       this.logId = okHttpHttpClient.logId;
       this.connectionTimeout = okHttpHttpClient.connectionTimeout;
+      this.userAgent = okHttpHttpClient.userAgent;
     }
 
     @Override
@@ -386,6 +392,12 @@ final class OkHttpHttpClient extends HttpClient {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public OkHttpHttpClientBuilder setUserAgent(String userAgent) {
+      this.userAgent = userAgent;
+      return this;
+    }
+
     @Override
     public OkHttpHttpClient build() {
       return new OkHttpHttpClient(
@@ -393,7 +405,8 @@ final class OkHttpHttpClient extends HttpClient {
           trustAllCertificates,
           connectionFactory,
           logId,
-          connectionTimeout);
+          connectionTimeout,
+          userAgent);
     }
   }
 }
