@@ -6,18 +6,18 @@ from absl.testing import absltest
 import requests
 import requests_mock
 
-from tsunami.plugin_server.py.common.data import network_endpoint_utils
-from tsunami.plugin_server.py.common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
-from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_method import HttpMethod
-from tsunami.plugin_server.py.common.net.http.http_request import HttpRequest
-from tsunami.plugin_server.py.common.net.http.http_response import HttpResponse
-from tsunami.plugin_server.py.common.net.http.http_status import HttpStatus
-from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClient
-from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
-from tsunami.proto import network_pb2
-from tsunami.proto import network_service_pb2
+from common.data import network_endpoint_utils
+from common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
+from common.net.http.http_header_fields import HttpHeaderFields
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_method import HttpMethod
+from common.net.http.http_request import HttpRequest
+from common.net.http.http_response import HttpResponse
+from common.net.http.http_status import HttpStatus
+from common.net.http.requests_http_client import RequestsHttpClient
+from common.net.http.requests_http_client import RequestsHttpClientBuilder
+import network_pb2
+import network_service_pb2
 
 
 class RequestsHttpClientTest(absltest.TestCase):

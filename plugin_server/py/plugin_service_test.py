@@ -19,22 +19,22 @@ from absl.testing import absltest
 import grpc_testing
 import ipaddr
 
-from google.protobuf import timestamp_pb2
-from tsunami.plugin_server.py import plugin_service
-from tsunami.plugin_server.py import tsunami_plugin
-from tsunami.plugin_server.py.common.net.http.http_client import HttpClient
-from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
-from tsunami.plugin_server.py.plugin.payload.payload_generator import PayloadGenerator
-from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
-from tsunami.plugin_server.py.plugin.payload.payload_utility import get_parsed_payload
-from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
-from tsunami.proto import detection_pb2
-from tsunami.proto import network_pb2
-from tsunami.proto import network_service_pb2
-from tsunami.proto import plugin_representation_pb2
-from tsunami.proto import plugin_service_pb2
-from tsunami.proto import reconnaissance_pb2
-from tsunami.proto import vulnerability_pb2
+from google3.google.protobuf import timestamp_pb2
+import plugin_service
+import tsunami_plugin
+from common.net.http.http_client import HttpClient
+from common.net.http.requests_http_client import RequestsHttpClientBuilder
+from plugin.payload.payload_generator import PayloadGenerator
+from plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from plugin.payload.payload_utility import get_parsed_payload
+from plugin.tcs_client import TcsClient
+import detection_pb2
+import network_pb2
+import network_service_pb2
+import plugin_representation_pb2
+import plugin_service_pb2
+import reconnaissance_pb2
+import vulnerability_pb2
 
 
 _NetworkEndpoint = network_pb2.NetworkEndpoint

@@ -3,8 +3,8 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 import requests_mock
-from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
-from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
+from common.net.http.requests_http_client import RequestsHttpClientBuilder
+from plugin.tcs_client import TcsClient
 
 
 SECRET = 'a3d9ed89deadbeef'

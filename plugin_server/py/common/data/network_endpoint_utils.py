@@ -7,7 +7,7 @@ also needs the modification.
 
 import ipaddress
 from typing import Optional
-from tsunami.proto import network_pb2
+import network_pb2
 
 AddressFamily = network_pb2.AddressFamily
 Hostname = network_pb2.Hostname

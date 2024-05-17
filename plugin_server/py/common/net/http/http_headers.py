@@ -3,7 +3,7 @@
 import collections
 import re
 from typing import Optional
-from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
+from common.net.http.http_header_fields import HttpHeaderFields
 
 
 class HttpHeaders:

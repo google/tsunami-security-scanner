@@ -3,11 +3,11 @@
 import re
 from typing import Any, Callable, Optional
 
-from tsunami.plugin_server.py.plugin.payload.payload import Payload
-from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
-from tsunami.plugin_server.py.plugin.payload.validator import Validator
-from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
-from tsunami.proto import payload_generator_pb2 as pg
+from plugin.payload.payload import Payload
+from plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from plugin.payload.validator import Validator
+from plugin.tcs_client import TcsClient
+import payload_generator_pb2 as pg
 
 
 class PayloadGenerator:

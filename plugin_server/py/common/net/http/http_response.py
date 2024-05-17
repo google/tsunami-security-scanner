@@ -3,8 +3,8 @@
 import abc
 import json
 from typing import Any, Optional
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_status import HttpStatus
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_status import HttpStatus
 
 
 class HttpResponse(metaclass=abc.ABCMeta):

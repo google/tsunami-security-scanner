@@ -2,9 +2,9 @@
 
 from absl.testing import absltest
 
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_response import HttpResponse
-from tsunami.plugin_server.py.common.net.http.http_status import HttpStatus
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_response import HttpResponse
+from common.net.http.http_status import HttpStatus
 
 
 class HttpResponseTest(absltest.TestCase):

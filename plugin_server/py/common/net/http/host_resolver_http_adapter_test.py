@@ -6,9 +6,9 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import requests
 
-from tsunami.plugin_server.py.common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
-from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
-from tsunami.plugin_server.py.common.net.http.http_method import HttpMethod
+from common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
+from common.net.http.http_header_fields import HttpHeaderFields
+from common.net.http.http_method import HttpMethod
 
 
 class HostResolverHttpAdapterTest(parameterized.TestCase):

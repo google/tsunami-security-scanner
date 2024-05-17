@@ -8,15 +8,15 @@ from typing import Optional
 from absl import logging
 import requests
 
-from tsunami.plugin_server.py.common.data.network_service_utils import NetworkService
-from tsunami.plugin_server.py.common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
-from tsunami.plugin_server.py.common.net.http.http_client import Builder
-from tsunami.plugin_server.py.common.net.http.http_client import HttpClient
-from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_request import HttpRequest
-from tsunami.plugin_server.py.common.net.http.http_response import HttpResponse
-from tsunami.plugin_server.py.common.net.http.http_status import HttpStatus
+from common.data.network_service_utils import NetworkService
+from common.net.http.host_resolver_http_adapter import HostResolverHttpAdapter
+from common.net.http.http_client import Builder
+from common.net.http.http_client import HttpClient
+from common.net.http.http_header_fields import HttpHeaderFields
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_request import HttpRequest
+from common.net.http.http_response import HttpResponse
+from common.net.http.http_status import HttpStatus
 
 
 _DEFAULT_ALLOW_REDIRECT = True

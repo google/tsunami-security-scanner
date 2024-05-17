@@ -3,9 +3,9 @@
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_method import HttpMethod
-from tsunami.plugin_server.py.common.net.http.http_request import HttpRequest
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_method import HttpMethod
+from common.net.http.http_request import HttpRequest
 
 
 class HttpRequestTest(parameterized.TestCase):

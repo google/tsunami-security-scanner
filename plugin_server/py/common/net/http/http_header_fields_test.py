@@ -1,7 +1,7 @@
 """Tests for google3.third_party.java_src.tsunami.plugin_server.py.common.net.http_headers."""
 
 from absl.testing import absltest
-from tsunami.plugin_server.py.common.net.http import http_header_fields
+from common.net.http import http_header_fields
 
 
 HttpHeaderFields = http_header_fields.HttpHeaderFields

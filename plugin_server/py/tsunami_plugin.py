@@ -13,10 +13,10 @@
 # limitations under the License.
 """Interface that all Python TsunamiPlugins will need to implement to run detection."""
 import abc
-from tsunami.proto import detection_pb2
-from tsunami.proto import network_service_pb2
-from tsunami.proto import plugin_representation_pb2
-from tsunami.proto import reconnaissance_pb2
+import detection_pb2
+import network_service_pb2
+import plugin_representation_pb2
+import reconnaissance_pb2
 
 TargetInfo = reconnaissance_pb2.TargetInfo
 NetworkService = network_service_pb2.NetworkService

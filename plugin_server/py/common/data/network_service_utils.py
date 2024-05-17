@@ -8,9 +8,9 @@ also needs the modification.
 
 import socket
 import urllib.parse
-from tsunami.plugin_server.py.common.data import network_endpoint_utils
-from tsunami.proto import network_pb2
-from tsunami.proto import network_service_pb2
+from common.data import network_endpoint_utils
+import network_pb2
+import network_service_pb2
 
 urlparse = urllib.parse.urlparse
 NetworkService = network_service_pb2.NetworkService

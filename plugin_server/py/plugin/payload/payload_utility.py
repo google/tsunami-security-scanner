@@ -1,13 +1,19 @@
 """Utility service for retrieving and parsing payload."""
 
 from ruamel import yaml
-from net.proto2.python.public import json_format
-from pyglib import resources
-from tsunami.proto import payload_generator_pb2 as pg
+from google.protobuf import json_format
+# copybara:strip_begin(internal-blaze-run)
+from google3.pyglib import resources
+# copybara:strip_end_and_replace_begin
+# from pathlib import Path
+# copybara:replace_end
+import payload_generator_pb2 as pg
 
-
+# copybara:strip_begin(internal-blaze-run)
 _PATH = 'google3/third_party/java_src/tsunami/plugin/src/main/resources/com/google/tsunami/plugin/payload/payload_definitions.yaml'
-
+# copybara:strip_end_and_replace_begin
+# _PATH = '../../plugin/src/main/resources/com/google/tsunami/plugin/payload/payload_definitions.yaml'
+# copybara:replace_end
 
 def get_parsed_payload() -> list[pg.PayloadDefinition]:
   """Get payload from payload_definitions.yaml.
@@ -25,7 +31,11 @@ def get_parsed_payload() -> list[pg.PayloadDefinition]:
         - Payload that uses validation regex but does not specify the regex to
           be used.
   """
+  # copybara:strip_begin(internal-blaze-run)
   payload_str = str(resources.GetResource(_PATH, 'r'))
+  # copybara:strip_end_and_replace_begin
+  # payload_str = Path(_PATH).read_text()
+  # copybara:replace_end
   payload_dict = yaml.safe_load(payload_str)
   payload_library = json_format.ParseDict(payload_dict, pg.PayloadLibrary())
   return _validate_payloads([p for p in payload_library.payloads])

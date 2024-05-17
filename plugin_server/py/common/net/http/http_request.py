@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from tsunami.plugin_server.py.common.net.http.http_headers import Builder as HttpHeadersBuilder
-from tsunami.plugin_server.py.common.net.http.http_headers import HttpHeaders
-from tsunami.plugin_server.py.common.net.http.http_method import HttpMethod
+from common.net.http.http_headers import Builder as HttpHeadersBuilder
+from common.net.http.http_headers import HttpHeaders
+from common.net.http.http_method import HttpMethod
 
 
 def check_url_argument(func):

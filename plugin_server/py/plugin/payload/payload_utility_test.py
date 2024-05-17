@@ -2,9 +2,9 @@
 
 import unittest
 
-from pyglib import resources
-from testing.pybase import googletest
-from tsunami.plugin_server.py.plugin.payload import payload_utility
+from google3.pyglib import resources
+from google3.testing.pybase import googletest
+from plugin.payload import payload_utility
 
 
 class PayloadUtilityTest(googletest.TestCase):

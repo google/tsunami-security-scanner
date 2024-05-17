@@ -6,7 +6,7 @@ from urllib import parse
 
 import requests
 
-from tsunami.plugin_server.py.common.net.http.http_header_fields import HttpHeaderFields
+from common.net.http.http_header_fields import HttpHeaderFields
 
 
 class HostResolverHttpAdapter(requests.adapters.HTTPAdapter):

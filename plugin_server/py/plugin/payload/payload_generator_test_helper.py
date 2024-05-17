@@ -1,5 +1,5 @@
 """Payload Generator Test Helper."""
-from tsunami.proto import payload_generator_pb2 as pg
+import payload_generator_pb2 as pg
 
 
 LINUX_REFLECTIVE_RCE_CONFIG = pg.PayloadGeneratorConfig(

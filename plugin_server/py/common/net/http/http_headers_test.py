@@ -3,8 +3,8 @@
 import collections
 from absl.testing import absltest
 from absl.testing import parameterized
-from tsunami.plugin_server.py.common.net.http import http_header_fields
-from tsunami.plugin_server.py.common.net.http import http_headers
+from common.net.http import http_header_fields
+from common.net.http import http_headers
 
 
 HttpHeaderFields = http_header_fields.HttpHeaderFields

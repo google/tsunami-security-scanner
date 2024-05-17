@@ -4,9 +4,9 @@ from typing import Optional
 from absl.testing import absltest
 from absl.testing import parameterized
 
-from tsunami.plugin_server.py.plugin.payload.payload import Payload
-from tsunami.plugin_server.py.plugin.payload.validator import Validator
-from tsunami.proto import payload_generator_pb2 as pg
+from plugin.payload.payload import Payload
+from plugin.payload.validator import Validator
+import payload_generator_pb2 as pg
 
 _CONFIG = pg.PayloadGeneratorConfig()
 _PAYLOAD_ATTRIBUTES = pg.PayloadAttributes()

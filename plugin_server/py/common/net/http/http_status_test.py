@@ -2,7 +2,7 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from tsunami.plugin_server.py.common.net.http import http_status
+from common.net.http import http_status
 
 HttpStatus = http_status.HttpStatus
 

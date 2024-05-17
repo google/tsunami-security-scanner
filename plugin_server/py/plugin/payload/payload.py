@@ -4,8 +4,8 @@ from typing import Optional
 
 from absl import logging
 
-from tsunami.plugin_server.py.plugin.payload.validator import Validator
-from tsunami.proto import payload_generator_pb2
+from plugin.payload.validator import Validator
+import payload_generator_pb2
 
 
 class Payload:

@@ -18,11 +18,11 @@ from typing import cast
 
 from absl import logging
 
-from tsunami.plugin_server.py import tsunami_plugin
-from tsunami.proto import detection_pb2
-from tsunami.proto import plugin_representation_pb2
-from tsunami.proto import plugin_service_pb2
-from tsunami.proto import plugin_service_pb2_grpc
+import tsunami_plugin
+import detection_pb2
+import plugin_representation_pb2
+import plugin_service_pb2
+import plugin_service_pb2_grpc
 
 RunResponse = plugin_service_pb2.RunResponse
 ListPluginsRequest = plugin_service_pb2.ListPluginsRequest

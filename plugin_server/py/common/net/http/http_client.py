@@ -2,9 +2,9 @@
 import abc
 
 from typing import Optional
-from tsunami.plugin_server.py.common.data.network_service_utils import NetworkService
-from tsunami.plugin_server.py.common.net.http.http_request import HttpRequest
-from tsunami.plugin_server.py.common.net.http.http_response import HttpResponse
+from common.data.network_service_utils import NetworkService
+from common.net.http.http_request import HttpRequest
+from common.net.http.http_response import HttpResponse
 
 
 class HttpClient(metaclass=abc.ABCMeta):

@@ -2,8 +2,8 @@
 
 import base64
 
-from testing.pybase import googletest
-from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from google3.testing.pybase import googletest
+from plugin.payload.payload_secret_generator import PayloadSecretGenerator
 
 
 _SECRET_BYTE_SIZE = 8

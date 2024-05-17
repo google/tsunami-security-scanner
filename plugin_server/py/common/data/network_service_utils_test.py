@@ -6,9 +6,9 @@ import urllib.parse
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from tsunami.plugin_server.py.common.data import network_service_utils
-from tsunami.proto import network_pb2
-from tsunami.proto import network_service_pb2
+from common.data import network_service_utils
+import network_pb2
+import network_service_pb2
 
 AddressFamily = network_pb2.AddressFamily
 NetworkEndpoint = network_pb2.NetworkEndpoint

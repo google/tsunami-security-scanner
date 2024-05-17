@@ -29,15 +29,15 @@ from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 
-from tsunami.plugin_server.py import plugin_service
-from tsunami.plugin_server.py import tsunami_plugin
-from tsunami.plugin_server.py.common.net.http.requests_http_client import RequestsHttpClientBuilder
-from tsunami.plugin_server.py.plugin.payload.payload_generator import PayloadGenerator
-from tsunami.plugin_server.py.plugin.payload.payload_secret_generator import PayloadSecretGenerator
-from tsunami.plugin_server.py.plugin.payload.payload_utility import get_parsed_payload
-from tsunami.plugin_server.py.plugin.tcs_client import TcsClient
-from tsunami.proto import plugin_service_pb2
-from tsunami.proto import plugin_service_pb2_grpc
+import plugin_service
+import tsunami_plugin
+from common.net.http.requests_http_client import RequestsHttpClientBuilder
+from plugin.payload.payload_generator import PayloadGenerator
+from plugin.payload.payload_secret_generator import PayloadSecretGenerator
+from plugin.payload.payload_utility import get_parsed_payload
+from plugin.tcs_client import TcsClient
+import plugin_service_pb2
+import plugin_service_pb2_grpc
 
 
 _HOST = '127.0.0.1'
@@ -74,7 +74,11 @@ def main(unused_argv):
 
   # Load plugins from tsunami_plugins repository.
   plugin_pkg = importlib.import_module(
+      # copybara:strip_begin(internal-blaze-run)
       'py_plugins'
+      # copybara:strip_end_and_replace_begin
+      'py_plugins'
+      # copybara:replace_end
   )
   _import_py_plugins(plugin_pkg)
 
@@ -182,4 +186,8 @@ def _set_health_service_to_serving(server, health_servicer):
 
 if __name__ == '__main__':
   flags.set_default(logging.ALSOLOGTOSTDERR, True)
+  # copybara:strip_begin(internal-blaze-run)
   app.run(main, change_root_and_user=False)
+  # copybara:strip_end_and_replace_begin
+  app.run(main)
+  # copybara:replace_end
