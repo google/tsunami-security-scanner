@@ -77,7 +77,7 @@ def main(unused_argv):
       # copybara:strip_begin(internal-blaze-run)
       'py_plugins'
       # copybara:strip_end_and_replace_begin
-      'py_plugins'
+      # 'py_plugins'
       # copybara:replace_end
   )
   _import_py_plugins(plugin_pkg)
@@ -189,5 +189,5 @@ if __name__ == '__main__':
   # copybara:strip_begin(internal-blaze-run)
   app.run(main, change_root_and_user=False)
   # copybara:strip_end_and_replace_begin
-  app.run(main)
+  # app.run(main)
   # copybara:replace_end
