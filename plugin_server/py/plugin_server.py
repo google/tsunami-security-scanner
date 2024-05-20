@@ -74,11 +74,7 @@ def main(unused_argv):
 
   # Load plugins from tsunami_plugins repository.
   plugin_pkg = importlib.import_module(
-      # copybara:strip_begin(internal-blaze-run)
       'py_plugins'
-      # copybara:strip_end_and_replace_begin
-      # 'py_plugins'
-      # copybara:replace_end
   )
   _import_py_plugins(plugin_pkg)
 
@@ -186,8 +182,4 @@ def _set_health_service_to_serving(server, health_servicer):
 
 if __name__ == '__main__':
   flags.set_default(logging.ALSOLOGTOSTDERR, True)
-  # copybara:strip_begin(internal-blaze-run)
-  app.run(main, change_root_and_user=False)
-  # copybara:strip_end_and_replace_begin
-  # app.run(main)
-  # copybara:replace_end
+  app.run(main)
