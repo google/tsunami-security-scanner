@@ -1,0 +1,5 @@
+plugin:
+  callbackserver:
+    callback_address: "127.0.0.1"  # Running callback server locally
+    callback_port: 8881            # Make sure to match with ones configured in tcs_config.yaml
+    polling_uri: "http://127.0.0.1:8880"

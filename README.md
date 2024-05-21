@@ -60,6 +60,14 @@ To quickly get started with Tsunami scans,
  1.  Print example Tsunami command for scanning `127.0.0.1` using the previously
      generated artifacts.
 
+#### Advanced Configuration with Callback Server and Python Language Server
+
+ 1.  execute the following command:
+
+     ```
+     bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start_advanced.sh)"
+     ```
+
 ### Docker install
 
 1.  start a vulnerable application that can be identified by Tsunami, e.g. an
@@ -90,7 +98,7 @@ To quickly get started with Tsunami scans,
     docker exec -it tsunami bash
     ```
 
-    ## Contributing
+## Contributing
 
 Read how to [contribute to Tsunami](docs/contributing.md).
 

@@ -24,7 +24,8 @@ def get_parsed_payload() -> list[pg.PayloadDefinition]:
           be used.
   """
   payload_str = Path(_PATH).read_text()
-  payload_dict = yaml.safe_load(payload_str)
+  yaml_parser = yaml.YAML(typ='safe', pure=True)
+  payload_dict = yaml_parser.load(payload_str)
   payload_library = json_format.ParseDict(payload_dict, pg.PayloadLibrary())
   return _validate_payloads([p for p in payload_library.payloads])
 

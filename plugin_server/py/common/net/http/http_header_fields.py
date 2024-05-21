@@ -93,7 +93,6 @@ class HttpHeaderFields(enum.Enum):
   CROSS_ORIGIN_EMBEDDER_POLICY = "Cross-Origin-Embedder-Policy"
   CROSS_ORIGIN_EMBEDDER_POLICY_REPORT_ONLY = "Cross-Origin-Embedder-Policy-Report-Only"
   CROSS_ORIGIN_OPENER_POLICY = "Cross-Origin-Opener-Policy"
-  external code
   ETAG = "ETag"
   EXPIRES = "Expires"
   LAST_MODIFIED = "Last-Modified"
@@ -157,7 +156,6 @@ class HttpHeaderFields(enum.Enum):
   SEC_CH_PREFERS_COLOR_SCHEME = "Sec-CH-Prefers-Color-Scheme"
   ACCEPT_CH = "Accept-CH"
   CRITICAL_CH = "Critical-CH"
-  external code
   SEC_CH_UA = "Sec-CH-UA"
   SEC_CH_UA_ARCH = "Sec-CH-UA-Arch"
   SEC_CH_UA_MODEL = "Sec-CH-UA-Model"
