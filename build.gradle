@@ -2,6 +2,7 @@
 
 plugins {
     id 'net.ltgt.errorprone' apply false
+    id "com.github.johnrengelman.shadow"
 }
 
 subprojects {
@@ -11,6 +12,7 @@ subprojects {
     apply plugin: "signing"
 
     apply plugin: 'net.ltgt.errorprone'
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     group = 'com.google.tsunami'
     version = '0.0.23-SNAPSHOT' // Current Tsunami version
@@ -97,6 +99,12 @@ subprojects {
                 truth8: "com.google.truth.extensions:truth-java8-extension:${truthVersion}",
                 truth_protobuf: "com.google.truth.extensions:truth-proto-extension:${truthVersion}",
         ]
+    }
+
+    // Resolving conflicting NameResolverProvider from grpc-core.jar and
+    // grpc-netty-shaded.jar, https://github.com/grpc/grpc-java/issues/10853
+    shadowJar {
+        mergeServiceFiles()
     }
 
     if (rootProject.properties.get('errorProne', true)) {
