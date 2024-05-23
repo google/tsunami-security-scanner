@@ -17,12 +17,14 @@ package com.google.tsunami.common.server;
 
 import com.google.auto.value.AutoValue;
 import java.time.Duration;
+import javax.annotation.Nullable;
 
 /** Command to spawn a language server and associated command lines. */
 @AutoValue
 public abstract class LanguageServerCommand {
   public static LanguageServerCommand create(
       String serverCommand,
+      @Nullable String serverAddress,
       String port,
       String logId,
       String outputDir,
@@ -33,6 +35,7 @@ public abstract class LanguageServerCommand {
       String pollingUri) {
     return new AutoValue_LanguageServerCommand(
         serverCommand,
+        serverAddress,
         port,
         logId,
         outputDir,
@@ -44,6 +47,8 @@ public abstract class LanguageServerCommand {
   }
 
   public abstract String serverCommand();
+
+  public abstract String serverAddress();
 
   public abstract String port();
 

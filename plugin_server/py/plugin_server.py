@@ -152,6 +152,9 @@ def _configure_plugin_service(server):
       cls(http_client, payload_generator)
       for cls in tsunami_plugin.VulnDetector.__subclasses__()
   ]
+  logging.info('Configured %d python plugin:', len(plugins))
+  for plugin in plugins:
+    logging.info('\t%s', plugin.GetPluginDefinition().info.name)
   servicer = plugin_service.PluginServiceServicer(
       py_plugins=plugins, max_workers=_THREADS.value
   )

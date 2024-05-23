@@ -41,6 +41,16 @@ public final class LanguageServerOptions implements CliOption {
               + " chosen.")
   public List<String> pluginServerPorts;
 
+  @Parameter(
+      names = "--python-plugin-server-address",
+      description = "The address for python language server.")
+  public String pythonPluginServerAddress;
+
+  @Parameter(
+      names = "--python-plugin-server-port",
+      description = "The port of the python plugin server to open connection with.")
+  public Integer pythonPluginServerPort;
+
   @Override
   public void validate() {
     if (pluginServerFilenames != null || pluginServerPorts != null) {
@@ -79,6 +89,16 @@ public final class LanguageServerOptions implements CliOption {
                 "Number of plugin server paths must be equal to number of plugin server ports."
                     + " Paths: %s. Ports: %s.",
                 pathCounts, portCounts));
+      }
+    }
+
+    if (pythonPluginServerAddress != null) {
+      if (!(pythonPluginServerPort <= NetworkEndpointUtils.MAX_PORT_NUMBER
+          && pythonPluginServerPort > 0)) {
+        throw new ParameterException(
+            String.format(
+                "Python plugin server port out of range. Expected [0, %s], actual %s.",
+                NetworkEndpointUtils.MAX_PORT_NUMBER, pythonPluginServerPort));
       }
     }
   }

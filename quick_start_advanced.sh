@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2020 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,16 +53,21 @@ else
 fi
 popd >/dev/null
 
-# Build all plugins.
+# Build all google plugins.
 pushd "${REPOS}/tsunami-security-scanner-plugins/google" >/dev/null
 printf "\nBuilding all Google plugins ...\n"
 ./build_all.sh
 cp build/plugins/*.jar "${PLUGINS}"
-mkdir -p "${REPOS}/tsunami-security-scanner/plugin_server/py/py_plugins"
-# Exclude the python example plugin.
-find . -type f -name '*.py' -not -iname '*example_py_vuln_detector*' -exec cp '{}' '${REPOS}/tsunami-security-scanner/plugin_server/py/py_plugins/{}' ';'
 popd >/dev/null
-cd
+
+# Copy over python plugins.
+# Exclude the python example plugin.
+pushd "${REPOS}/tsunami-security-scanner-plugins/py_plugins/" >/dev/null
+mkdir -p "${REPOS}/tsunami-security-scanner/plugin_server/py/py_plugins"
+for py_plugin in `find * -type f -name '*.py' -not -iname '*example_py_vuln_detector*' -not -iname '*_test.py'`; do
+  cp $py_plugin /usr/local/google/home/anniemao/tsunami/repos/tsunami-security-scanner/plugin_server/py/py_plugins/`basename $py_plugin`
+done
+popd >/dev/null
 
 # Build the callback server.
 pushd "${REPOS}/tsunami-security-scanner-callback-server" >/dev/null
@@ -73,7 +78,6 @@ TCS_JAR_FILENAME=$(basename -- "${TCS_JAR}")
 cp "${TCS_JAR}" "${WD}"
 cp "${REPOS}/tsunami-security-scanner-callback-server/tcs_config.yaml" "${WD}"
 popd >/dev/null
-cd
 
 # Build the scanner.
 pushd "${REPOS}/tsunami-security-scanner" >/dev/null
@@ -108,22 +112,26 @@ printf "\nBuild successful, execute the following command to start the callback 
 printf "\ncd ${WD} && \\\\\n"
 printf "java -cp \"${TCS_JAR_FILENAME}\" \\\\\n"
 printf "  com.google.tsunami.callbackserver.main.TcsMain \\\\\n"
-printf "  --custom-config=tcs_config.yaml \\\\\n"
+printf "  --custom-config=tcs_config.yaml\n"
 
 printf "\nBuild successful, execute the following command to start the pythan language server\n"
 printf "\ncd ${REPOS}/tsunami-security-scanner/plugin_server/py && \\\\\n"
-printf "\npython3 -m venv . && source bin/activate && \\\\\n"
-printf "java -cp \"${TCS_JAR_FILENAME}\" \\\\\n"
-printf "  com.google.tsunami.callbackserver.main.TcsMain \\\\\n"
-printf "  --custom-config=tcs_config.yaml \\\\\n"
-
-printf "\nBuild successful, execute the following command to scan 127.0.0.1:\n"
-printf "\ncd ${WD} && \\\\\n"
+printf "python3 -m venv . && source bin/activate && \\\\\n"
 printf "python3 plugin_server.py \\\\\n"
 printf "  --port=34567 \\\\\n"
 printf "  --trust_all_ssl_cert=true \\\\\n"
 printf "  --timeout_seconds=180 \\\\\n"
 printf "  --callback_address=127.0.0.1 \\\\\n"
 printf "  --callback_port=8881 \\\\\n"
-printf "  --polling_uri=http://127.0.0.1:8080  \\\\\n"
-printf "  --plugin-server-ports=34567  \\\\\n"
+printf "  --polling_uri=http://127.0.0.1:8880\n"
+
+printf "\nBuild successful, execute the following command to scan 127.0.0.1:\n"
+printf "\ncd ${WD} && \\\\\n"
+printf "java -cp \"${JAR_FILENAME}:${WD}/plugins/*\" \\\\\n"
+printf "  -Dtsunami-config.location=${WD}/tsunami_tcs.yaml \\\\\n"
+printf "  com.google.tsunami.main.cli.TsunamiCli \\\\\n"
+printf "  --ip-v4-target=127.0.0.1 \\\\\n"
+printf "  --scan-results-local-output-format=JSON \\\\\n"
+printf "  --scan-results-local-output-filename=/tmp/tsunami-output.json \\\\\n"
+printf "  --python-plugin-server-address=127.0.0.1 \\\\\n"
+printf "  --python-plugin-server-ports=34567 \n"

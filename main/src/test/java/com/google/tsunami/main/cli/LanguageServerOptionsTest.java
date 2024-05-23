@@ -59,4 +59,19 @@ public final class LanguageServerOptionsTest {
         ParameterException.class,
         options::validate);
   }
+
+  @Test
+  public void validate_whenPythonPluginServerPortNumberOutOfRange_throwsParameterException() {
+    LanguageServerOptions options = new LanguageServerOptions();
+    options.pythonPluginServerAddress = "127.0.0.1";
+    options.pythonPluginServerPort = -1;
+
+    assertThrows(
+        "Python plugin server port out of range. Expected [0, "
+            + NetworkEndpointUtils.MAX_PORT_NUMBER
+            + "]"
+            + ", actual -1",
+        ParameterException.class,
+        options::validate);
+  }
 }

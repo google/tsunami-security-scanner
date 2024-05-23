@@ -22,6 +22,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.auto.value.AutoAnnotation;
 import com.google.auto.value.AutoBuilder;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
@@ -74,12 +75,21 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
       ImmutableList<LanguageServerCommand> commands) {
     return commands.stream()
         .map(
-            command ->
-                // TODO(b/289462738): Support IPv6 loopback (::1) interface
-                NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
+            command -> {
+              if (Strings.isNullOrEmpty(command.serverCommand())) {
+                return NettyChannelBuilder.forTarget(
+                        String.format("%s:%s", command.serverAddress(), command.port()))
                     .negotiationType(NegotiationType.PLAINTEXT)
                     .maxInboundMessageSize(MAX_MESSAGE_SIZE)
-                    .build())
+                    .build();
+              } else {
+                // TODO(b/289462738): Support IPv6 loopback (::1) interface
+                return NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
+                    .negotiationType(NegotiationType.PLAINTEXT)
+                    .maxInboundMessageSize(MAX_MESSAGE_SIZE)
+                    .build();
+              }
+            })
         .collect(toImmutableList());
   }
 

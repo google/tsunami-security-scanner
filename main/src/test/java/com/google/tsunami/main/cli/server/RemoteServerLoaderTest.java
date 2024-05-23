@@ -34,6 +34,7 @@ public final class RemoteServerLoaderTest {
         ImmutableList.of(
             LanguageServerCommand.create(
                 "/bin/sh",
+                "",
                 "34567",
                 "34",
                 "/output-here",
@@ -49,6 +50,29 @@ public final class RemoteServerLoaderTest {
     var processList = loader.runServerProcesses();
     assertThat(processList).hasSize(1);
     assertThat(processList.get(0)).isNotNull();
+  }
+
+  @Test
+  public void runServerProcess_whenServerAddressExistsAndNormalPort_returnsEmptyProcessList() {
+    ImmutableList<LanguageServerCommand> commands =
+        ImmutableList.of(
+            LanguageServerCommand.create(
+                "",
+                "127.0.0.1",
+                "34567",
+                "34",
+                "/output-here",
+                false,
+                Duration.ofSeconds(10),
+                "157.34.0.2",
+                8080,
+                "157.34.0.2:8881"));
+
+    RemoteServerLoader loader =
+        Guice.createInjector(new RemoteServerLoaderModule(commands))
+            .getInstance(RemoteServerLoader.class);
+    var processList = loader.runServerProcesses();
+    assertThat(processList).isEmpty();
   }
 }
 

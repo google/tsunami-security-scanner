@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.tsunami.common.command.CommandExecutor;
@@ -46,6 +47,8 @@ public class RemoteServerLoader {
   public ImmutableList<Process> runServerProcesses() {
     logger.atInfo().log("Starting language server processes (if any)...");
     return commands.stream()
+        // Filter out commands that don't need server start up
+        .filter(command -> !Strings.isNullOrEmpty(command.serverCommand()))
         .map(
             command ->
                 runProcess(

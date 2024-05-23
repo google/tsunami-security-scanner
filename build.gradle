@@ -32,7 +32,7 @@ subprojects {
         googleCloudStorageVersion = '1.103.1'
         googleHttpClientVersion = '1.44.1'
         guavaVersion = '28.2-jre'
-        guiceVersion = '4.2.3'
+        guiceVersion = '6.0.0'
         grpcVersion = '1.60.0'
         gsonVersion = '2.8.6'
         jaxbVersion = '2.3.1'
@@ -47,7 +47,7 @@ subprojects {
         protocVersion = protobufVersion
         snakeyamlVersion = '1.26'
         junitVersion = '4.13'
-        mockitoVersion = '2.28.2'
+        mockitoVersion = '5.12.0'
         truthVersion = '1.4.0'
         tcsVersion = '0.0.1'
 

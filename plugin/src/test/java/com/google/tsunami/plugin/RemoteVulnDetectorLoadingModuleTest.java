@@ -55,6 +55,7 @@ public final class RemoteVulnDetectorLoadingModuleTest {
     var path0 =
         LanguageServerCommand.create(
             generateServerName(),
+            "",
             "34567",
             "193",
             "/output/here",
@@ -66,6 +67,7 @@ public final class RemoteVulnDetectorLoadingModuleTest {
     var path1 =
         LanguageServerCommand.create(
             generateServerName(),
+            "",
             "34566",
             "193",
             "/output/now",
@@ -74,10 +76,23 @@ public final class RemoteVulnDetectorLoadingModuleTest {
             "157.34.0.2",
             8080,
             "157.34.0.2:8881");
+    var server0 =
+        LanguageServerCommand.create(
+            "",
+            "127.0.0.1",
+            "34567",
+            "193",
+            "/output/here",
+            false,
+            Duration.ofSeconds(10),
+            "157.34.0.2",
+            8080,
+            "157.34.0.2:8881");
     Map<PluginDefinition, TsunamiPlugin> remotePlugins =
-        Guice.createInjector(new RemoteVulnDetectorLoadingModule(ImmutableList.of(path0, path1)))
+        Guice.createInjector(
+                new RemoteVulnDetectorLoadingModule(ImmutableList.of(path0, path1, server0)))
             .getInstance(PLUGIN_BINDING_KEY);
 
-    assertThat(remotePlugins).hasSize(2);
+    assertThat(remotePlugins).hasSize(3);
   }
 }
