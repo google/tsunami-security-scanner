@@ -52,6 +52,7 @@ subprojects {
         mockitoVersion = '5.12.0'
         truthVersion = '1.4.0'
         tcsVersion = '0.0.1'
+        hiveVersion = '2.3.2'
 
         // All Tsunami dependencies.
         deps = [
@@ -89,6 +90,7 @@ subprojects {
                 snakeyaml: "org.yaml:snakeyaml:${snakeyamlVersion}",
                 tcs_common: "com.google.tsunami:tcs-common:${tcsVersion}",
                 tcs_proto: "com.google.tsunami:tcs-proto:${tcsVersion}",
+                hive: "org.apache.hive:hive-jdbc:${hiveVersion}",
 
                 // Test dependencies.
                 guava_testlib: "com.google.guava:guava-testlib:${guavaVersion}",
@@ -104,6 +106,7 @@ subprojects {
     // Resolving conflicting NameResolverProvider from grpc-core.jar and
     // grpc-netty-shaded.jar, https://github.com/grpc/grpc-java/issues/10853
     shadowJar {
+        zip64 true
         mergeServiceFiles()
     }
 
