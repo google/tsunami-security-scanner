@@ -15,6 +15,7 @@ dependencies {
     compile deps.truth
     runtime deps.mysql
     runtime deps.postgresql
+    runtime deps.hive
     annotationProcessor deps.autovalue_annotation_processor
 
     testCompile deps.guava_testlib
