@@ -94,7 +94,7 @@ pushd "${REPOS}/tsunami-security-scanner/plugin_server/py" >/dev/null
 # sudo apt install python3.11-venv
 python3 -m venv .
 source bin/activate
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 popd >/dev/null
 
 pushd "${REPOS}/tsunami-security-scanner/proto" >/dev/null
