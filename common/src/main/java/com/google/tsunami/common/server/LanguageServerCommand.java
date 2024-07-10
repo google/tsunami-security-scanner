@@ -32,7 +32,8 @@ public abstract class LanguageServerCommand {
       Duration timeoutSeconds,
       String callbackAddress,
       Integer callbackPort,
-      String pollingUri) {
+      String pollingUri,
+      int deadlineRunSeconds) {
     return new AutoValue_LanguageServerCommand(
         serverCommand,
         serverAddress,
@@ -43,7 +44,8 @@ public abstract class LanguageServerCommand {
         timeoutSeconds,
         callbackAddress,
         callbackPort,
-        pollingUri);
+        pollingUri,
+        deadlineRunSeconds);
   }
 
   public abstract String serverCommand();
@@ -65,4 +67,6 @@ public abstract class LanguageServerCommand {
   public abstract Integer callbackPort();
 
   public abstract String pollingUri();
+
+  public abstract int deadlineRunSeconds();
 }

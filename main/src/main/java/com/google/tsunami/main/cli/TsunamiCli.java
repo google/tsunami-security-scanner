@@ -21,12 +21,9 @@ import static com.google.tsunami.common.data.NetworkEndpointUtils.forIp;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndHostname;
 import static com.google.tsunami.common.data.NetworkServiceUtils.buildUriNetworkService;
 
-import com.beust.jcommander.ParameterException;
-import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.flogger.GoogleLogger;
 import com.google.inject.AbstractModule;
@@ -39,6 +36,7 @@ import com.google.tsunami.common.config.ConfigModule;
 import com.google.tsunami.common.config.TsunamiConfig;
 import com.google.tsunami.common.config.YamlConfigLoader;
 import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
+import com.google.tsunami.common.net.http.HttpClientCliOptions;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.reflection.ClassGraphModule;
 import com.google.tsunami.common.server.LanguageServerCommand;
@@ -65,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /** Command line interface for the Tsunami Security Scanner. */
@@ -91,7 +88,7 @@ public final class TsunamiCli {
 
   public boolean run()
       throws ExecutionException, InterruptedException, ScanningWorkflowException, IOException {
-    String logId = (mainCliOptions.logId == null) ? "" : (mainCliOptions.logId + ": ");
+    String logId = mainCliOptions.getLogId();
     // TODO(b/171405612): Find a way to print the log ID at every log line.
     logger.atInfo().log("%sTsunamiCli starting...", logId);
 
@@ -143,12 +140,13 @@ public final class TsunamiCli {
     scanResultsArchiver.archive(scanResults);
   }
 
-  private static final class TsunamiCliModule extends AbstractModule {
+  private static final class TsunamiCliFirstStageModule extends AbstractModule {
     private final ScanResult classScanResult;
     private final String[] args;
     private final TsunamiConfig tsunamiConfig;
 
-    TsunamiCliModule(ScanResult classScanResult, String[] args, TsunamiConfig tsunamiConfig) {
+    TsunamiCliFirstStageModule(
+        ScanResult classScanResult, String[] args, TsunamiConfig tsunamiConfig) {
       this.classScanResult = checkNotNull(classScanResult);
       this.args = checkNotNull(args);
       this.tsunamiConfig = checkNotNull(tsunamiConfig);
@@ -156,19 +154,37 @@ public final class TsunamiCli {
 
     @Override
     protected void configure() {
-      // TODO(b/171405612): Find a way to use the log ID extracted by the CLI options.
-      String logId = extractLogId(args);
-
-      // TODO(b/241964583): Only use LanguageServerOptions to extract language server args.
-      ImmutableList<LanguageServerCommand> commands =
-          extractPluginServerArgs(args, logId, tsunamiConfig);
-
       install(new ClassGraphModule(classScanResult));
       install(new ConfigModule(classScanResult, tsunamiConfig));
       install(new CliOptionsModule(classScanResult, "TsunamiCli", args));
+    }
+  }
+
+  private static final class TsunamiCliModule extends AbstractModule {
+    private final ScanResult classScanResult;
+    private final Injector parentInjector;
+    private final TsunamiConfig tsunamiConfig;
+
+    TsunamiCliModule(
+        Injector parentInjector, ScanResult classScanResult, TsunamiConfig tsunamiConfig) {
+      this.classScanResult = checkNotNull(classScanResult);
+      this.parentInjector = checkNotNull(parentInjector);
+      this.tsunamiConfig = checkNotNull(tsunamiConfig);
+    }
+
+    @Override
+    protected void configure() {
+      MainCliOptions mco = parentInjector.getInstance(MainCliOptions.class);
+      LanguageServerOptions lso = parentInjector.getInstance(LanguageServerOptions.class);
+      HttpClientCliOptions hcco = parentInjector.getInstance(HttpClientCliOptions.class);
+      ScanResultsArchiver.Options srao =
+          parentInjector.getInstance(ScanResultsArchiver.Options.class);
+
+      ImmutableList<LanguageServerCommand> commands = extractPluginServerArgs(mco, lso, hcco, srao);
+
       install(new SystemUtcClockModule());
       install(new CommandExecutorModule());
-      install(new HttpClientModule.Builder().setLogId(logId).build());
+      install(new HttpClientModule.Builder().setLogId(mco.logId).build());
       install(new GoogleCloudStorageArchiverModule());
       install(new ScanResultsArchiverModule());
       install(new PluginExecutionModule());
@@ -177,55 +193,36 @@ public final class TsunamiCli {
       install(new RemoteServerLoaderModule(commands));
       install(new RemoteVulnDetectorLoadingModule(commands));
     }
-    
+
     private ImmutableList<LanguageServerCommand> extractPluginServerArgs(
-        String[] args, String logId, TsunamiConfig tsunamiConfig) {
+        MainCliOptions mco,
+        LanguageServerOptions lso,
+        HttpClientCliOptions hcco,
+        ScanResultsArchiver.Options srao) {
       List<LanguageServerCommand> commands = Lists.newArrayList();
-      Boolean trustAllSslCertCli = extractCliTrustAllSslCert(args);
-      var paths = extractCliPluginServerArgs(args, "--plugin-server-paths=");
-      var ports = extractCliPluginServerArgs(args, "--plugin-server-ports=");
-      var pythonServerAddress = extractPythonPluginServerAddress(args);
-      var pythonServerPort = extractPythonPluginServerPort(args);
-      if (paths.size() != ports.size()) {
-        throw new ParameterException(
-            String.format(
-                "Number of plugin server paths must be equal to number of plugin server ports."
-                    + " Paths: %s. Ports: %s.",
-                paths.size(), ports.size()));
-      }
-      if (paths.isEmpty() && Strings.isNullOrEmpty(pythonServerAddress)) {
+      Boolean trustAllSslCertCli = hcco.trustAllCertificates;
+      var logId = mco.getLogId();
+      var paths = lso.pluginServerFilenames;
+      var ports = lso.pluginServerPorts;
+      var rpcDeadline = lso.pluginServerRpcDeadlineSeconds;
+      var remoteServerAddresses = lso.remotePluginServerAddress;
+      var remoteServerPorts = lso.remotePluginServerPort;
+      var remoteRpcDeadlines = lso.remotePluginServerRpcDeadlineSeconds;
+      if (paths.isEmpty() && remoteServerAddresses.isEmpty()) {
         return ImmutableList.of();
       }
+      String lngOutputDir = extractOutputDir(srao);
+      boolean lngTrustAllSslCertCli;
+      Duration lngConnectDuration;
+      String lngCallbackAddress;
+      Integer lngCallbackPort;
+      String lngPollingUri;
       if (tsunamiConfig.getRawConfigData().isEmpty()) {
-        for (int i = 0; i < paths.size(); ++i) {
-          commands.add(
-              LanguageServerCommand.create(
-                  paths.get(i),
-                  "",
-                  ports.get(i),
-                  logId,
-                  extractOutputDir(args),
-                  trustAllSslCertCli != null && trustAllSslCertCli.booleanValue(),
-                  Duration.ZERO,
-                  "",
-                  0,
-                  ""));
-        }
-        if (!Strings.isNullOrEmpty(pythonServerAddress)) {
-          commands.add(
-              LanguageServerCommand.create(
-                  "",
-                  pythonServerAddress,
-                  pythonServerPort,
-                  logId,
-                  extractOutputDir(args),
-                  trustAllSslCertCli != null && trustAllSslCertCli.booleanValue(),
-                  Duration.ZERO,
-                  "",
-                  0,
-                  ""));
-        }
-        return ImmutableList.copyOf(commands);
+        lngTrustAllSslCertCli = trustAllSslCertCli != null && trustAllSslCertCli.booleanValue();
+        lngConnectDuration = Duration.ZERO;
+        lngCallbackAddress = "";
+        lngCallbackPort = 0;
+        lngPollingUri = "";
       } else {
         Object callbackConfig =
             ((Map) tsunamiConfig.getRawConfigData().get("plugin")).get("callbackserver");
@@ -233,110 +230,52 @@ public final class TsunamiCli {
             ((Map) ((Map) tsunamiConfig.getRawConfigData().get("common")).get("net")).get("http");
         boolean trustAllSslCertConfig =
             (boolean) ((Map) httpClientConfig).get("trust_all_certificates");
-        for (int i = 0; i < paths.size(); ++i) {
-          commands.add(
-              LanguageServerCommand.create(
-                  paths.get(i),
-                  "",
-                  ports.get(i),
-                  logId,
-                  extractOutputDir(args),
-                  trustAllSslCertCli == null
-                      ? trustAllSslCertConfig
-                      : trustAllSslCertCli.booleanValue(),
-                  Duration.ofSeconds((int) ((Map) httpClientConfig).get("connect_timeout_seconds")),
-                  (String) ((Map) callbackConfig).get("callback_address"),
-                  (Integer) ((Map) callbackConfig).get("callback_port"),
-                  (String) ((Map) callbackConfig).get("polling_uri")));
-        }
-        if (!Strings.isNullOrEmpty(pythonServerAddress)) {
-          commands.add(
-              LanguageServerCommand.create(
-                  "",
-                  pythonServerAddress,
-                  pythonServerPort,
-                  logId,
-                  extractOutputDir(args),
-                  trustAllSslCertCli == null
-                      ? trustAllSslCertConfig
-                      : trustAllSslCertCli.booleanValue(),
-                  Duration.ofSeconds((int) ((Map) httpClientConfig).get("connect_timeout_seconds")),
-                  (String) ((Map) callbackConfig).get("callback_address"),
-                  (Integer) ((Map) callbackConfig).get("callback_port"),
-                  (String) ((Map) callbackConfig).get("polling_uri")));
-        }
-        return ImmutableList.copyOf(commands);
+
+        lngTrustAllSslCertCli =
+            trustAllSslCertCli == null ? trustAllSslCertConfig : trustAllSslCertCli.booleanValue();
+        lngConnectDuration =
+            Duration.ofSeconds((int) ((Map) httpClientConfig).get("connect_timeout_seconds"));
+        lngCallbackAddress = (String) ((Map) callbackConfig).get("callback_address");
+        lngCallbackPort = (Integer) ((Map) callbackConfig).get("callback_port");
+        lngPollingUri = (String) ((Map) callbackConfig).get("polling_uri");
       }
+
+      for (int i = 0; i < paths.size(); ++i) {
+        commands.add(
+            LanguageServerCommand.create(
+                paths.get(i),
+                "",
+                ports.get(i),
+                logId,
+                lngOutputDir,
+                lngTrustAllSslCertCli,
+                lngConnectDuration,
+                lngCallbackAddress,
+                lngCallbackPort,
+                lngPollingUri,
+                rpcDeadline.isEmpty() ? 0 : rpcDeadline.get(i)));
+      }
+      for (int i = 0; i < remoteServerAddresses.size(); ++i) {
+        commands.add(
+            LanguageServerCommand.create(
+                "",
+                remoteServerAddresses.get(i),
+                remoteServerPorts.get(i).toString(),
+                logId,
+                lngOutputDir,
+                lngTrustAllSslCertCli,
+                lngConnectDuration,
+                lngCallbackAddress,
+                lngCallbackPort,
+                lngPollingUri,
+                remoteRpcDeadlines.isEmpty() ? 0 : remoteRpcDeadlines.get(i)));
+      }
+      return ImmutableList.copyOf(commands);
     }
 
-    @Nullable
-    private Boolean extractCliTrustAllSslCert(String[] args) {
-      for (String arg : args) {
-        if (arg.startsWith("--http-client-trust-all-certificates")) {
-          if (arg.contains("=")) {
-            return Boolean.valueOf(Iterables.get(Splitter.on('=').split(arg), 1));
-          } else {
-            return true;
-          }
-        }
-      }
-      return null;
-    }
-
-    @Nullable
-    private String extractPythonPluginServerAddress(String[] args) {
-      for (String arg : args) {
-        if (arg.startsWith("--python-plugin-server-address")) {
-          if (arg.contains("=")) {
-            return Iterables.get(Splitter.on('=').split(arg), 1);
-          } else {
-            return null;
-          }
-        }
-      }
-      return null;
-    }
-
-    @Nullable
-    private String extractPythonPluginServerPort(String[] args) {
-      for (String arg : args) {
-        if (arg.startsWith("--python-plugin-server-port")) {
-          if (arg.contains("=")) {
-            return Iterables.get(Splitter.on('=').split(arg), 1);
-          } else {
-            return null;
-          }
-        }
-      }
-      return null;
-    }
-
-    private String extractOutputDir(String[] args) {
-      for (String arg : args) {
-        if (arg.startsWith("--scan-results-local-output-filename=")) {
-          String filename = Iterables.get(Splitter.on('=').split(arg), 1) + ": ";
-          return Path.of(filename).getParent().toString();
-        }
-      }
-      return "";
-    }
-
-    private ImmutableList<String> extractCliPluginServerArgs(String[] args, String flag) {
-      for (String arg : args) {
-        if (arg.startsWith(flag)) {
-          var count = Iterables.get(Splitter.on('=').split(arg), 1);
-          return ImmutableList.copyOf(Splitter.on(',').split(count));
-        }
-      }
-      return ImmutableList.of();
-    }
-
-    private String extractLogId(String[] args) {
-      // TODO(b/171405612): Use the Flag class instead of manual parsing.
-      for (String arg : args) {
-        if (arg.startsWith("--log-id=")) {
-          return Iterables.get(Splitter.on('=').split(arg), 1) + ": ";
-        }
+    private String extractOutputDir(ScanResultsArchiver.Options sra) {
+      if (!Strings.isNullOrEmpty(sra.localOutputFilename)) {
+        return Path.of(sra.localOutputFilename).getParent().toString();
       }
       return "";
     }
@@ -354,8 +293,12 @@ public final class TsunamiCli {
             .scan()) {
       logger.atInfo().log("Full classpath scan took %s", stopwatch);
 
+      Injector firstStageInjector =
+          Guice.createInjector(new TsunamiCliFirstStageModule(scanResult, args, tsunamiConfig));
+
       Injector injector =
-          Guice.createInjector(new TsunamiCliModule(scanResult, args, tsunamiConfig));
+          firstStageInjector.createChildInjector(
+              new TsunamiCliModule(firstStageInjector, scanResult, tsunamiConfig));
 
       // Exit with non-zero code if scan failed.
       if (!injector.getInstance(TsunamiCli.class).run()) {

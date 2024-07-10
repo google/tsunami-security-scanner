@@ -81,4 +81,9 @@ public final class MainCliOptions implements CliOption {
               + " should not be passed along with parameters that skip port scan (--uri-target)");
     }
   }
+
+  /** Returns the log ID to print in front of the logs. */
+  public String getLogId() {
+    return (logId == null) ? "" : (logId + ": ");
+  }
 }

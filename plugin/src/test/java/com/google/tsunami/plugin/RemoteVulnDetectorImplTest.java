@@ -210,7 +210,8 @@ public final class RemoteVulnDetectorImplTest {
                         new RemoteVulnDetectorImpl(
                             InProcessChannelBuilder.forName(serverName).directExecutor().build(),
                             BACKOFF,
-                            MAX_ATTEMPTS));
+                            MAX_ATTEMPTS,
+                            null));
               }
             })
         .getInstance(RemoteVulnDetector.class);

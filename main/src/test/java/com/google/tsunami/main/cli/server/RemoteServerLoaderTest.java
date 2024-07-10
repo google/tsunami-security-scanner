@@ -42,7 +42,8 @@ public final class RemoteServerLoaderTest {
                 Duration.ofSeconds(10),
                 "157.34.0.2",
                 8080,
-                "157.34.0.2:8881"));
+                "157.34.0.2:8881",
+                0));
 
     RemoteServerLoader loader =
         Guice.createInjector(new RemoteServerLoaderModule(commands))
@@ -66,7 +67,8 @@ public final class RemoteServerLoaderTest {
                 Duration.ofSeconds(10),
                 "157.34.0.2",
                 8080,
-                "157.34.0.2:8881"));
+                "157.34.0.2:8881",
+                0));
 
     RemoteServerLoader loader =
         Guice.createInjector(new RemoteServerLoaderModule(commands))
@@ -75,5 +77,3 @@ public final class RemoteServerLoaderTest {
     assertThat(processList).isEmpty();
   }
 }
-
-

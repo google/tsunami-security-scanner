@@ -63,15 +63,39 @@ public final class LanguageServerOptionsTest {
   @Test
   public void validate_whenPythonPluginServerPortNumberOutOfRange_throwsParameterException() {
     LanguageServerOptions options = new LanguageServerOptions();
-    options.pythonPluginServerAddress = "127.0.0.1";
-    options.pythonPluginServerPort = -1;
+    options.remotePluginServerAddress = ImmutableList.of("127.0.0.1");
+    options.remotePluginServerPort = ImmutableList.of(-1);
 
     assertThrows(
-        "Python plugin server port out of range. Expected [0, "
+        "Remote plugin server port out of range. Expected [0, "
             + NetworkEndpointUtils.MAX_PORT_NUMBER
             + "]"
             + ", actual -1",
         ParameterException.class,
         options::validate);
+  }
+
+  @Test
+  public void validate_whenPythonPluginServerInvalidNumberOfDeadlines_throwsParameterException() {
+    LanguageServerOptions options = new LanguageServerOptions();
+    options.remotePluginServerAddress = ImmutableList.of("127.0.0.1");
+    options.remotePluginServerPort = ImmutableList.of(10000);
+    options.remotePluginServerRpcDeadlineSeconds = ImmutableList.of(100, 200);
+
+    assertThrows(
+        "Number of plugin server rpc deadlines must be equal to number of plugin server. ports."
+            + " Paths: 1. Ports: 1. Deadlines: 2",
+        ParameterException.class,
+        options::validate);
+  }
+
+  @Test
+  public void validate_whenPythonPluginServerValidNumberOfDeadlines_succeeds() {
+    LanguageServerOptions options = new LanguageServerOptions();
+    options.remotePluginServerAddress = ImmutableList.of("127.0.0.1");
+    options.remotePluginServerPort = ImmutableList.of(10000);
+    options.remotePluginServerRpcDeadlineSeconds = ImmutableList.of(150);
+
+    options.validate();
   }
 }

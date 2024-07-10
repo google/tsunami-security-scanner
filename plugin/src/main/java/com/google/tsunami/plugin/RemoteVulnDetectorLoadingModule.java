@@ -16,7 +16,7 @@
 package com.google.tsunami.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.auto.value.AutoAnnotation;
@@ -29,6 +29,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.tsunami.common.server.LanguageServerCommand;
 import com.google.tsunami.plugin.annotations.PluginInfo;
 import io.grpc.Channel;
+import io.grpc.Deadline;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
 
@@ -61,36 +62,35 @@ public final class RemoteVulnDetectorLoadingModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    ImmutableList<Channel> availableChannels = getLanguageServerChannels(availableServerPorts);
     MapBinder<PluginDefinition, TsunamiPlugin> tsunamiPluginBinder =
         MapBinder.newMapBinder(binder(), PluginDefinition.class, TsunamiPlugin.class);
-    availableChannels.forEach(
-        channel ->
-            tsunamiPluginBinder
-                .addBinding(getRemoteVulnDetectorPluginDefinition(channel.hashCode()))
-                .toInstance(new RemoteVulnDetectorImpl(channel, BACKOFF, MAX_ATTEMPTS)));
+    availableServerPorts.forEach(
+        command -> {
+          var channel = getLanguageServerChannel(command);
+          var deadline =
+              command.deadlineRunSeconds() > 0
+                  ? Deadline.after(command.deadlineRunSeconds(), SECONDS)
+                  : null;
+          tsunamiPluginBinder
+              .addBinding(getRemoteVulnDetectorPluginDefinition(channel.hashCode()))
+              .toInstance(new RemoteVulnDetectorImpl(channel, BACKOFF, MAX_ATTEMPTS, deadline));
+        });
   }
 
-  private ImmutableList<Channel> getLanguageServerChannels(
-      ImmutableList<LanguageServerCommand> commands) {
-    return commands.stream()
-        .map(
-            command -> {
-              if (Strings.isNullOrEmpty(command.serverCommand())) {
-                return NettyChannelBuilder.forTarget(
-                        String.format("%s:%s", command.serverAddress(), command.port()))
-                    .negotiationType(NegotiationType.PLAINTEXT)
-                    .maxInboundMessageSize(MAX_MESSAGE_SIZE)
-                    .build();
-              } else {
-                // TODO(b/289462738): Support IPv6 loopback (::1) interface
-                return NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
-                    .negotiationType(NegotiationType.PLAINTEXT)
-                    .maxInboundMessageSize(MAX_MESSAGE_SIZE)
-                    .build();
-              }
-            })
-        .collect(toImmutableList());
+  private Channel getLanguageServerChannel(LanguageServerCommand command) {
+    if (Strings.isNullOrEmpty(command.serverCommand())) {
+      return NettyChannelBuilder.forTarget(
+              String.format("%s:%s", command.serverAddress(), command.port()))
+          .negotiationType(NegotiationType.PLAINTEXT)
+          .maxInboundMessageSize(MAX_MESSAGE_SIZE)
+          .build();
+    } else {
+      // TODO(b/289462738): Support IPv6 loopback (::1) interface
+      return NettyChannelBuilder.forTarget("127.0.0.1:" + command.port())
+          .negotiationType(NegotiationType.PLAINTEXT)
+          .maxInboundMessageSize(MAX_MESSAGE_SIZE)
+          .build();
+    }
   }
 
   // TODO(b/239095108): Change channelIds to something more meaningful to identify

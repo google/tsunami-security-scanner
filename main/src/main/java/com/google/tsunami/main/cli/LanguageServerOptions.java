@@ -18,6 +18,7 @@ package com.google.tsunami.main.cli;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+import com.google.common.collect.ImmutableList;
 import com.google.tsunami.common.cli.CliOption;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import java.nio.file.Files;
@@ -30,8 +31,8 @@ public final class LanguageServerOptions implements CliOption {
 
   @Parameter(
       names = "--plugin-server-paths",
-      description = "The filename of the language server to run language-spceific plugins.")
-  public List<String> pluginServerFilenames;
+      description = "The filename of the language server to run language-specific plugins.")
+  public List<String> pluginServerFilenames = ImmutableList.of();
 
   @Parameter(
       names = "--plugin-server-ports",
@@ -39,21 +40,31 @@ public final class LanguageServerOptions implements CliOption {
           "The port of the plugin server to open connection with. If not enough ports were"
               + " specified for the number of language servers specified, an open port will be"
               + " chosen.")
-  public List<String> pluginServerPorts;
+  public List<String> pluginServerPorts = ImmutableList.of();
 
   @Parameter(
-      names = "--python-plugin-server-address",
-      description = "The address for python language server.")
-  public String pythonPluginServerAddress;
+      names = "--plugin-server-rpc-deadline-seconds",
+      description = "The RPC deadline in seconds for the plugin servers.")
+  public List<Integer> pluginServerRpcDeadlineSeconds = ImmutableList.of();
 
   @Parameter(
-      names = "--python-plugin-server-port",
-      description = "The port of the python plugin server to open connection with.")
-  public Integer pythonPluginServerPort;
+      names = {"--remote-plugin-server-addresses", "--python-plugin-server-address"},
+      description = "The address for remote language server (e.g. Python).")
+  public List<String> remotePluginServerAddress = ImmutableList.of();
+
+  @Parameter(
+      names = {"--remote-plugin-server-ports", "--python-plugin-server-port"},
+      description = "The port of the remote plugin server to open connection with.")
+  public List<Integer> remotePluginServerPort = ImmutableList.of();
+
+  @Parameter(
+      names = "--remote-plugin-server-rpc-deadline-seconds",
+      description = "The RPC deadline in seconds for this plugin server.")
+  public List<Integer> remotePluginServerRpcDeadlineSeconds = ImmutableList.of();
 
   @Override
   public void validate() {
-    if (pluginServerFilenames != null || pluginServerPorts != null) {
+    if (!pluginServerFilenames.isEmpty() || !pluginServerPorts.isEmpty()) {
       if (pluginServerFilenames != null && !pluginServerFilenames.isEmpty()) {
         for (String pluginServerFilename : pluginServerFilenames) {
           if (!Files.exists(Paths.get(pluginServerFilename))) {
@@ -66,7 +77,7 @@ public final class LanguageServerOptions implements CliOption {
       if (pluginServerPorts != null && !pluginServerPorts.isEmpty()) {
         for (String pluginServerPort : pluginServerPorts) {
           try {
-            var port = Integer.parseInt(pluginServerPort, 10);
+            int port = Integer.parseInt(pluginServerPort);
             if (!(port <= NetworkEndpointUtils.MAX_PORT_NUMBER && port > 0)) {
               throw new ParameterException(
                   String.format(
@@ -90,15 +101,46 @@ public final class LanguageServerOptions implements CliOption {
                     + " Paths: %s. Ports: %s.",
                 pathCounts, portCounts));
       }
+
+      if (!pluginServerRpcDeadlineSeconds.isEmpty()) {
+        if (pluginServerRpcDeadlineSeconds.size() != pathCounts) {
+          throw new ParameterException(
+              String.format(
+                  "Number of plugin server rpc deadlines must be equal to number of plugin server"
+                      + " ports. Paths: %s. Ports: %s. Deadlines: %s",
+                  pathCounts, portCounts, pluginServerRpcDeadlineSeconds.size()));
+        }
+      }
     }
 
-    if (pythonPluginServerAddress != null) {
-      if (!(pythonPluginServerPort <= NetworkEndpointUtils.MAX_PORT_NUMBER
-          && pythonPluginServerPort > 0)) {
+    if (!remotePluginServerAddress.isEmpty()) {
+      var addrCounts = remotePluginServerAddress.size();
+      var portCounts = remotePluginServerPort.size();
+      if (addrCounts != portCounts) {
         throw new ParameterException(
             String.format(
-                "Python plugin server port out of range. Expected [0, %s], actual %s.",
-                NetworkEndpointUtils.MAX_PORT_NUMBER, pythonPluginServerPort));
+                "Number of remote plugin server paths must be equal to number of plugin server "
+                    + "ports. Addresses: %s. Ports: %s.",
+                addrCounts, portCounts));
+      }
+
+      if (!remotePluginServerRpcDeadlineSeconds.isEmpty()) {
+        if (remotePluginServerRpcDeadlineSeconds.size() != addrCounts) {
+          throw new ParameterException(
+              String.format(
+                  "Number of plugin server rpc deadlines must be equal to number of plugin server"
+                      + " ports. Paths: %s. Ports: %s. Deadlines: %s",
+                  addrCounts, portCounts, pluginServerRpcDeadlineSeconds.size()));
+        }
+      }
+
+      for (int port : remotePluginServerPort) {
+        if (!(port <= NetworkEndpointUtils.MAX_PORT_NUMBER && port > 0)) {
+          throw new ParameterException(
+              String.format(
+                  "Remote plugin server port out of range. Expected [0, %s], actual %s.",
+                  NetworkEndpointUtils.MAX_PORT_NUMBER, port));
+        }
       }
     }
   }

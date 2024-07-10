@@ -52,12 +52,15 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
   private final Set<MatchedPlugin> pluginsToRun;
   private final ExponentialBackOff backoff;
   private final int maxAttempts;
+  private final Deadline deadline;
 
-  RemoteVulnDetectorImpl(Channel channel, ExponentialBackOff backoff, int maxAttempts) {
+  RemoteVulnDetectorImpl(
+      Channel channel, ExponentialBackOff backoff, int maxAttempts, Deadline deadline) {
     this.service = new PluginServiceClient(checkNotNull(channel));
     this.pluginsToRun = Sets.newHashSet();
     this.backoff = backoff;
     this.maxAttempts = maxAttempts;
+    this.deadline = deadline != null ? deadline : DEFAULT_DEADLINE;
   }
 
   @Override
@@ -69,7 +72,7 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
         return service
             .runWithDeadline(
                 RunRequest.newBuilder().setTarget(target).addAllPlugins(pluginsToRun).build(),
-                DEFAULT_DEADLINE)
+                deadline)
             .get()
             .getReports();
       }

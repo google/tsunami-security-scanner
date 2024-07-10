@@ -65,7 +65,7 @@ popd >/dev/null
 pushd "${REPOS}/tsunami-security-scanner-plugins/py_plugins/" >/dev/null
 mkdir -p "${REPOS}/tsunami-security-scanner/plugin_server/py/py_plugins"
 for py_plugin in `find * -type f -name '*.py' -not -iname '*example_py_vuln_detector*' -not -iname '*_test.py'`; do
-  cp $py_plugin /usr/local/google/home/anniemao/tsunami/repos/tsunami-security-scanner/plugin_server/py/py_plugins/`basename $py_plugin`
+  cp $py_plugin "${REPOS}"/tsunami-security-scanner/plugin_server/py/py_plugins/`basename $py_plugin`
 done
 popd >/dev/null
 
@@ -133,5 +133,5 @@ printf "  com.google.tsunami.main.cli.TsunamiCli \\\\\n"
 printf "  --ip-v4-target=127.0.0.1 \\\\\n"
 printf "  --scan-results-local-output-format=JSON \\\\\n"
 printf "  --scan-results-local-output-filename=/tmp/tsunami-output.json \\\\\n"
-printf "  --python-plugin-server-address=127.0.0.1 \\\\\n"
-printf "  --python-plugin-server-port=34567 \n"
+printf "  --remote-plugin-server-addresses=127.0.0.1 \\\\\n"
+printf "  --remote-plugin-server-ports=34567 \n"
