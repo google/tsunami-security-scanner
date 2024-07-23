@@ -34,6 +34,29 @@ message TargetInfo {
 
   // TODO(magl): add more information about the scanning target, like OSes,
   // architectures, firewalls etc.
+
+  repeated OperatingSystemClass operating_system_classes = 2;
+}
+
+// Represents a ForOperatingSystem annotation placeholder used by the
+// PluginDefinition proto above.
+// For possible values, consult the following database:
+// https://raw.githubusercontent.com/nmap/nmap/master/nmap-os-db
+message OperatingSystemClass {
+  // The type of the target operating system, e.g. "general purpose"
+  string type = 1;
+
+  // The vendor of the target operating system, e.g. "Linux"
+  string vendor = 2;
+
+  // The family of the target operating system, e.g. "Linux"
+  string os_family = 3;
+
+  // The generation of the target operating system, e.g. "2.6.X"
+  string os_generation = 4;
+
+  // The estimated accuracy of the target operating system, e.g. 90
+  uint32 accuracy = 5;
 }
 
 // Report from a port scanner.

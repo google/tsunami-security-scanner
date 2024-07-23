@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-// Representation of a tsunami plugin definition passed between language servers.
+// Representation of a tsunami plugin definition passed between language
+// servers.
 syntax = "proto3";
 
 package tsunami.proto;
@@ -37,6 +38,13 @@ message PluginDefinition {
 
   // If the definition is for a web service or not.
   bool for_web_service = 4;
+
+  // If the definition is for a specific operating system or not.
+  // Note: this filter is executed within an AND condition with the other
+  // filters. E.g. if target_service_name.value is "http" and
+  // target_operating_system.osclass.family is "Linux" then the plugin will only
+  // match if the service is http and the operating system is Linux.
+  TargetOperatingSystemClass target_operating_system_class = 5;
 }
 
 // Represents a PluginInfo annotation placeholder used by the
@@ -84,4 +92,18 @@ message TargetSoftware {
 
   // Array of versions and version ranges of the target software.
   repeated string value = 2;
+}
+
+// Represents a ForOperatingSystem annotation placeholder used by the
+// PluginDefinition proto above. These values are coming directly from the
+// port scanner's output (e.g. nmap).
+message TargetOperatingSystemClass {
+  // The vendor of the target operating system, e.g. "Microsoft"
+  repeated string vendor = 1;
+
+  // The family of the target operating system, e.g. "Windows"
+  repeated string os_family = 2;
+
+  // The minimum accuracy of the target operating system, e.g. 90
+  uint32 min_accuracy = 3;
 }

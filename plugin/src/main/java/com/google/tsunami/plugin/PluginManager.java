@@ -23,9 +23,12 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+import com.google.tsunami.plugin.annotations.ForOperatingSystemClass;
 import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.ReconnaissanceReport;
+import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.TargetOperatingSystemClass;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,15 +125,25 @@ public class PluginManager {
       Provider<TsunamiPlugin> vulnDetectorProvider,
       ReconnaissanceReport reconnaissanceReport) {
     List<NetworkService> matchedNetworkServices;
+    var allNetworkServices = reconnaissanceReport.getNetworkServicesList();
+    if (pluginDefinition.targetOperatingSystemClass().isPresent()) {
+      allNetworkServices =
+          allNetworkServices.stream()
+              .filter(
+                  networkService ->
+                      hasMatchingOperatingSystem(
+                          reconnaissanceReport.getTargetInfo(), pluginDefinition))
+              .collect(toImmutableList());
+    }
     if (!pluginDefinition.targetServiceName().isPresent()
         && !pluginDefinition.targetSoftware().isPresent()
         && !pluginDefinition.isForWebService()) {
       // No filtering annotation applied, just match all network services from reconnaissance.
-      matchedNetworkServices = reconnaissanceReport.getNetworkServicesList();
+      matchedNetworkServices = allNetworkServices;
     } else {
       // At least one filtering annotation applied, check services to see if any one matches.
       matchedNetworkServices =
-          reconnaissanceReport.getNetworkServicesList().stream()
+          allNetworkServices.stream()
               .filter(
                   networkService ->
                       hasMatchingServiceName(networkService, pluginDefinition)
@@ -162,17 +175,27 @@ public class PluginManager {
     for (com.google.tsunami.proto.PluginDefinition remotePluginDefinition :
         remoteVulnDetector.getAllPlugins()) {
       var matchedPluginBuilder = MatchedPlugin.newBuilder();
+      var allNetworkServices = reconnaissanceReport.getNetworkServicesList();
+      if (remotePluginDefinition.hasTargetOperatingSystemClass()) {
+        // Prefiltering based on the Operating System, so the other potential filters are applied
+        // like if we were in an AND condition.
+        allNetworkServices =
+            allNetworkServices.stream()
+                .filter(
+                    networkService ->
+                        hasMatchingOperatingSystem(
+                            reconnaissanceReport.getTargetInfo(), remotePluginDefinition))
+                .collect(toImmutableList());
+      }
       if (!remotePluginDefinition.hasTargetServiceName()
           && !remotePluginDefinition.hasTargetSoftware()
           && !remotePluginDefinition.getForWebService()) {
-        matchedPluginBuilder
-            .setPlugin(remotePluginDefinition)
-            .addAllServices(reconnaissanceReport.getNetworkServicesList());
+        matchedPluginBuilder.setPlugin(remotePluginDefinition).addAllServices(allNetworkServices);
       } else {
         matchedPluginBuilder
             .setPlugin(remotePluginDefinition)
             .addAllServices(
-                reconnaissanceReport.getNetworkServicesList().stream()
+                allNetworkServices.stream()
                     .filter(
                         networkService ->
                             hasMatchingServiceName(networkService, remotePluginDefinition)
@@ -182,6 +205,40 @@ public class PluginManager {
       remoteVulnDetector.addMatchedPluginToDetect(matchedPluginBuilder.build());
     }
     return Optional.of(builder.build());
+  }
+
+  private static boolean hasMatchingOperatingSystem(
+      TargetInfo targetInfo, PluginDefinition pluginDefinition) {
+    return hasMatchingOperatingSystem(
+        targetInfo,
+        getTargetOperatingSystemClass(pluginDefinition.targetOperatingSystemClass().get()));
+  }
+
+  private static boolean hasMatchingOperatingSystem(
+      TargetInfo targetInfo, com.google.tsunami.proto.PluginDefinition pluginDefinition) {
+    return hasMatchingOperatingSystem(targetInfo, pluginDefinition.getTargetOperatingSystemClass());
+  }
+
+  // Determines if the target info has a matching operating system to the plugin definition.
+  // If the target info has no info about the operating system, it will return false.
+  private static boolean hasMatchingOperatingSystem(
+      TargetInfo targetInfo, TargetOperatingSystemClass pluginOs) {
+    for (var osGuess : targetInfo.getOperatingSystemClassesList()) {
+      var osGuessAccuracy = osGuess.getAccuracy();
+      var minAccuracyWanted = pluginOs.getMinAccuracy();
+      if (minAccuracyWanted != 0 && minAccuracyWanted > osGuessAccuracy) {
+        continue;
+      }
+      if (pluginOs.getVendorList().contains(osGuess.getVendor())) {
+        return true;
+      }
+      if (pluginOs.getOsFamilyList().contains(osGuess.getOsFamily())) {
+        return true;
+      }
+    }
+
+    // None of the OS guesses matched.
+    return false;
   }
 
   private static boolean hasMatchingServiceName(
@@ -267,5 +324,17 @@ public class PluginManager {
 
       public abstract PluginMatchingResult<T> build();
     }
+  }
+
+  private static TargetOperatingSystemClass getTargetOperatingSystemClass(
+      ForOperatingSystemClass target) {
+    var builder = TargetOperatingSystemClass.newBuilder().setMinAccuracy(target.minAccuracy());
+    for (String vendor : target.vendor()) {
+      builder.addVendor(vendor);
+    }
+    for (String osfamily : target.osfamily()) {
+      builder.addOsFamily(osfamily);
+    }
+    return builder.build();
   }
 }

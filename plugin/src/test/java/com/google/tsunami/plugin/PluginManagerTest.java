@@ -25,6 +25,7 @@ import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
+import com.google.tsunami.plugin.annotations.ForOperatingSystemClass;
 import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
 import com.google.tsunami.plugin.annotations.ForWebService;
@@ -43,9 +44,11 @@ import com.google.tsunami.proto.DetectionReportList;
 import com.google.tsunami.proto.FingerprintingReport;
 import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
+import com.google.tsunami.proto.OperatingSystemClass;
 import com.google.tsunami.proto.ReconnaissanceReport;
 import com.google.tsunami.proto.Software;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.TargetOperatingSystemClass;
 import com.google.tsunami.proto.TargetServiceName;
 import com.google.tsunami.proto.TargetSoftware;
 import com.google.tsunami.proto.TransportProtocol;
@@ -385,6 +388,153 @@ public class PluginManagerTest {
   }
 
   @Test
+  public void getVulnDetectors_whenOsFilterHasNoMatchingClass_returnsEmpty() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    NetworkService jenkinsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("Jenkins"))
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(wordPressService)
+            .addNetworkServices(jenkinsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeOsFilteringDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    // matchVulnDetectors returns Optional.empty() when there is no match.
+    assertThat(vulnDetectors).isEmpty();
+  }
+
+  @Test
+  public void getVulnDetectors_whenOsFilterHasMatchingClass_returnsMatches() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    NetworkService jenkinsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("Jenkins"))
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(
+                TargetInfo.newBuilder()
+                    .addOperatingSystemClasses(
+                        OperatingSystemClass.newBuilder()
+                            .setVendor("Vendor")
+                            .setOsFamily("FakeOS")
+                            .setAccuracy(99)))
+            .addNetworkServices(wordPressService)
+            .addNetworkServices(jenkinsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeOsFilteringDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    assertThat(vulnDetectors.get(0).tsunamiPlugin().getClass())
+        .isEqualTo(FakeOsFilteringDetector.class);
+    // And matches everything (as all these services are running on the same target)
+    assertThat(vulnDetectors.get(0).matchedServices())
+        .containsExactly(wordPressService, jenkinsService, noNameService);
+  }
+
+  @Test
+  public void getVulnDetectors_whenOsServiceFilterHasMatchingClass_returnsMatches() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    NetworkService jenkinsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("Jenkins"))
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(
+                TargetInfo.newBuilder()
+                    .addOperatingSystemClasses(
+                        OperatingSystemClass.newBuilder()
+                            .setVendor("Vendor")
+                            .setOsFamily("FakeOS")
+                            .setAccuracy(99)))
+            .addNetworkServices(wordPressService)
+            .addNetworkServices(jenkinsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeOsServiceFilteringDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    assertThat(vulnDetectors.get(0).tsunamiPlugin().getClass())
+        .isEqualTo(FakeOsServiceFilteringDetector.class);
+    // And matches the ones with the Jenkins software (and noname as well, as no software info is
+    // present there; see hasMatchingServiceName)
+    assertThat(vulnDetectors.get(0).matchedServices())
+        .containsExactly(jenkinsService, noNameService);
+  }
+
+  @Test
   public void getVulnDetectors_whenSoftwareFilterHasNoMatchingService_returnsEmpty() {
     NetworkService wordPressService =
         NetworkService.newBuilder()
@@ -593,11 +743,102 @@ public class PluginManagerTest {
     assertThat(vulnDetectors).hasSize(1);
     ImmutableList<MatchedPlugin> matchedResult =
         ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
-    assertThat(matchedResult).hasSize(2);
+    assertThat(matchedResult).hasSize(4);
     assertThat(matchedResult.get(1).getPlugin())
         .isEqualTo(FakeFilteringRemoteDetector.getJenkinsServiceDefinition());
     assertThat(matchedResult.get(1).getServicesList())
         .containsExactly(jenkinsService, noNameService);
+
+    // The other non-OS detector should match, too:
+    assertThat(matchedResult.get(0).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getHttpServiceDefinition());
+    // wordpress: matching service_name (http)
+    // jenkins: mismatching service_name (http*s*)
+    // nonameservice: no service_name present in the NetworkService, hasMatchingServiceName accepts
+    // that
+    assertThat(matchedResult.get(0).getServicesList())
+        .containsExactly(wordPressService, noNameService);
+    // The OS related ones should be empty:
+    assertThat(matchedResult.get(2).getServicesCount()).isEqualTo(0);
+    assertThat(matchedResult.get(3).getServicesCount()).isEqualTo(0);
+  }
+
+  @Test
+  public void
+      getVulnDetectors_whenRemoteDetectorOsFilterHasMatchingService_returnsMatchedService() {
+    NetworkService wordPressService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .setSoftware(Software.newBuilder().setName("WordPress"))
+            .build();
+    NetworkService jenkinsService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .setSoftware(Software.newBuilder().setName("Jenkins"))
+            .build();
+    NetworkService noNameService =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 12345))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(
+                TargetInfo.newBuilder()
+                    .addOperatingSystemClasses(
+                        OperatingSystemClass.newBuilder()
+                            .setType("general purpose")
+                            .setVendor("Vendor")
+                            .setOsFamily("FakeOS")
+                            .setAccuracy(96)))
+            .addNetworkServices(wordPressService)
+            .addNetworkServices(jenkinsService)
+            .addNetworkServices(noNameService)
+            .build();
+    PluginManager pluginManager =
+        Guice.createInjector(
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule(),
+                FakeFilteringRemoteDetector.getModule())
+            .getInstance(PluginManager.class);
+
+    ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+        pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+    assertThat(vulnDetectors).hasSize(1);
+    ImmutableList<MatchedPlugin> matchedResult =
+        ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
+    assertThat(matchedResult).hasSize(4);
+    assertThat(matchedResult.get(1).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getJenkinsServiceDefinition());
+    assertThat(matchedResult.get(1).getServicesList())
+        .containsExactly(jenkinsService, noNameService);
+
+    // The other non-OS detector should match, too:
+    assertThat(matchedResult.get(0).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getHttpServiceDefinition());
+    // wordpress: matching service_name (http)
+    // jenkins: mismatching service_name (http*s*)
+    // nonameservice: no service_name present in the NetworkService, hasMatchingServiceName accepts
+    // that
+    assertThat(matchedResult.get(0).getServicesList())
+        .containsExactly(wordPressService, noNameService);
+
+    // The one that matches the OS only, should match everything:
+    assertThat(matchedResult.get(2).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getOperatingSystemServiceDefinition());
+    assertThat(matchedResult.get(2).getServicesList())
+        .containsExactly(wordPressService, jenkinsService, noNameService);
+
+    // The one that matches the OS and "http", should return these:
+    assertThat(matchedResult.get(3).getPlugin())
+        .isEqualTo(FakeFilteringRemoteDetector.getOperatingSystemAndHttpServiceDefinition());
+    assertThat(matchedResult.get(3).getServicesList())
+        .containsExactly(wordPressService, noNameService);
   }
 
   @Test
@@ -628,9 +869,10 @@ public class PluginManagerTest {
     assertThat(vulnDetectors).hasSize(1);
     ImmutableList<MatchedPlugin> matchedResult =
         ((FakeFilteringRemoteDetector) vulnDetectors.get(0).tsunamiPlugin()).getMatchedPlugins();
-    assertThat(matchedResult).hasSize(2);
-    assertThat(matchedResult.get(0).getServicesCount()).isEqualTo(0);
-    assertThat(matchedResult.get(1).getServicesCount()).isEqualTo(0);
+    assertThat(matchedResult).hasSize(4);
+    for (var mr : matchedResult) {
+      assertThat(mr.getServicesCount()).isEqualTo(0);
+    }
   }
 
   @PluginInfo(
@@ -744,6 +986,64 @@ public class PluginManagerTest {
   }
 
   @PluginInfo(
+      type = PluginType.VULN_DETECTION,
+      name = "FakeOsFilteringDetector",
+      version = "v0.1",
+      description = "A fake VulnDetector.",
+      author = "fake",
+      bootstrapModule = FakeOsFilteringDetector.FakeOsFilteringDetectorBootstrapModule.class)
+  @ForOperatingSystemClass(osfamily = "FakeOS")
+  private static final class FakeOsFilteringDetector implements VulnDetector {
+    @Override
+    public DetectionReportList detect(
+        TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
+      return null;
+    }
+
+    static FakeOsFilteringDetectorBootstrapModule getModule() {
+      return new FakeOsFilteringDetectorBootstrapModule();
+    }
+
+    private static final class FakeOsFilteringDetectorBootstrapModule
+        extends PluginBootstrapModule {
+      @Override
+      protected void configurePlugin() {
+        registerPlugin(FakeOsFilteringDetector.class);
+      }
+    }
+  }
+
+  @PluginInfo(
+      type = PluginType.VULN_DETECTION,
+      name = "FakeOsServiceFilteringDetector",
+      version = "v0.1",
+      description = "A fake VulnDetector.",
+      author = "fake",
+      bootstrapModule =
+          FakeOsServiceFilteringDetector.FakeOsServiceFilteringDetectorBootstrapModule.class)
+  @ForOperatingSystemClass(osfamily = "FakeOS")
+  @ForSoftware(name = "Jenkins")
+  private static final class FakeOsServiceFilteringDetector implements VulnDetector {
+    @Override
+    public DetectionReportList detect(
+        TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
+      return null;
+    }
+
+    static FakeOsServiceFilteringDetectorBootstrapModule getModule() {
+      return new FakeOsServiceFilteringDetectorBootstrapModule();
+    }
+
+    private static final class FakeOsServiceFilteringDetectorBootstrapModule
+        extends PluginBootstrapModule {
+      @Override
+      protected void configurePlugin() {
+        registerPlugin(FakeOsServiceFilteringDetector.class);
+      }
+    }
+  }
+
+  @PluginInfo(
       type = PluginType.REMOTE_VULN_DETECTION,
       name = "FakeFilteringRemoteDetector",
       version = "v0.1",
@@ -771,7 +1071,11 @@ public class PluginManagerTest {
 
     @Override
     public ImmutableList<com.google.tsunami.proto.PluginDefinition> getAllPlugins() {
-      return ImmutableList.of(getHttpServiceDefinition(), getJenkinsServiceDefinition());
+      return ImmutableList.of(
+          getHttpServiceDefinition(),
+          getJenkinsServiceDefinition(),
+          getOperatingSystemServiceDefinition(),
+          getOperatingSystemAndHttpServiceDefinition());
     }
 
     @Override
@@ -802,6 +1106,41 @@ public class PluginManagerTest {
                   .setDescription("A fake VulnDetector")
                   .setAuthor("fake"))
           .setTargetSoftware(TargetSoftware.newBuilder().setName("Jenkins"))
+          .build();
+    }
+
+    static com.google.tsunami.proto.PluginDefinition getOperatingSystemServiceDefinition() {
+      return com.google.tsunami.proto.PluginDefinition.newBuilder()
+          .setInfo(
+              com.google.tsunami.proto.PluginInfo.newBuilder()
+                  .setType(com.google.tsunami.proto.PluginInfo.PluginType.VULN_DETECTION)
+                  .setName("FakeOsVuln")
+                  .setVersion("v0.1")
+                  .setDescription("A fake VulnDetector that targets services running on FakeOS")
+                  .setAuthor("fake"))
+          .setTargetOperatingSystemClass(
+              TargetOperatingSystemClass.newBuilder()
+                  .addOsFamily("ThisWontMatch")
+                  .addOsFamily("FakeOS"))
+          .build();
+    }
+
+    static com.google.tsunami.proto.PluginDefinition getOperatingSystemAndHttpServiceDefinition() {
+      return com.google.tsunami.proto.PluginDefinition.newBuilder()
+          .setInfo(
+              com.google.tsunami.proto.PluginInfo.newBuilder()
+                  .setType(com.google.tsunami.proto.PluginInfo.PluginType.VULN_DETECTION)
+                  .setName("FakeOsHttpVuln")
+                  .setVersion("v0.1")
+                  .setDescription(
+                      "A fake VulnDetector that targets http services running on FakeOS")
+                  .setAuthor("fake"))
+          .setTargetServiceName(TargetServiceName.newBuilder().addValue("http"))
+          .setTargetOperatingSystemClass(
+              TargetOperatingSystemClass.newBuilder()
+                  .addVendor("ThisWontMatch")
+                  .addOsFamily("FakeOS")
+                  .setMinAccuracy(90))
           .build();
     }
 

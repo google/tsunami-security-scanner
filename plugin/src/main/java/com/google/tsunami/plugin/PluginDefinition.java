@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
+import com.google.tsunami.plugin.annotations.ForOperatingSystemClass;
 import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
 import com.google.tsunami.plugin.annotations.ForWebService;
@@ -36,6 +37,8 @@ abstract class PluginDefinition {
   abstract Optional<ForSoftware> targetSoftware();
 
   abstract boolean isForWebService();
+
+  abstract Optional<ForOperatingSystemClass> targetOperatingSystemClass();
 
   /**
    * Unique identifier for the plugin.
@@ -77,6 +80,8 @@ abstract class PluginDefinition {
     Optional<ForSoftware> targetSoftware =
         Optional.ofNullable(pluginClazz.getAnnotation(ForSoftware.class));
     boolean isForWebService = pluginClazz.isAnnotationPresent(ForWebService.class);
+    Optional<ForOperatingSystemClass> targetOperatingSystemClass =
+        Optional.ofNullable(pluginClazz.getAnnotation(ForOperatingSystemClass.class));
 
     checkState(
         pluginInfo.isPresent(),
@@ -84,7 +89,11 @@ abstract class PluginDefinition {
         pluginClazz);
 
     return new AutoValue_PluginDefinition(
-        pluginInfo.get(), targetServiceName, targetSoftware, isForWebService);
+        pluginInfo.get(),
+        targetServiceName,
+        targetSoftware,
+        isForWebService,
+        targetOperatingSystemClass);
   }
 
   /**
@@ -96,6 +105,10 @@ abstract class PluginDefinition {
    */
   public static PluginDefinition forRemotePlugin(PluginInfo remotePluginInfo) {
     return new AutoValue_PluginDefinition(
-        checkNotNull(remotePluginInfo), Optional.empty(), Optional.empty(), false);
+        checkNotNull(remotePluginInfo),
+        Optional.empty(),
+        Optional.empty(),
+        false,
+        Optional.empty());
   }
 }
