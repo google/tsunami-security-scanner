@@ -19,10 +19,10 @@ syntax = "proto3";
 
 package tsunami.proto;
 
-import "plugin_representation.proto";
 import "detection.proto";
-import "reconnaissance.proto";
 import "network_service.proto";
+import "plugin_representation.proto";
+import "reconnaissance.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "PluginServiceProtos";
@@ -36,6 +36,29 @@ message RunRequest {
   TargetInfo target = 1;
   // All matched plugins that will need to run.
   repeated MatchedPlugin plugins = 2;
+}
+
+// Compact representation of RunRequest.
+message RunCompactRequest {
+  // Target of the plugins.
+  TargetInfo target = 1;
+
+  // Indexes in the following structure point to the services/plugins defined
+  // below. (The order is safe, guaranteed by the proto specification: "The
+  // order of the elements with respect to each other is preserved when parsing,
+  // though the ordering with respect to other fields is lost.")
+  message PluginNetworkServiceTarget {
+    // The index of the plugin to run.
+    uint32 plugin_index = 1;
+    // The index of the network service to run against.
+    uint32 service_index = 2;
+  }
+  // All network services that are targeted by some of the plugins.
+  repeated NetworkService services = 2;
+  // All plugins that should be executed during the run.
+  repeated PluginDefinition plugins = 3;
+  // The concrete map of plugin/network service pairs that should be scanned.
+  repeated PluginNetworkServiceTarget scan_targets = 4;
 }
 
 // Represents the plugin needed to run by the language-specific server
@@ -60,13 +83,24 @@ message ListPluginsRequest {}
 // from the requested server.
 message ListPluginsResponse {
   repeated PluginDefinition plugins = 1;
+
+  // Plugin service can indicate here that it RunRequest should be compact
+  // (compact_targets should be populated instead of MatchedPlugin plugins).
+  bool want_compact_run_request = 2;
 }
 
 // Represents the plugin service, two RPCs for running plugins
 // and listing plugins, respectively.
 service PluginService {
-  // Performs a run request to run all language plugins specified by the request.
+  // Performs a run request to run all language plugins specified by the
+  // request.
   rpc Run(RunRequest) returns (RunResponse) {}
+  // Performs a run request to run all language plugins specified by the
+  // compact representation of the request. This is useful, when hundreds of
+  // plugins are to be run against many different NetworkServices.
+  // The language server must set `want_compact_run_request` so that the
+  // Tsunami CLI knows to invoke this method instead of `Run`.
+  rpc RunCompact(RunCompactRequest) returns (RunResponse) {}
   // Sends a request to list all plugins from the respective language server.
   rpc ListPlugins(ListPluginsRequest) returns (ListPluginsResponse) {}
 }

@@ -32,6 +32,7 @@ import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.PluginDefinition;
 import com.google.tsunami.proto.PluginInfo;
 import com.google.tsunami.proto.PluginServiceGrpc.PluginServiceImplBase;
+import com.google.tsunami.proto.RunCompactRequest;
 import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import com.google.tsunami.proto.TargetInfo;
@@ -172,6 +173,62 @@ public final class RemoteVulnDetectorImplTest {
         });
 
     assertThat(pluginToTest.getAllPlugins()).containsExactly(plugin);
+  }
+
+  @Test
+  public void getAllPlugins_withCompactRunRequest_callsRunCompact() throws Exception {
+    registerHealthCheckWithStatus(ServingStatus.SERVING);
+
+    var targetInfo =
+        TargetInfo.newBuilder()
+            .addNetworkEndpoints(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .build();
+    var someNetworkService = NetworkService.getDefaultInstance();
+    var expectedDetectionReport =
+        DetectionReport.newBuilder()
+            .setTargetInfo(targetInfo)
+            .setNetworkService(someNetworkService)
+            .build();
+
+    var plugin = createSinglePluginDefinitionWithName("test");
+    RemoteVulnDetector pluginToTest = getNewRemoteVulnDetectorInstance();
+    serviceRegistry.addService(
+        new PluginServiceImplBase() {
+          @Override
+          public void listPlugins(
+              ListPluginsRequest request, StreamObserver<ListPluginsResponse> responseObserver) {
+            responseObserver.onNext(
+                ListPluginsResponse.newBuilder()
+                    .setWantCompactRunRequest(true)
+                    .addPlugins(plugin)
+                    .build());
+            responseObserver.onCompleted();
+          }
+
+          @Override
+          public void run(RunRequest request, StreamObserver<RunResponse> responseObserver) {
+            responseObserver.onError(new Exception("run should not be called"));
+          }
+
+          @Override
+          public void runCompact(
+              RunCompactRequest request, StreamObserver<RunResponse> responseObserver) {
+            responseObserver.onNext(
+                RunResponse.newBuilder()
+                    .setReports(
+                        DetectionReportList.newBuilder()
+                            .addDetectionReports(expectedDetectionReport))
+                    .build());
+            responseObserver.onCompleted();
+          }
+        });
+
+    assertThat(pluginToTest.getAllPlugins()).containsExactly(plugin);
+    assertThat(
+            pluginToTest
+                .detect(targetInfo, ImmutableList.of(someNetworkService))
+                .getDetectionReportsList())
+        .containsExactly(expectedDetectionReport);
   }
 
   @Test

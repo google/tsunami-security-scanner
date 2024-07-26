@@ -24,12 +24,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.tsunami.common.server.CompactRunRequestHelper;
 import com.google.tsunami.proto.DetectionReportList;
 import com.google.tsunami.proto.ListPluginsRequest;
 import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.PluginDefinition;
 import com.google.tsunami.proto.RunRequest;
+import com.google.tsunami.proto.RunResponse;
 import com.google.tsunami.proto.TargetInfo;
 import io.grpc.Channel;
 import io.grpc.Deadline;
@@ -53,6 +55,7 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
   private final ExponentialBackOff backoff;
   private final int maxAttempts;
   private final Deadline deadline;
+  private boolean wantCompactRunRequest = false;
 
   RemoteVulnDetectorImpl(
       Channel channel, ExponentialBackOff backoff, int maxAttempts, Deadline deadline) {
@@ -68,13 +71,17 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
       TargetInfo target, ImmutableList<NetworkService> matchedServices) {
     try {
       if (checkHealthWithBackoffs()) {
+        var runRequest =
+            RunRequest.newBuilder().setTarget(target).addAllPlugins(pluginsToRun).build();
         logger.atInfo().log("Detecting with language server plugins...");
-        return service
-            .runWithDeadline(
-                RunRequest.newBuilder().setTarget(target).addAllPlugins(pluginsToRun).build(),
-                deadline)
-            .get()
-            .getReports();
+        RunResponse runResponse;
+        if (this.wantCompactRunRequest) {
+          var runCompactRequest = CompactRunRequestHelper.compress(runRequest);
+          runResponse = service.runCompactWithDeadline(runCompactRequest, deadline).get();
+        } else {
+          runResponse = service.runWithDeadline(runRequest, deadline).get();
+        }
+        return runResponse.getReports();
       }
     } catch (InterruptedException | ExecutionException e) {
       throw new LanguageServerException("Failed to get response from language server.", e);
@@ -87,11 +94,14 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
     try {
       if (checkHealthWithBackoffs()) {
         logger.atInfo().log("Getting language server plugins...");
-        return ImmutableList.copyOf(
+        var listPluginsResponse =
             service
                 .listPluginsWithDeadline(ListPluginsRequest.getDefaultInstance(), DEFAULT_DEADLINE)
-                .get()
-                .getPluginsList());
+                .get();
+        // Note: each plugin service client has a dedicated RemoteVulnDetectorImpl instance,
+        // so we can safely set this flag here.
+        this.wantCompactRunRequest = listPluginsResponse.getWantCompactRunRequest();
+        return ImmutableList.copyOf(listPluginsResponse.getPluginsList());
       } else {
         return ImmutableList.of();
       }

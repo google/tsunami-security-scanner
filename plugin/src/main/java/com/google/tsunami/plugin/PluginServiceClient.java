@@ -22,6 +22,7 @@ import com.google.tsunami.proto.ListPluginsRequest;
 import com.google.tsunami.proto.ListPluginsResponse;
 import com.google.tsunami.proto.PluginServiceGrpc;
 import com.google.tsunami.proto.PluginServiceGrpc.PluginServiceFutureStub;
+import com.google.tsunami.proto.RunCompactRequest;
 import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import io.grpc.Channel;
@@ -54,6 +55,18 @@ public final class PluginServiceClient {
    */
   public ListenableFuture<RunResponse> runWithDeadline(RunRequest request, Deadline deadline) {
     return pluginService.withDeadline(deadline).run(request);
+  }
+
+  /**
+   * Sends a runCompact request to the gRPC language server with a specified deadline.
+   *
+   * @param request The main request containing plugins to run.
+   * @param deadline The timeout of the service.
+   * @return The future of the run response.
+   */
+  public ListenableFuture<RunResponse> runCompactWithDeadline(
+      RunCompactRequest request, Deadline deadline) {
+    return pluginService.withDeadline(deadline).runCompact(request);
   }
 
   /**
