@@ -40,6 +40,40 @@ payloads:
     vulnerability_type:
       - REFLECTIVE_RCE
       - BLIND_RCE
+  - name: linux_root_crontab
+    # Write the crontab payload to /etc/cron.d/tsunami_rce_cron 
+    interpretation_environment: LINUX_ROOT_CRONTAB
+    execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
+    uses_callback_server: true
+    payload_string: "* * * * * root curl $TSUNAMI_PAYLOAD_TOKEN_URL \n"
+    vulnerability_type:
+      - ARBITRARY_FILE_WRITE
+  - name: linux_curl_trace_read
+    interpretation_environment: LINUX_SHELL
+    execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
+    uses_callback_server: false
+    payload_string: curl --trace /tmp/tsunami-rce -- tsunami-rce-$TSUNAMI_PAYLOAD_TOKEN_RANDOM
+    validation_type: VALIDATION_REGEX
+    validation_regex: (?s).*tsunami-rce-$TSUNAMI_PAYLOAD_TOKEN_RANDOM.*
+    vulnerability_type:
+      - BLIND_RCE_FILE_READ
+  - name: windows_callback
+    interpretation_environment: WINDOWS_SHELL
+    execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
+    uses_callback_server: true
+    payload_string: powershell -Command "Invoke-WebRequest -URI $TSUNAMI_PAYLOAD_TOKEN_URL"
+    vulnerability_type:
+      - REFLECTIVE_RCE
+      - BLIND_RCE  
+  - name: windows_echo
+    interpretation_environment: WINDOWS_SHELL
+    execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
+    uses_callback_server: false
+    payload_string: powershell -Command "echo TSUNAMI_PAYLOAD_START$(echo $TSUNAMI_PAYLOAD_TOKEN_RANDOM)TSUNAMI_PAYLOAD_END"
+    validation_type: VALIDATION_REGEX
+    validation_regex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
+    vulnerability_type:
+      - REFLECTIVE_RCE  
   - name: linux_printf
     interpretation_environment: LINUX_SHELL
     execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
