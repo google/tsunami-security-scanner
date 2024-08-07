@@ -184,7 +184,7 @@ public final class TsunamiCli {
 
       install(new SystemUtcClockModule());
       install(new CommandExecutorModule());
-      install(new HttpClientModule.Builder().setLogId(mco.logId).build());
+      install(new HttpClientModule.Builder().setLogId(mco.getLogId()).build());
       install(new GoogleCloudStorageArchiverModule());
       install(new ScanResultsArchiverModule());
       install(new PluginExecutionModule());
