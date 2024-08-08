@@ -31,7 +31,7 @@ public abstract class LanguageServerCommand {
       boolean trustAllSsl,
       Duration timeoutSeconds,
       String callbackAddress,
-      Integer callbackPort,
+      int callbackPort,
       String pollingUri,
       int deadlineRunSeconds) {
     return new AutoValue_LanguageServerCommand(
@@ -64,7 +64,7 @@ public abstract class LanguageServerCommand {
 
   public abstract String callbackAddress();
 
-  public abstract Integer callbackPort();
+  public abstract int callbackPort();
 
   public abstract String pollingUri();
 
