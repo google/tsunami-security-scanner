@@ -57,6 +57,30 @@ public final class PayloadGeneratorWithCallbackServerTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
+  private static final PayloadGeneratorConfig LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.ARBITRARY_FILE_WRITE)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.LINUX_ROOT_CRONTAB)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();
+  private static final PayloadGeneratorConfig LINUX_BLIND_RCE_FILE_READ_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.BLIND_RCE_FILE_READ)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.LINUX_SHELL)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();
+  private static final PayloadGeneratorConfig WINDOWS_REFLECTIVE_RCE_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
+          .setInterpretationEnvironment(
+              PayloadGeneratorConfig.InterpretationEnvironment.WINDOWS_SHELL)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();
   private static final PayloadGeneratorConfig ANY_SSRF_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.SSRF)
@@ -66,6 +90,11 @@ public final class PayloadGeneratorWithCallbackServerTest {
           .build();
   private static final String CORRECT_PRINTF =
       "printf %s%s%s TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END";
+  private static final String CORRECT_CURL_TRACE =
+      "curl --trace /tmp/tsunami-rce -- tsunami-rce-ffffffffffffffff";
+  private static final String CORRECT_WINDOWS_ECHO =
+      "powershell -Command \"echo TSUNAMI_PAYLOAD_START$(echo"
+          + " ffffffffffffffff)TSUNAMI_PAYLOAD_END\"";
 
   @Before
   public void setUp() throws IOException {
@@ -118,6 +147,70 @@ public final class PayloadGeneratorWithCallbackServerTest {
 
     mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
     Payload payload = payloadGenerator.generate(LINUX_REFLECTIVE_RCE_CONFIG);
+
+    assertFalse(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void generate_withCrontabConfiguration_returnsCronCurlPayload() {
+    Payload payload = payloadGenerator.generate(LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG);
+
+    assertThat(payload.getPayload()).contains("* * * * * root curl");
+    assertThat(payload.getPayload()).contains(mockCallbackServer.getHostName());
+    assertThat(payload.getPayload()).contains(Integer.toString(mockCallbackServer.getPort(), 10));
+    assertTrue(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void checkIfExecuted_withCrontabConfiguration_andExecutedCallbackUrl_returnsTrue()
+      throws IOException {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockSuccessfulCallbackResponse());
+    Payload payload = payloadGenerator.generate(LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG);
+
+    assertTrue(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void checkIfExecuted_withCrontabConfiguration_andNotExecutedCallbackUrl_returnsFalse() {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
+    Payload payload = payloadGenerator.generate(LINUX_ARBITRARY_FILE_WRITE_CRON_CONFIG);
+
+    assertFalse(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void generate_withCurlTraceConfiguration_returnsCurlTracePayload() {
+    Payload payload = payloadGenerator.generateNoCallback(LINUX_BLIND_RCE_FILE_READ_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_CURL_TRACE);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void generate_withWindowsConfiguration_returnsEchoPayload() {
+    Payload payload = payloadGenerator.generateNoCallback(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload()).isEqualTo(CORRECT_WINDOWS_ECHO);
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void checkIfExecuted_withWindowsConfiguration_andExecutedCallbackUrl_returnsTrue()
+      throws IOException {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockSuccessfulCallbackResponse());
+    Payload payload = payloadGenerator.generate(WINDOWS_REFLECTIVE_RCE_CONFIG);
+
+    assertTrue(payload.checkIfExecuted());
+  }
+
+  @Test
+  public void checkIfExecuted_withWindowsConfiguration_andNotExecutedCallbackUrl_returnsFalse() {
+
+    mockCallbackServer.enqueue(PayloadTestHelper.generateMockUnsuccessfulCallbackResponse());
+    Payload payload = payloadGenerator.generate(WINDOWS_REFLECTIVE_RCE_CONFIG);
 
     assertFalse(payload.checkIfExecuted());
   }
