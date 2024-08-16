@@ -172,7 +172,12 @@ public final class NetworkServiceUtils {
    */
   public static String buildWebApplicationRootUrl(NetworkService networkService) {
     checkNotNull(networkService);
-    checkArgument(isWebService(networkService));
+
+    if (!isWebService(networkService)) {
+      return "http://"
+          + NetworkEndpointUtils.toUriAuthority(networkService.getNetworkEndpoint())
+          + "/";
+    }
 
     String rootUrl =
         (isPlainHttp(networkService) ? "http://" : "https://")

@@ -357,6 +357,17 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void buildWebApplicationRootUrl_whenNotWebService_returnsHttpUrl() {
+    assertThat(
+        NetworkServiceUtils.buildWebApplicationRootUrl(
+            NetworkService.newBuilder()
+                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 2121))
+                .setServiceName("unknown")
+                .build()))
+        .isEqualTo("http://127.0.0.1:2121/");
+  }
+
+  @Test
   public void buildUriNetworkService_returnsNetworkService() throws IOException {
 
     URL url = new URL("https://localhost/function1");
