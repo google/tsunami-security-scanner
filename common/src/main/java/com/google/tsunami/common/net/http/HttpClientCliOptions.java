@@ -27,6 +27,7 @@ public final class HttpClientCliOptions implements CliOption {
 
   @Parameter(
       names = "--http-client-trust-all-certificates",
+      arity = 1,
       description = "Whether the HTTP client should trust all certificates on HTTPS traffic.")
   public Boolean trustAllCertificates;
 

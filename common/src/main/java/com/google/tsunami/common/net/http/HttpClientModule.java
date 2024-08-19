@@ -171,7 +171,7 @@ public final class HttpClientModule extends AbstractModule {
     if (httpClientConfigProperties.trustAllCertificates != null) {
       return httpClientConfigProperties.trustAllCertificates;
     }
-    return false;
+    return true;
   }
 
   @Provides

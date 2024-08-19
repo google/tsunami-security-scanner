@@ -375,12 +375,6 @@ final class OkHttpHttpClient extends HttpClient {
     }
 
     @Override
-    public OkHttpHttpClientBuilder setTrustAllCertificates(boolean trustAllCertificates) {
-      this.trustAllCertificates = trustAllCertificates;
-      return this;
-    }
-
-    @Override
     public OkHttpHttpClientBuilder setLogId(String logId) {
       this.logId = logId;
       return this;

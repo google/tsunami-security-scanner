@@ -93,8 +93,6 @@ public abstract class HttpClient {
 
     public abstract Builder<T> setFollowRedirects(boolean followRedirects);
 
-    public abstract Builder<T> setTrustAllCertificates(boolean trustAllCertificates);
-
     public abstract Builder<T> setLogId(String logId);
 
     public abstract Builder<T> setConnectTimeout(Duration connectionTimeout);
