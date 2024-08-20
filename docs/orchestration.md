@@ -2,12 +2,10 @@
 
 ## Overview
 
-As of today, Tsunami follows a hardcoded 2-step process when scanning a publicly
-exposed network endpoint (see
-[Future Work](future_work.md#dynamic_orchestration) on the potential
-improvement on the workflow):
+Tsunami follows a hardcoded 2-step process when scanning a publicly
+exposed network endpoint:
 
-*   **Reconnaissance**: In the first step, Tsunami identifies open ports and
+*   **Reconnaissance**: First, Tsunami identifies open ports and
     subsequently fingerprints protocols, services and other software running on
     the target host via a set of fingerprinting plugins. To not reinvent the
     wheel, Tsunami leverages existing tools such as [nmap](https://nmap.org/)
@@ -21,7 +19,7 @@ improvement on the workflow):
 
 Following diagram shows the overall workflow for a Tsunami scan.
 
-![orchestration](img/orchestration.svg)
+![orchestration](/docs/img/orchestration.svg)
 
 ## Reconnaissance
 
@@ -47,8 +45,8 @@ purpose. This allows users to swap the port scanning implementations. To not
 reinvent the wheel, users could choose a Tsunami plugin wrapper around existing
 tools like [nmap](https://nmap.org/) or
 [masscan](https://github.com/robertdavidgraham/masscan). You may find useful
-`PortScanner` implementations can be found in
-[tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins)
+`PortScanner` implementations in
+[tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins/tree/master/google/portscan)
 repo.
 
 ### Fingerprinting Phase
@@ -67,9 +65,14 @@ required to identify these applications.
 `ServiceFingerprinter` is a special type of Tsunami plugin that allows users to
 define fingerprinters for a specific network service. By using filtering
 annotations (see
-[how to apply my plugins to certain types of services / software?](howto.md#filter_plugins)),
+[how to apply my plugins to certain types of services / software?](/docs/howto.md#filter_plugins)),
 Tsunami will be able to automatically invoke appropriate `ServiceFingerprinter`s
 when it identifies matching network services.
+
+Tsunami only performs service fingerprinting for web services,
+using the
+[`WebServiceFingerprinter`](https://github.com/google/tsunami-security-scanner-plugins/blob/71c57f6bc151a3d97675d74c904a175172c77df4/google/fingerprinters/web/src/main/java/com/google/tsunami/plugins/fingerprinters/web/WebServiceFingerprinter.java)
+plugin.
 
 ### Reconnaissance Report
 
@@ -85,16 +88,14 @@ on the information gathered in the Reconnaissance step. `VulnDetector`'s
 detection logic could either be implemented as plain Java code, or as a separate
 binary / script using a different language like python or go. External binaries
 and scripts have to be executed as separate processes outside of Tsunami using
-Tsunami's command execution util. See
-[Future Work](future_work.md#multi_lang_plugins) for our design ideas of
-making Tsunami plugins language agnostic.
+Tsunami's command execution util.
 
 ### Detector Selection
 
 Usually one `VulnDetector` only verifies one vulnerability and the vulnerability
 often only affects one type of network service or software. In order to avoid
 doing wasteful work, Tsunami allows plugins to be annotated by some filtering
-annotations (see [how-to guide](howto.md#filter_plugins) for details) to limit
+annotations (see [how-to guide](/docs/howto.md#filter_plugins) for details) to limit
 the scope of the plugin.
 
 Then before the Vulnerability Verification step starts, Tsunami will select
