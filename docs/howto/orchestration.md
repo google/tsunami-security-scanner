@@ -64,10 +64,8 @@ required to identify these applications.
 
 `ServiceFingerprinter` is a special type of Tsunami plugin that allows users to
 define fingerprinters for a specific network service. By using filtering
-annotations (see
-[how to apply my plugins to certain types of services / software?](/docs/howto.md#filter_plugins)),
-Tsunami will be able to automatically invoke appropriate `ServiceFingerprinter`s
-when it identifies matching network services.
+annotations, Tsunami will be able to automatically invoke appropriate
+`ServiceFingerprinter`s when it identifies matching network services.
 
 Tsunami only performs service fingerprinting for web services,
 using the
@@ -95,8 +93,7 @@ Tsunami's command execution util.
 Usually one `VulnDetector` only verifies one vulnerability and the vulnerability
 often only affects one type of network service or software. In order to avoid
 doing wasteful work, Tsunami allows plugins to be annotated by some filtering
-annotations (see [how-to guide](/docs/howto.md#filter_plugins) for details) to limit
-the scope of the plugin.
+annotations to limit the scope of the plugin.
 
 Then before the Vulnerability Verification step starts, Tsunami will select
 matching `VulnDetector`s to run based on the exposed network services and
