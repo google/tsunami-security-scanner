@@ -1,0 +1,28 @@
+---
+title: Posts
+layout: default
+---
+
+{% for post in paginator.posts %}
+  <h1><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h1>
+  <h3 class="author">
+    Posted on <span class="date">{{ post.date | date_to_long_string: "ordinal" }}</span>
+  </h3>
+  <div class="content">
+    {{ post.excerpt }}
+  </div>
+{% endfor %}
+
+<div class="pagination">
+  {% if paginator.previous_page %}
+    <a href="{{ paginator.previous_page_path | relative_url }}">
+      Previous
+    </a> ::
+  {% endif %}
+  <span class="page_number ">
+    {{ paginator.page }} of {{ paginator.total_pages }}
+  </span>
+  {% if paginator.next_page %}
+    :: <a href="{{ paginator.next_page_path | relative_url }}">Next</a>
+  {% endif %}
+</div>

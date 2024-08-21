@@ -1,0 +1,11 @@
+{% for nav in site.data.nav %}
+  {% if nav.subcategories != null %}
+    {% for subcategory in nav.subcategories %}
+      <a class="btn" href="{{ subcategory.path | relative_url }}">{{ subcategory.title }}</a>
+    {% endfor %}
+  {% elsif nav.title == page.title %}
+    <a class="btn" href="{{ nav.path | relative_url }}">{{ nav.title }}</a>
+  {% else %}
+    <a class="btn" href="{{ nav.path | relative_url }}">{{ nav.title }}</a>
+  {% endif %}
+{% endfor %}

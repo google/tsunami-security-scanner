@@ -1,0 +1,8 @@
+remote_theme: pages-themes/cayman@v0.2.0
+url: https://google.github.io
+baseurl: /tsunami-security-scanner
+paginate: 5
+paginate_path: "/blog/page:num/"
+plugins:
+- jekyll-remote-theme
+- jekyll-paginate

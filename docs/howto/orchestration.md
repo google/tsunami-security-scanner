@@ -19,7 +19,7 @@ exposed network endpoint:
 
 Following diagram shows the overall workflow for a Tsunami scan.
 
-![orchestration](/docs/img/orchestration.svg)
+![orchestration](img/orchestration.svg)
 
 ## Reconnaissance
 

@@ -1,0 +1,14 @@
+- title: "What's new"
+  path: /
+
+- title: "All articles"
+  path: /blog/
+
+- title: "Documentation"
+  path: /howto/
+
+- title: "Contributing"
+  path: /contribute/
+
+- title: "About Tsunami"
+  path: /about/

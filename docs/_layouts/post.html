@@ -1,0 +1,11 @@
+---
+layout: default
+---
+<h3>
+  Posted on {{ page.date | date_to_long_string: "ordinal" }}  by
+  {% for author in page.authors %}
+    {{ author.name }}
+  {% endfor %}
+</h3>
+
+{{ content }}

@@ -1,0 +1,13 @@
+---
+---
+
+@import '{{ site.theme }}';
+
+.pagination {
+  text-align: center;
+  background-color: #eee;
+  border-radius: 0.3rem;
+  padding: 3px;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}

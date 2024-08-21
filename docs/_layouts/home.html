@@ -1,0 +1,5 @@
+---
+layout: none
+---
+
+{{ site.posts.first }}
