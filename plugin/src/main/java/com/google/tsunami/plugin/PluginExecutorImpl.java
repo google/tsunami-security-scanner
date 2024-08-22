@@ -70,6 +70,10 @@ class PluginExecutorImpl implements PluginExecutor {
     if (executionStopwatch.isRunning()) {
       executionStopwatch.stop();
     }
+    logger.atInfo().log(
+        "%s plugin execution finished in %d (ms)",
+        executorConfig.matchedPlugin().pluginDefinition().pluginInfo().name(),
+        executionStopwatch.elapsed().toMillis());
     return PluginExecutionResult.<T>builder()
         .setExecutionStatus(ExecutionStatus.SUCCEEDED)
         .setResultData(resultData)
