@@ -15,6 +15,7 @@
  */
 package com.google.tsunami.plugin;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.tsunami.common.data.NetworkServiceUtils.isWebService;
 import static java.util.Arrays.stream;
@@ -41,10 +42,13 @@ import javax.inject.Provider;
  */
 public class PluginManager {
   private final Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins;
+  private final TcsClient tcsClient;
 
   @Inject
-  PluginManager(Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins) {
+  PluginManager(
+      Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins, TcsClient tcsClient) {
     this.tsunamiPlugins = tsunamiPlugins;
+    this.tcsClient = checkNotNull(tcsClient);
   }
 
   /**
@@ -100,6 +104,7 @@ public class PluginManager {
       ReconnaissanceReport reconnaissanceReport) {
     return tsunamiPlugins.entrySet().stream()
         .filter(entry -> isVulnDetector(entry.getKey()))
+        .filter(entry -> matchCurrentCallbackServerSetup(entry.getKey()))
         .map(entry -> matchAllVulnDetectors(entry.getKey(), entry.getValue(), reconnaissanceReport))
         .flatMap(Streams::stream)
         .collect(toImmutableList());
@@ -108,6 +113,14 @@ public class PluginManager {
   private static boolean isVulnDetector(PluginDefinition pluginDefinition) {
     return pluginDefinition.type().equals(PluginType.VULN_DETECTION)
         || pluginDefinition.type().equals(PluginType.REMOTE_VULN_DETECTION);
+  }
+
+  private boolean matchCurrentCallbackServerSetup(PluginDefinition pluginDefinition) {
+    if (tcsClient.isCallbackServerEnabled()) {
+      return true;
+    }
+
+    return !pluginDefinition.requiresCallbackServer();
   }
 
   private static Optional<PluginMatchingResult<VulnDetector>> matchAllVulnDetectors(
@@ -310,13 +323,16 @@ public class PluginManager {
     @AutoValue.Builder
     public abstract static class Builder<T extends TsunamiPlugin> {
       public abstract Builder<T> setPluginDefinition(PluginDefinition value);
+
       public abstract Builder<T> setTsunamiPlugin(T value);
 
       abstract ImmutableList.Builder<NetworkService> matchedServicesBuilder();
+
       public Builder<T> addMatchedService(NetworkService networkService) {
         matchedServicesBuilder().add(networkService);
         return this;
       }
+
       public Builder<T> addAllMatchedServices(Iterable<NetworkService> networkServices) {
         matchedServicesBuilder().addAll(networkServices);
         return this;

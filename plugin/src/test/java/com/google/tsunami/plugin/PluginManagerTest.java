@@ -24,12 +24,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
+import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
 import com.google.tsunami.plugin.annotations.ForOperatingSystemClass;
 import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
 import com.google.tsunami.plugin.annotations.ForWebService;
 import com.google.tsunami.plugin.annotations.PluginInfo;
+import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
 import com.google.tsunami.plugin.testing.FakePortScanner2;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule;
@@ -52,6 +54,7 @@ import com.google.tsunami.proto.TargetOperatingSystemClass;
 import com.google.tsunami.proto.TargetServiceName;
 import com.google.tsunami.proto.TargetSoftware;
 import com.google.tsunami.proto.TransportProtocol;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
@@ -66,6 +69,8 @@ public class PluginManagerTest {
   public void getPortScanners_whenMultiplePortScannersInstalled_returnsAllPortScanners() {
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakePortScannerBootstrapModule2(),
                 new FakeServiceFingerprinterBootstrapModule(),
@@ -84,6 +89,8 @@ public class PluginManagerTest {
   public void getPortScanners_whenNoPortScannersInstalled_returnsEmptyList() {
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakeServiceFingerprinterBootstrapModule(),
                 new FakeVulnDetectorBootstrapModule())
             .getInstance(PluginManager.class);
@@ -95,6 +102,8 @@ public class PluginManagerTest {
   public void getPortScanner_whenMultiplePortScannersInstalled_returnsTheFirstMatchedPortScanner() {
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakePortScannerBootstrapModule2(),
                 new FakeServiceFingerprinterBootstrapModule(),
@@ -117,6 +126,8 @@ public class PluginManagerTest {
   public void getPortScanner_whenNoPortScannersInstalled_returnsEmptyOptional() {
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakeServiceFingerprinterBootstrapModule(),
                 new FakeVulnDetectorBootstrapModule())
             .getInstance(PluginManager.class);
@@ -134,7 +145,10 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
-                new FakePortScannerBootstrapModule(), NoAnnotationFingerprinter.getModule())
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                NoAnnotationFingerprinter.getModule())
             .getInstance(PluginManager.class);
 
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
@@ -153,7 +167,10 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
-                new FakePortScannerBootstrapModule(), new FakeServiceFingerprinterBootstrapModule())
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule())
             .getInstance(PluginManager.class);
 
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
@@ -173,7 +190,10 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
-                new FakePortScannerBootstrapModule(), new FakeServiceFingerprinterBootstrapModule())
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule())
             .getInstance(PluginManager.class);
 
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
@@ -197,7 +217,11 @@ public class PluginManagerTest {
             .setServiceName("https")
             .build();
     PluginManager pluginManager =
-        Guice.createInjector(new FakePortScannerBootstrapModule(), FakeWebFingerprinter.getModule())
+        Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                FakeWebFingerprinter.getModule())
             .getInstance(PluginManager.class);
 
     Optional<PluginMatchingResult<ServiceFingerprinter>> fingerprinter =
@@ -225,7 +249,11 @@ public class PluginManagerTest {
             .setServiceName("rdp")
             .build();
     PluginManager pluginManager =
-        Guice.createInjector(new FakePortScannerBootstrapModule(), FakeWebFingerprinter.getModule())
+        Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                FakeWebFingerprinter.getModule())
             .getInstance(PluginManager.class);
 
     assertThat(pluginManager.getServiceFingerprinter(sshService)).isEmpty();
@@ -255,6 +283,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 new FakeVulnDetectorBootstrapModule(),
@@ -302,6 +332,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeServiceNameFilteringDetector.getModule())
@@ -331,6 +363,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeServiceNameFilteringDetector.getModule())
@@ -372,6 +406,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeSoftwareFilteringDetector.getModule())
@@ -417,6 +453,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeOsFilteringDetector.getModule())
@@ -465,6 +503,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeOsFilteringDetector.getModule())
@@ -517,6 +557,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeOsServiceFilteringDetector.getModule())
@@ -550,6 +592,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeSoftwareFilteringDetector.getModule())
@@ -583,7 +627,10 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
-                new FakePortScannerBootstrapModule(), new FakeServiceFingerprinterBootstrapModule())
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
+                new FakePortScannerBootstrapModule(),
+                new FakeServiceFingerprinterBootstrapModule())
             .getInstance(PluginManager.class);
 
     assertThat(pluginManager.getVulnDetectors(fakeReconnaissanceReport)).isEmpty();
@@ -613,6 +660,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakeServiceFingerprinterBootstrapModule(),
                 new FakeRemoteVulnDetectorLoadingModule(2))
             .getInstance(PluginManager.class);
@@ -655,6 +704,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeFilteringRemoteDetector.getModule())
@@ -687,6 +738,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeFilteringRemoteDetector.getModule())
@@ -732,6 +785,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeFilteringRemoteDetector.getModule())
@@ -801,6 +856,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeFilteringRemoteDetector.getModule())
@@ -858,6 +915,8 @@ public class PluginManagerTest {
             .build();
     PluginManager pluginManager =
         Guice.createInjector(
+                new HttpClientModule.Builder().build(),
+                new PayloadGeneratorModule(new SecureRandom()),
                 new FakePortScannerBootstrapModule(),
                 new FakeServiceFingerprinterBootstrapModule(),
                 FakeFilteringRemoteDetector.getModule())

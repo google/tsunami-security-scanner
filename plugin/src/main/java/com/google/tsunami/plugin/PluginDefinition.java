@@ -25,6 +25,7 @@ import com.google.tsunami.plugin.annotations.ForServiceName;
 import com.google.tsunami.plugin.annotations.ForSoftware;
 import com.google.tsunami.plugin.annotations.ForWebService;
 import com.google.tsunami.plugin.annotations.PluginInfo;
+import com.google.tsunami.plugin.annotations.RequiresCallbackServer;
 import java.util.Optional;
 
 /** A data class that captures all the definition details about a {@link TsunamiPlugin}. */
@@ -39,6 +40,8 @@ abstract class PluginDefinition {
   abstract boolean isForWebService();
 
   abstract Optional<ForOperatingSystemClass> targetOperatingSystemClass();
+
+  abstract boolean requiresCallbackServer();
 
   /**
    * Unique identifier for the plugin.
@@ -82,6 +85,7 @@ abstract class PluginDefinition {
     boolean isForWebService = pluginClazz.isAnnotationPresent(ForWebService.class);
     Optional<ForOperatingSystemClass> targetOperatingSystemClass =
         Optional.ofNullable(pluginClazz.getAnnotation(ForOperatingSystemClass.class));
+    boolean requiresCallbackServer = pluginClazz.isAnnotationPresent(RequiresCallbackServer.class);
 
     checkState(
         pluginInfo.isPresent(),
@@ -93,7 +97,8 @@ abstract class PluginDefinition {
         targetServiceName,
         targetSoftware,
         isForWebService,
-        targetOperatingSystemClass);
+        targetOperatingSystemClass,
+        requiresCallbackServer);
   }
 
   /**
@@ -109,6 +114,7 @@ abstract class PluginDefinition {
         Optional.empty(),
         Optional.empty(),
         false,
-        Optional.empty());
+        Optional.empty(),
+        false);
   }
 }

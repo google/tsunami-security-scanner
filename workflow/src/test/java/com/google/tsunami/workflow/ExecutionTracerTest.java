@@ -23,10 +23,12 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.testing.FakeTicker;
 import com.google.inject.Guice;
+import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.PluginManager;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
 import com.google.tsunami.plugin.PortScanner;
 import com.google.tsunami.plugin.VulnDetector;
+import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeServiceFingerprinterBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule;
@@ -36,6 +38,7 @@ import com.google.tsunami.proto.ReconnaissanceReport;
 import com.google.tsunami.proto.ScanFinding;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.TransportProtocol;
+import java.security.SecureRandom;
 import java.time.Duration;
 import javax.inject.Inject;
 import org.junit.Before;
@@ -57,6 +60,8 @@ public final class ExecutionTracerTest {
   @Before
   public void setUp() {
     Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakePortScannerBootstrapModule(),
             new FakePortScannerBootstrapModule(),
             new FakeServiceFingerprinterBootstrapModule(),

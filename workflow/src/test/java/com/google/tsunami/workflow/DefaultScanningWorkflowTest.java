@@ -23,7 +23,9 @@ import static org.junit.Assert.assertThrows;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
+import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.plugin.testing.FailedPortScannerBootstrapModule;
 import com.google.tsunami.plugin.testing.FailedRemoteVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FailedServiceFingerprinterBootstrapModule;
@@ -43,6 +45,7 @@ import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule2;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.ScanStatus;
 import com.google.tsunami.proto.ScanTarget;
+import java.security.SecureRandom;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import org.junit.Before;
@@ -58,6 +61,8 @@ public final class DefaultScanningWorkflowTest {
   @Before
   public void setUp() {
     Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -140,6 +145,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakeServiceFingerprinterBootstrapModule(),
@@ -159,6 +166,8 @@ public final class DefaultScanningWorkflowTest {
       throws InterruptedException, ExecutionException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -187,6 +196,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FailedPortScannerBootstrapModule(),
@@ -207,6 +218,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -228,6 +241,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -250,6 +265,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -276,6 +293,8 @@ public final class DefaultScanningWorkflowTest {
       throws ExecutionException, InterruptedException {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakePortScannerBootstrapModule(),
@@ -295,6 +314,8 @@ public final class DefaultScanningWorkflowTest {
   public void run_whenNullScanTarget_throwsNullPointerException() {
     Injector injector =
         Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
             new FakeUtcClockModule(),
             new FakePluginExecutionModule(),
             new FakeServiceFingerprinterBootstrapModule(),

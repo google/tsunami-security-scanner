@@ -27,8 +27,10 @@ import com.google.tsunami.common.cli.CliOptionsModule;
 import com.google.tsunami.common.config.ConfigModule;
 import com.google.tsunami.common.config.TsunamiConfig;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
+import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.common.time.testing.FakeUtcClockModule;
 import com.google.tsunami.main.cli.server.RemoteServerLoaderModule;
+import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.plugin.testing.FailedVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePluginExecutionModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
@@ -62,6 +64,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -98,6 +101,8 @@ public final class TsunamiCliTest {
                 @Override
                 protected void configure() {
                   bind(ScanResultsArchiver.class).toInstance(scanResultsArchiver);
+                  install(new HttpClientModule.Builder().build());
+                  install(new PayloadGeneratorModule(new SecureRandom()));
                   install(new ConfigModule(scanResult, TsunamiConfig.fromYamlData(rawConfigData)));
                   install(new CliOptionsModule(scanResult, "TsunamiCliTest", args));
                   install(new FakeUtcClockModule());
@@ -271,6 +276,8 @@ public final class TsunamiCliTest {
                 @Override
                 protected void configure() {
                   bind(ScanResultsArchiver.class).toInstance(scanResultsArchiver);
+                  install(new HttpClientModule.Builder().build());
+                  install(new PayloadGeneratorModule(new SecureRandom()));
                   install(
                       new ConfigModule(scanResult, TsunamiConfig.fromYamlData(ImmutableMap.of())));
                   install(
