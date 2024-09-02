@@ -17,7 +17,6 @@ package com.google.tsunami.plugin;
 
 import com.google.inject.AbstractModule;
 import com.google.tsunami.common.concurrent.ScheduledThreadPoolModule;
-import java.time.Duration;
 
 /** Installs dependencies used for plugin executions. */
 public final class PluginExecutionModule extends AbstractModule {
@@ -31,7 +30,6 @@ public final class PluginExecutionModule extends AbstractModule {
             .setName("PluginExecution")
             .setSize(16)
             .setDaemon(true)
-            .setDelayedShutdown(Duration.ofMinutes(1))
             .setPriority(Thread.NORM_PRIORITY)
             .setAnnotation(PluginExecutionThreadPool.class)
             .build());

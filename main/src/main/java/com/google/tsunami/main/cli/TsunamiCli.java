@@ -305,6 +305,7 @@ public final class TsunamiCli {
         System.exit(1);
       }
       logger.atInfo().log("Full Tsunami scan took %s.", stopwatch.stop());
+      System.exit(0);
     } catch (Throwable e) {
       logger.atSevere().withCause(e).log("Exiting due to workflow execution exceptions.");
       if (e instanceof InterruptedException) {

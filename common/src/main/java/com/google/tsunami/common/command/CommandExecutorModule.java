@@ -17,7 +17,6 @@ package com.google.tsunami.common.command;
 
 import com.google.inject.AbstractModule;
 import com.google.tsunami.common.concurrent.ThreadPoolModule;
-import java.time.Duration;
 
 /** Installs dependencies used by {@link CommandExecutor}. */
 public class CommandExecutorModule extends AbstractModule {
@@ -31,7 +30,6 @@ public class CommandExecutorModule extends AbstractModule {
             .setMaxSize(8)
             .setQueueCapacity(32)
             .setDaemon(true)
-            .setDelayedShutdown(Duration.ofMinutes(1))
             .setPriority(Thread.NORM_PRIORITY)
             .setAnnotation(CommandExecutionThreadPool.class)
             .build());
