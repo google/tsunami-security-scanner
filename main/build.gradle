@@ -14,6 +14,7 @@ dependencies {
     compile deps.flogger_google_ext
     compile deps.guava
     compile deps.jsoup
+    compile deps.libajp
     compile deps.grpc_netty
     runtime deps.jaxb_runtime
 
