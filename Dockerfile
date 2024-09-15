@@ -42,5 +42,5 @@ WORKDIR /usr/tsunami
 
 COPY --from=0 /usr/tsunami /usr/tsunami
 
-ENTRYPOINT ["java", "-cp", "tsunami.jar:plugins/*", "-Dtsunami-config.location=tsunami.yaml", "com.google.tsunami.main.cli.TsunamiCli"]
+ENTRYPOINT ["java", "-cp", "tsunami.jar:plugins/*", "-Dtsunami.config.location=tsunami.yaml", "com.google.tsunami.main.cli.TsunamiCli"]
 CMD ["--ip-v4-target=127.0.0.1", "--scan-results-local-output-format=JSON", "--scan-results-local-output-filename=logs/tsunami-output.json"]
