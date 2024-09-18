@@ -77,7 +77,7 @@ public final class TsunamiConfig {
   }
 
   @SuppressWarnings("unchecked") // We know Map key is always String from yaml file.
-  private ImmutableMap<String, Object> readConfigValue(String configPrefix) {
+  public ImmutableMap<String, Object> readConfigValue(String configPrefix) {
     Map<String, Object> retrievedData = rawConfigData;
 
     // Config prefixes are dot separated words list, e.g. example.config.prefix.

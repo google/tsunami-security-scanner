@@ -63,7 +63,7 @@ popd >/dev/null
 printf "\nBuild successful, execute the following command to scan 127.0.0.1:\n"
 printf "\ncd ${WD} && \\\\\n"
 printf "java -cp \"${JAR_FILENAME}:${WD}/plugins/*\" \\\\\n"
-printf "  -Dtsunami-config.location=${WD}/tsunami.yaml \\\\\n"
+printf "  -Dtsunami.config.location=${WD}/tsunami.yaml \\\\\n"
 printf "  com.google.tsunami.main.cli.TsunamiCli \\\\\n"
 printf "  --ip-v4-target=127.0.0.1 \\\\\n"
 printf "  --scan-results-local-output-format=JSON \\\\\n"
