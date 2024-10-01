@@ -13,11 +13,11 @@
 # limitations under the License.
 """Tests for plugin_service."""
 
+import ipaddress
 import time
 
 from absl.testing import absltest
 import grpc_testing
-import ipaddr
 
 from google3.google.protobuf import timestamp_pb2
 import plugin_service
@@ -140,7 +140,7 @@ def _build_network_endpoint(ip: str, port: int) -> _NetworkEndpoint:
 
 
 def _get_address_family(ip: str) -> _AddressFamily:
-  inet_addr = ipaddr.IPAddress(ip)
+  inet_addr = ipaddress.ip_address(ip)
   if inet_addr.version == 4:
     return _AddressFamily.IPV4
   elif inet_addr.version == 6:
