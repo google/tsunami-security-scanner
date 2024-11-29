@@ -47,7 +47,10 @@ public class PluginDefinitionTest {
     PluginInfo pluginInfo = FakeRemoteVulnDetector.class.getAnnotation(PluginInfo.class);
     PluginDefinition pluginDefinition = PluginDefinition.forRemotePlugin(pluginInfo);
 
-    assertThat(pluginDefinition.pluginInfo()).isEqualTo(pluginInfo);
+    assertThat(pluginDefinition.type()).isEqualTo(pluginInfo.type());
+    assertThat(pluginDefinition.name()).isEqualTo(pluginInfo.name());
+    assertThat(pluginDefinition.author()).isEqualTo(pluginInfo.author());
+    assertThat(pluginDefinition.version()).isEqualTo(pluginInfo.version());
     assertThat(pluginDefinition.id())
         .isEqualTo("/fake/REMOTE_VULN_DETECTION/FakeRemoteVulnDetector/v0.1");
   }

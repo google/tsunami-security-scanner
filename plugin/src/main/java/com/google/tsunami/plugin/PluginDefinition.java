@@ -31,7 +31,13 @@ import java.util.Optional;
 /** A data class that captures all the definition details about a {@link TsunamiPlugin}. */
 @AutoValue
 abstract class PluginDefinition {
-  abstract PluginInfo pluginInfo();
+  abstract PluginType type();
+
+  abstract String name();
+
+  abstract String author();
+
+  abstract String version();
 
   abstract Optional<ForServiceName> targetServiceName();
 
@@ -51,22 +57,6 @@ abstract class PluginDefinition {
   @Memoized
   public String id() {
     return String.format("/%s/%s/%s/%s", author(), type(), name(), version());
-  }
-
-  public PluginType type() {
-    return pluginInfo().type();
-  }
-
-  public String name() {
-    return pluginInfo().name();
-  }
-
-  public String author() {
-    return pluginInfo().author();
-  }
-
-  public String version() {
-    return pluginInfo().version();
   }
 
   /**
@@ -93,7 +83,10 @@ abstract class PluginDefinition {
         pluginClazz);
 
     return new AutoValue_PluginDefinition(
-        pluginInfo.get(),
+        pluginInfo.get().type(),
+        pluginInfo.get().name(),
+        pluginInfo.get().author(),
+        pluginInfo.get().version(),
         targetServiceName,
         targetSoftware,
         isForWebService,
@@ -109,12 +102,46 @@ abstract class PluginDefinition {
    * @return a {@link PluginDefinition} built from the plugin info.
    */
   public static PluginDefinition forRemotePlugin(PluginInfo remotePluginInfo) {
+    checkNotNull(remotePluginInfo);
     return new AutoValue_PluginDefinition(
-        checkNotNull(remotePluginInfo),
+        remotePluginInfo.type(),
+        remotePluginInfo.name(),
+        remotePluginInfo.author(),
+        remotePluginInfo.version(),
         Optional.empty(),
         Optional.empty(),
         false,
         Optional.empty(),
         false);
+  }
+
+  /**
+   * Factory method for creating a {@link PluginDefinition} for dynamic plugins. A dynamic plugin is
+   * a plugin that is created at runtime and for which we cannot rely on the PluginInfo annotation.
+   *
+   * <p>Note that for dynamic plugins, we drop the notion of version and forces it to be 1.0.
+   *
+   * @param pluginName the name of the plugin
+   * @param pluginAuthor the author of the plugin
+   * @param isForWebService whether the plugin is for web service
+   * @param requiresCallbackServer whether the plugin requires a callback server
+   * @return a {@link PluginDefinition} built from the plugin info.
+   */
+  public static PluginDefinition forDynamicPlugin(
+      PluginType pluginType,
+      String pluginName,
+      String pluginAuthor,
+      boolean isForWebService,
+      boolean requiresCallbackServer) {
+    return new AutoValue_PluginDefinition(
+        pluginType,
+        pluginName,
+        pluginAuthor,
+        "1.0",
+        Optional.empty(),
+        Optional.empty(),
+        isForWebService,
+        Optional.empty(),
+        requiresCallbackServer);
   }
 }

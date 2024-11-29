@@ -59,4 +59,26 @@ public abstract class PluginBootstrapModule extends AbstractModule {
         .to(tsunamiPluginClazz);
     logger.atInfo().log("Plugin %s is registered.", tsunamiPluginClazz);
   }
+
+  /**
+   * Register a {@link TsunamiPlugin} that is dynamically created at runtime.
+   *
+   * @param name the name of the plugin
+   * @param author the author of the plugin
+   * @param requiresCallbackServer whether the plugin requires a callback server
+   * @param tsunamiPlugin the {@link TsunamiPlugin} to be registered
+   */
+  protected final void registerDynamicPlugin(
+      PluginType pluginType,
+      String name,
+      String author,
+      boolean requiresCallbackServer,
+      boolean isForWebService,
+      TsunamiPlugin tsunamiPlugin) {
+    var pluginDef =
+        PluginDefinition.forDynamicPlugin(
+            pluginType, name, author, isForWebService, requiresCallbackServer);
+    tsunamiPluginBinder.addBinding(pluginDef).toInstance(tsunamiPlugin);
+    logger.atInfo().log("Dynamic plugin registered: %s", pluginDef.name());
+  }
 }
