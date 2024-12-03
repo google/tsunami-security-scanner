@@ -89,7 +89,26 @@ public final class TcsClient {
       return CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
     }
     // Should never reach here
-    throw new AssertionError("Unrecognized address format, should be Ip address or valid domain");
+    throw new AssertionError("Unrecognized address format, should be IP address or valid domain");
+  }
+
+  public String getCallbackAddress() {
+    if (InetAddresses.isInetAddress(callbackAddress)) {
+      return callbackAddress;
+    } else if (InternetDomainName.isValid(callbackAddress)) {
+      return callbackAddress;
+    }
+
+    // Should never reach here
+    throw new AssertionError("Unrecognized address format, should be IP address or valid domain");
+  }
+
+  public int getCallbackPort() {
+    if (!isValidPortNumber(callbackPort)) {
+      throw new AssertionError("Invalid callbackPort number specified");
+    }
+
+    return callbackPort;
   }
 
   public boolean hasOobLog(String secretString) {

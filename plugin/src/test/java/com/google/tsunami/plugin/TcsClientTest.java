@@ -111,6 +111,42 @@ public final class TcsClientTest {
   }
 
   @Test
+  public void getCallbackAddress_validIpv4Address_returnsAddress() {
+    client = new TcsClient(VALID_IPV4_ADDRESS, VALID_PORT, VALID_URL, httpClient);
+    assertThat(client.getCallbackAddress()).isEqualTo(VALID_IPV4_ADDRESS);
+  }
+
+  @Test
+  public void getCallbackAddress_validIpv6Address_returnsAddress() {
+    client = new TcsClient(VALID_IPV6_ADDRESS, VALID_PORT, VALID_URL, httpClient);
+    assertThat(client.getCallbackAddress()).isEqualTo(VALID_IPV6_ADDRESS);
+  }
+
+  @Test
+  public void getCallbackAddress_validDomainAddress_returnsAddress() {
+    client = new TcsClient(VALID_DOMAIN, VALID_PORT, VALID_URL, httpClient);
+    assertThat(client.getCallbackAddress()).isEqualTo(VALID_DOMAIN);
+  }
+
+  @Test
+  public void getCallbackAddress_invalidAddress_throwsError() {
+    client = new TcsClient(INVALID_ADDRESS, 100000, VALID_URL, httpClient);
+    assertThrows(AssertionError.class, () -> client.getCallbackAddress());
+  }
+
+  @Test
+  public void getCallbackPort_validPort_returnsPort() {
+    client = new TcsClient(VALID_DOMAIN, VALID_PORT, VALID_URL, httpClient);
+    assertThat(client.getCallbackPort()).isEqualTo(VALID_PORT);
+  }
+
+  @Test
+  public void getCallbackPort_invalidPort_throwsError() {
+    client = new TcsClient(VALID_DOMAIN, 100000, VALID_URL, httpClient);
+    assertThrows(AssertionError.class, () -> client.getCallbackPort());
+  }
+
+  @Test
   public void isVulnerable_sendsValidPollingRequest() throws IOException, InterruptedException {
     MockWebServer mockWebServer = new MockWebServer();
     mockWebServer.start();
