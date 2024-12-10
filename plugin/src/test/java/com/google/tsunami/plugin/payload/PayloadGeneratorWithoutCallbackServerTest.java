@@ -79,6 +79,13 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
           .setExecutionEnvironment(
               PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
           .build();
+  private static final PayloadGeneratorConfig JSP_REFLECTIVE_RCE_CONFIG =
+      PayloadGeneratorConfig.newBuilder()
+          .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
+          .setInterpretationEnvironment(PayloadGeneratorConfig.InterpretationEnvironment.JSP)
+          .setExecutionEnvironment(
+              PayloadGeneratorConfig.ExecutionEnvironment.EXEC_INTERPRETATION_ENVIRONMENT)
+          .build();
   private static final PayloadGeneratorConfig WINDOWS_REFLECTIVE_RCE_CONFIG =
       PayloadGeneratorConfig.newBuilder()
           .setVulnerabilityType(PayloadGeneratorConfig.VulnerabilityType.REFLECTIVE_RCE)
@@ -244,6 +251,36 @@ public final class PayloadGeneratorWithoutCallbackServerTest {
   @Test
   public void checkIfExecuted_withJavaConfiguration_andIncorrectInput_returnsFalse() {
     Payload payload = payloadGenerator.generate(JAVA_REFLECTIVE_RCE_CONFIG);
+
+    assertFalse(
+        payload.checkIfExecuted(
+            ByteString.copyFromUtf8("TSUNAMI_PAYLOAD_START ffffffffffffffff TSUNAMI_PAYLOAD_END")));
+  }
+
+  @Test
+  public void getPayload_withJspConfiguration_returnsPrintfPayload() {
+    Payload payload = payloadGenerator.generate(JSP_REFLECTIVE_RCE_CONFIG);
+
+    assertThat(payload.getPayload())
+        .isEqualTo(
+            "<% out.print(String.format(\"%s%s%s\",\"TSUNAMI_PAYLOAD_START\", \"ffffffffffffffff\","
+                + " \"TSUNAMI_PAYLOAD_END\")); %>");
+    assertFalse(payload.getPayloadAttributes().getUsesCallbackServer());
+  }
+
+  @Test
+  public void checkIfExecuted_withJspConfiguration_andCorrectInput_returnsTrue() {
+    Payload payload = payloadGenerator.generate(JSP_REFLECTIVE_RCE_CONFIG);
+
+    assertTrue(
+        payload.checkIfExecuted(
+            ByteString.copyFromUtf8(
+                "RANDOMOUTPUTTSUNAMI_PAYLOAD_STARTffffffffffffffffTSUNAMI_PAYLOAD_END")));
+  }
+
+  @Test
+  public void checkIfExecuted_withJspConfiguration_andIncorrectInput_returnsFalse() {
+    Payload payload = payloadGenerator.generate(JSP_REFLECTIVE_RCE_CONFIG);
 
     assertFalse(
         payload.checkIfExecuted(
