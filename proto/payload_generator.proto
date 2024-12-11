@@ -62,6 +62,8 @@ message PayloadGeneratorConfig {
     LINUX_ROOT_CRONTAB = 5;
     // Payload is interpreted wihin a Windows shell environment
     WINDOWS_SHELL = 6;
+    // Payload is interpreted within a JSP shell environment
+    JSP = 7;
   }
 
   // The actual runtime environment when the payload is run e.g. while a

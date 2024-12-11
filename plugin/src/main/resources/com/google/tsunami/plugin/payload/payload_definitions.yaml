@@ -92,3 +92,12 @@ payloads:
     validation_regex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
     vulnerabilityType:
       - REFLECTIVE_RCE
+  - name: jsp_print
+    interpretation_environment: JSP
+    execution_environment: EXEC_INTERPRETATION_ENVIRONMENT
+    uses_callback_server: false
+    payload_string: <% out.print(String.format("%s%s%s","TSUNAMI_PAYLOAD_START", "$TSUNAMI_PAYLOAD_TOKEN_RANDOM", "TSUNAMI_PAYLOAD_END")); %>
+    validation_type: VALIDATION_REGEX
+    validation_regex: (?s).*TSUNAMI_PAYLOAD_START$TSUNAMI_PAYLOAD_TOKEN_RANDOMTSUNAMI_PAYLOAD_END.*
+    vulnerability_type:
+      - REFLECTIVE_RCE
