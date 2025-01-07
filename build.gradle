@@ -54,6 +54,7 @@ subprojects {
         truthVersion = '1.4.0'
         tcsVersion = '0.0.1'
         hiveVersion = '2.3.2'
+        hypersqlVersion = '2.7.2'
 
         // All Tsunami dependencies.
         deps = [
@@ -93,6 +94,7 @@ subprojects {
                 tcs_common: "com.google.tsunami:tcs-common:${tcsVersion}",
                 tcs_proto: "com.google.tsunami:tcs-proto:${tcsVersion}",
                 hive: "org.apache.hive:hive-jdbc:${hiveVersion}",
+                hypersql:"org.hsqldb:hsqldb:${hypersqlVersion}",
 
                 // Test dependencies.
                 guava_testlib: "com.google.guava:guava-testlib:${guavaVersion}",
