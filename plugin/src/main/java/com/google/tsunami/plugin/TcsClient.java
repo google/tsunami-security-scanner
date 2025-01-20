@@ -138,7 +138,7 @@ public final class TcsClient {
         jsonParser.merge(response.bodyString().get(), result);
         return Optional.of(result.build());
       } else {
-        logger.atInfo().log("OOB server returned %s", response.status().code());
+        logger.atInfo().log("Callback server returned %s", response.status().code());
       }
     } catch (IOException e) {
       logger.atWarning().withCause(e).log("Polling request failed");
