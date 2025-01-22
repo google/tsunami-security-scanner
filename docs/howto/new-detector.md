@@ -5,6 +5,6 @@ This guide will help you get started with writing a Tsunami detector.
 
 There are several ways to write a Tsunami detector:
 
-* Using our custom configuration format (coming soon)
+* [Using our custom configuration format]({{ site.baseurl }}/howto/new-detector/new-detector-templated) (preferred approach)
 * [Using Java]({{ site.baseurl }}/howto/new-detector/new-detector-java)
 * Using Python (not documented yet)
