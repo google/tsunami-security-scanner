@@ -17,12 +17,14 @@ package com.google.tsunami.plugin;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.tsunami.common.data.NetworkServiceUtils.isWebService;
 import static java.util.Arrays.stream;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.tsunami.plugin.annotations.ForOperatingSystemClass;
 import com.google.tsunami.proto.MatchedPlugin;
@@ -43,12 +45,26 @@ import javax.inject.Provider;
 public class PluginManager {
   private final Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins;
   private final TcsClient tcsClient;
+  private final ImmutableSet<String> detectorsInclude;
+  private final ImmutableSet<String> detectorsExclude;
 
   @Inject
   PluginManager(
-      Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins, TcsClient tcsClient) {
+      Map<PluginDefinition, Provider<TsunamiPlugin>> tsunamiPlugins,
+      TcsClient tcsClient,
+      PluginManagerCliOptions pluginManagerCliOptions) {
     this.tsunamiPlugins = tsunamiPlugins;
     this.tcsClient = checkNotNull(tcsClient);
+    detectorsInclude = getDetectorNames(pluginManagerCliOptions.detectorsInclude);
+    detectorsExclude = getDetectorNames(pluginManagerCliOptions.detectorsExclude);
+  }
+
+  private static ImmutableSet<String> getDetectorNames(String detectorNames) {
+    if (detectorNames == null) {
+      return ImmutableSet.of();
+    } else {
+      return stream(detectorNames.split(",")).map(String::trim).collect(toImmutableSet());
+    }
   }
 
   /**
@@ -105,9 +121,23 @@ public class PluginManager {
     return tsunamiPlugins.entrySet().stream()
         .filter(entry -> isVulnDetector(entry.getKey()))
         .filter(entry -> matchCurrentCallbackServerSetup(entry.getKey()))
+        .filter(entry -> filterPluginByCliOptions(entry.getKey()))
         .map(entry -> matchAllVulnDetectors(entry.getKey(), entry.getValue(), reconnaissanceReport))
         .flatMap(Streams::stream)
         .collect(toImmutableList());
+  }
+
+  private static boolean isPluginListed(
+      PluginDefinition pluginDefinition, ImmutableSet<String> pluginNames, boolean defaultValue) {
+    if (pluginNames.isEmpty()) {
+      return defaultValue;
+    }
+    return pluginNames.contains(pluginDefinition.name());
+  }
+
+  private boolean filterPluginByCliOptions(PluginDefinition pluginDefinition) {
+    return isPluginListed(pluginDefinition, detectorsInclude, true)
+        && !isPluginListed(pluginDefinition, detectorsExclude, false);
   }
 
   private static boolean isVulnDetector(PluginDefinition pluginDefinition) {

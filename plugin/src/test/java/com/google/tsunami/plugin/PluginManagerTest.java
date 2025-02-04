@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
+import com.google.tsunami.common.cli.CliOptionsModule;
 import com.google.tsunami.common.data.NetworkEndpointUtils;
 import com.google.tsunami.common.net.http.HttpClientModule;
 import com.google.tsunami.plugin.PluginManager.PluginMatchingResult;
@@ -54,6 +55,8 @@ import com.google.tsunami.proto.TargetOperatingSystemClass;
 import com.google.tsunami.proto.TargetServiceName;
 import com.google.tsunami.proto.TargetSoftware;
 import com.google.tsunami.proto.TransportProtocol;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
@@ -931,6 +934,100 @@ public class PluginManagerTest {
     assertThat(matchedResult).hasSize(4);
     for (var mr : matchedResult) {
       assertThat(mr.getServicesCount()).isEqualTo(0);
+    }
+  }
+
+  @Test
+  public void getVulnDetectors_whenDetectorsIncludeIsOverridden_returnsMatchingVulnDetector() {
+    NetworkService fakeNetworkService1 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .build();
+    NetworkService fakeNetworkService2 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(fakeNetworkService1)
+            .addNetworkServices(fakeNetworkService2)
+            .build();
+    try (ScanResult scanResult = new ClassGraph().enableAllInfo().scan()) {
+      PluginManager pluginManager =
+          Guice.createInjector(
+                  new CliOptionsModule(
+                      scanResult,
+                      "TsunamiCliTest",
+                      new String[] {"--detectors-include=Blabla1, FakeVulnDetector, Blabla2"}),
+                  new HttpClientModule.Builder().build(),
+                  new PayloadGeneratorModule(new SecureRandom()),
+                  new FakePortScannerBootstrapModule(),
+                  new FakeServiceFingerprinterBootstrapModule(),
+                  new FakeVulnDetectorBootstrapModule(),
+                  new FakeVulnDetectorBootstrapModule2())
+              .getInstance(PluginManager.class);
+
+      ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+          pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+      assertThat(
+              vulnDetectors.stream()
+                  .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
+          .containsExactly(FakeVulnDetector.class);
+      assertThat(vulnDetectors.stream().map(PluginMatchingResult::matchedServices))
+          .containsExactly(fakeReconnaissanceReport.getNetworkServicesList());
+    }
+  }
+
+  @Test
+  public void getVulnDetectors_whenDetectorsExcludeIsOverridden_returnsMatchingVulnDetector() {
+    NetworkService fakeNetworkService1 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 80))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("http")
+            .build();
+    NetworkService fakeNetworkService2 =
+        NetworkService.newBuilder()
+            .setNetworkEndpoint(NetworkEndpointUtils.forIpAndPort("1.1.1.1", 443))
+            .setTransportProtocol(TransportProtocol.TCP)
+            .setServiceName("https")
+            .build();
+    ReconnaissanceReport fakeReconnaissanceReport =
+        ReconnaissanceReport.newBuilder()
+            .setTargetInfo(TargetInfo.getDefaultInstance())
+            .addNetworkServices(fakeNetworkService1)
+            .addNetworkServices(fakeNetworkService2)
+            .build();
+    try (ScanResult scanResult = new ClassGraph().enableAllInfo().scan()) {
+      PluginManager pluginManager =
+          Guice.createInjector(
+                  new CliOptionsModule(
+                      scanResult,
+                      "TsunamiCliTest",
+                      new String[] {"--detectors-exclude=FakeVulnDetector"}),
+                  new HttpClientModule.Builder().build(),
+                  new PayloadGeneratorModule(new SecureRandom()),
+                  new FakePortScannerBootstrapModule(),
+                  new FakeServiceFingerprinterBootstrapModule(),
+                  new FakeVulnDetectorBootstrapModule(),
+                  new FakeVulnDetectorBootstrapModule2())
+              .getInstance(PluginManager.class);
+
+      ImmutableList<PluginMatchingResult<VulnDetector>> vulnDetectors =
+          pluginManager.getVulnDetectors(fakeReconnaissanceReport);
+
+      assertThat(
+              vulnDetectors.stream()
+                  .map(pluginMatchingResult -> pluginMatchingResult.tsunamiPlugin().getClass()))
+          .containsExactly(FakeVulnDetector2.class);
+      assertThat(vulnDetectors.stream().map(PluginMatchingResult::matchedServices))
+          .containsExactly(fakeReconnaissanceReport.getNetworkServicesList());
     }
   }
 
