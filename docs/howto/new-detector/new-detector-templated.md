@@ -1,3 +1,6 @@
+---
+render_with_liquid: false
+---
 # Templated plugins documentation
 
 ## Introduction
@@ -484,17 +487,23 @@ callback server.
 Here is the list of variables that are provided:
 
 - `T_NS_BASEURL`: The base URL of the network service being scanned. For example
-`http://127.0.0.1:9090` or `http://hostname:1000`;
+`http://127.0.0.1:9090` or `http://hostname.lan:1000`;
 - `T_NS_PROTOCOL`: The protocol used by the network service being scanned (e.g.
 `tcp`);
 - `T_NS_HOSTNAME`: The hostname of the network service being scanned. Note that
-this variable is only available if Tsunami was invoked with a hostname target;
-- `T_NS_PORT`: The port of the network service being scanned;
-- `T_NS_IP`: The IP of the network service being scanned;
-- `T_CBS_URI`: The callback server URL used to trigger the callback server;
-- `T_CBS_SECRET`: The callback server secret generated for the current workflow run;
-- `T_CBS_ADDRESS`: Address of the callback server;
-- `T_CBS_PORT`: Port of the callback server;
+this variable is only available if Tsunami was invoked with a hostname target
+(e.g. `hostname.lan`);
+- `T_NS_PORT`: The port of the network service being scanned (e.g. `1000`);
+- `T_NS_IP`: The IP of the network service being scanned (e.g. `127.0.0.1`);
+- `T_CBS_URI`: The callback server URL used to trigger the callback server. This
+is the main variable used when using the callback server. It contains the
+address and hashed secret (e.g. `http://tsunami-callback.lan/8fe7d878787d65`
+where `8fe7d878787d65` is the **hashed** secret);
+- `T_CBS_SECRET`: The callback server secret generated for the current workflow
+run; note that it is not hashed and is not relevant in most cases (e.g.
+`somesecret`);
+- `T_CBS_ADDRESS`: Address of the callback server (e.g. `tsunami-callback.lan`);
+- `T_CBS_PORT`: Port of the callback server (e.g. `80`);
 
 ### Using the callback server
 
@@ -505,10 +514,10 @@ vulnerabilities via an out-of-band mechanism. You can read more about it on the
 
 In a nutshell, the callback server works this way:
 
-1. A secret is generated;
+1. A secret is generated (and stored in `T_CBS_SECRET`);
 2. This secret is hashed;
-3. The exploit uses the hashed secret and the URL of the callback server to
-trigger an out-of-band communication with the callback server;
+3. The exploit uses the hashed secret and the URL of the callback server
+(`T_CBS_URI`) to trigger an out-of-band communication with the callback server;
 4. The secret can be used to ask the callback server if a communication using
 the hashed secret has been logged (i.e. if the vulnerability has been
 triggered);
