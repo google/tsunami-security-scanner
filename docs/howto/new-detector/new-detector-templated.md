@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # Templated plugins documentation
 
 ## Introduction
@@ -113,11 +110,11 @@ the following convention:
 - If the vulnerability has an associated CVE:
 `VulnerableApplicationName_CVE_YYYY_NNNNN` and the plugin should be placed in
 the `cve/YYYY/` directory.
-- If the vulnerability does not have an associated CVE: `VulnerableApplicationName_YYYY_VulnerabilityName`; if a vulnerability has no
+- If the vulnerability does not have an associated CVE:
+`VulnerableApplicationName_YYYY_VulnerabilityName`; if a vulnerability has no
 name you can try to describe it, for example `PreauthRCE`. The vulnerability
 will then be placed in the directory that matches the type of vulnerability,
 for example `rce/YYYY/VulnerableApplicationName_YYYY_VulnerabilityName`.
-
 
 ### Providing information about our plugin and the vulnerability
 
@@ -382,6 +379,7 @@ workflows: {
 
 Which can then be used in the action:
 
+{% raw %}
 ```proto
 actions: {
   name: "exploitation"
@@ -400,6 +398,7 @@ actions: {
   }
 }
 ```
+{% endraw %}
 
 IMPORTANT: The syntax for variables is requires **exactly** one space before and
 after the variable name, between the brackets. Otherwise, substitution will not
@@ -531,9 +530,11 @@ make sure a request to the callback server is made with the trigger URL. The
 trigger URL is stored in the `T_CBS_URI` variable. For example, in our previous
 example we could change the payload to:
 
+{% raw %}
 ```proto
 { name: "payload" value: "%{ import os; os.system('curl {{ T_CBS_URI }}') }%" }
 ```
+{% endraw %}
 
 `T_CBS_URI` would be replaced with the trigger URL and the callback server
 would receive a request on that endpoint if the vulnerability is triggered.
@@ -552,6 +553,7 @@ is currently running? Do we not want to support both use cases? That is one of
 the features offered by workflows: `condition` allows you to define a condition
 for the workflow to be executed. With our example:
 
+{% raw %}
 ```proto
 # Workflow that uses the callback server.
 workflows: {
@@ -583,6 +585,7 @@ workflows: {
   ]
 }
 ```
+{% endraw %}
 
 Note: Because workflow are interpreted in order, the one that is more
 restrictive needs to be defined first. Otherwise, the less restrictive workflow
