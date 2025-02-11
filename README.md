@@ -100,7 +100,7 @@ To quickly get started with Tsunami scans,
 
 ## Contributing
 
-Read how to [contribute to Tsunami](docs/contributing.md).
+Read how to [contribute to Tsunami](docs/contribute/contributing.md).
 
 ## License
 
