@@ -115,6 +115,8 @@ the `cve/YYYY/` directory.
 name you can try to describe it, for example `PreauthRCE`. The vulnerability
 will then be placed in the directory that matches the type of vulnerability,
 for example `rce/YYYY/VulnerableApplicationName_YYYY_VulnerabilityName`.
+- When the name of a plugin contains an accronym (e.g. `HTTP`, `UI`, `RCE`),
+that acronym must be in uppercase.
 
 ### Providing information about our plugin and the vulnerability
 
