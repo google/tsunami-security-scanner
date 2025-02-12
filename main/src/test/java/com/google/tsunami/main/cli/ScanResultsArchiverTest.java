@@ -96,6 +96,11 @@ public final class ScanResultsArchiverTest {
   }
 
   @Test
+  public void optionsValidate_defaultLoggingEnabled_isFalse() {
+    assertThat(options.loggingEnabled).isFalse();
+  }
+
+  @Test
   public void archive_withNoStorageEnabled_storesNothing() throws InvalidProtocolBufferException {
     options.localOutputFilename = "";
     options.gcsOutputFileUrl = "";

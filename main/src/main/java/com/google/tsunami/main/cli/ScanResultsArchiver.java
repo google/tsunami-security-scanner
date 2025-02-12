@@ -24,6 +24,7 @@ import com.beust.jcommander.Parameters;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.base.Strings;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import com.google.tsunami.common.cli.CliOption;
@@ -59,6 +60,12 @@ class ScanResultsArchiver {
         description = "The format of the scanning results uploaded to GCS bucket.")
     public OutputDataFormat gcsOutputFormat;
 
+    @Parameter(
+        names = "--scan-results-logging-enabled",
+        description = "Enable logging of the scan results.",
+        arity = 1)
+    public Boolean loggingEnabled = false;
+
     @Override
     public void validate() {
       if (!Strings.isNullOrEmpty(gcsOutputFileUrl)
@@ -67,6 +74,8 @@ class ScanResultsArchiver {
       }
     }
   }
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Options options;
   private final RawFileArchiver rawFileArchiver;
@@ -96,6 +105,10 @@ class ScanResultsArchiver {
       GoogleCloudStorageArchiver archiver =
           googleCloudStorageArchiverFactory.create(getGcsStorage());
       archive(archiver, options.gcsOutputFileUrl, options.gcsOutputFormat, scanResults);
+    }
+
+    if (options.loggingEnabled) {
+      logger.atInfo().log("Scan results for RVD efficacy: %s", scanResults);
     }
   }
 
