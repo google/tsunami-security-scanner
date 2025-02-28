@@ -26,3 +26,13 @@ eclipsebin
 # Emacs
 *~
 \#*\#
+
+# plugin_server generated files
+*_pb2_grpc.py
+*_pb2.py
+plugin_server/py/lib
+plugin_server/py/lib64
+plugin_server/py/pyvenv.cfg
+
+# Python compiled bytecode files
+__pycache__/

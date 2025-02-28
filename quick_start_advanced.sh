@@ -89,10 +89,10 @@ cp "${JAR}" "${WD}"
 cp "${REPOS}/tsunami-security-scanner/tsunami_tcs.yaml" "${WD}"
 popd >/dev/null
 
-# Install python libs and generate python proto targets.
+# Install python3.11 libs and generate python3.11 proto targets.
 pushd "${REPOS}/tsunami-security-scanner/plugin_server/py" >/dev/null
 # sudo apt install python3.11-venv
-python3 -m venv .
+python3.11 -m venv .
 source bin/activate
 pip install --require-hashes -r requirements.txt
 popd >/dev/null
@@ -100,12 +100,12 @@ popd >/dev/null
 pushd "${REPOS}/tsunami-security-scanner/proto" >/dev/null
 PROTO_OUT="${REPOS}/tsunami-security-scanner/plugin_server/py"
 for proto in `ls *.proto`; do
-  python -m grpc_tools.protoc -I. --python_out=${PROTO_OUT}/. --grpc_python_out=${PROTO_OUT}/. "${proto}"
+  python3.11 -m grpc_tools.protoc -I. --python_out=${PROTO_OUT}/. --grpc_python_out=${PROTO_OUT}/. "${proto}"
 done
 popd >/dev/null
 
 pushd "${REPOS}/tsunami-security-scanner-callback-server/proto" >/dev/null
-python -m grpc_tools.protoc -I. --python_out=${PROTO_OUT}/. --grpc_python_out=${PROTO_OUT}/. "polling.proto"
+python3.11 -m grpc_tools.protoc -I. --python_out=${PROTO_OUT}/. --grpc_python_out=${PROTO_OUT}/. "polling.proto"
 popd >/dev/null
 
 printf "\nBuild successful, execute the following command to start the callback server\n"
@@ -116,8 +116,8 @@ printf "  --custom-config=tcs_config.yaml\n"
 
 printf "\nBuild successful, execute the following command to start the pythan language server\n"
 printf "\ncd ${REPOS}/tsunami-security-scanner/plugin_server/py && \\\\\n"
-printf "python3 -m venv . && source bin/activate && \\\\\n"
-printf "python3 plugin_server.py \\\\\n"
+printf "python3.11 -m venv . && source bin/activate && \\\\\n"
+printf "python3.11 plugin_server.py \\\\\n"
 printf "  --port=34567 \\\\\n"
 printf "  --trust_all_ssl_cert=true \\\\\n"
 printf "  --timeout_seconds=180 \\\\\n"
