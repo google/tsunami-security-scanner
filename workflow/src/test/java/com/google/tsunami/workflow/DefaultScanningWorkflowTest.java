@@ -34,6 +34,7 @@ import com.google.tsunami.plugin.testing.FakePluginExecutionModule;
 import com.google.tsunami.plugin.testing.FakePortScanner;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule;
 import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModule2;
+import com.google.tsunami.plugin.testing.FakePortScannerBootstrapModuleEmpty;
 import com.google.tsunami.plugin.testing.FakeRemoteVulnDetector;
 import com.google.tsunami.plugin.testing.FakeRemoteVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeServiceFingerprinter;
@@ -42,6 +43,7 @@ import com.google.tsunami.plugin.testing.FakeVulnDetector;
 import com.google.tsunami.plugin.testing.FakeVulnDetector2;
 import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule;
 import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModule2;
+import com.google.tsunami.plugin.testing.FakeVulnDetectorBootstrapModuleEmpty;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.ScanStatus;
 import com.google.tsunami.proto.ScanTarget;
@@ -231,9 +233,31 @@ public final class DefaultScanningWorkflowTest {
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
 
     assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(scanResults.getTargetAlive()).isTrue();
     assertThat(scanResults.getReconnaissanceReport().getNetworkServicesList())
         .containsExactly(
             FakePortScanner.getFakeNetworkService(buildScanTarget().getNetworkEndpoint()));
+  }
+
+  @Test
+  public void run_whenNoPortOrVulnReported_returnsHostDown()
+      throws ExecutionException, InterruptedException {
+    Injector injector =
+        Guice.createInjector(
+            new HttpClientModule.Builder().build(),
+            new PayloadGeneratorModule(new SecureRandom()),
+            new FakeUtcClockModule(),
+            new FakePluginExecutionModule(),
+            new FakePortScannerBootstrapModuleEmpty(),
+            new FakeVulnDetectorBootstrapModuleEmpty());
+    scanningWorkflow = injector.getInstance(DefaultScanningWorkflow.class);
+
+    ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
+
+    assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(scanResults.getReconnaissanceReport().getNetworkServicesList()).isEmpty();
+    assertThat(scanResults.getScanFindingsList()).isEmpty();
+    assertThat(scanResults.getTargetAlive()).isFalse();
   }
 
   @Test
@@ -254,6 +278,7 @@ public final class DefaultScanningWorkflowTest {
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
 
     assertThat(scanResults.getScanStatus()).isEqualTo(ScanStatus.SUCCEEDED);
+    assertThat(scanResults.getTargetAlive()).isTrue();
     assertThat(scanResults.getReconnaissanceReport().getNetworkServicesList())
         .containsExactly(
             FakeServiceFingerprinter.addWebServiceContext(

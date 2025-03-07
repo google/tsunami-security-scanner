@@ -334,9 +334,15 @@ public final class DefaultScanningWorkflow {
       statusMessage = "Failed plugins:\n" + Joiner.on("\n").join(failedPlugins);
     }
 
+    boolean targetAlive = false;
+    if (reconnaissanceReport.getNetworkServicesCount() > 0 || !detectionResults.isEmpty()) {
+      targetAlive = true;
+    }
+
     return ScanResults.newBuilder()
         .setScanStatus(scanStatus)
         .setStatusMessage(statusMessage)
+        .setTargetAlive(targetAlive)
         .addAllScanFindings(
             succeededDetectionReports.stream()
                 .filter(

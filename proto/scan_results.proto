@@ -59,13 +59,18 @@ message ScanFinding {
 }
 
 // Full scanning results.
-// NEXT ID: 8
+// NEXT ID: 9
 message ScanResults {
   // Status of this scan.
   ScanStatus scan_status = 1;
 
   // Detailed message for the scan status.
   string status_message = 6;
+
+  // Reports whether the target was alive during the scan.
+  // A target is considered alive if at least one network service was identified
+  // or at least one vulnerability was detected.
+  bool target_alive = 8;
 
   // All findings from this scan.
   repeated ScanFinding scan_findings = 2;
