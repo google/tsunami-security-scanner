@@ -17,11 +17,13 @@ templated format.
   * How do I know how to write a templated plugin?
   * Execution workflow of a templated plugin
 
+
 - [Bootstrapping the plugin](02-bootstrapping)
 
   * Understanding the vulnerability
   * Providing information about our plugin and the vulnerability
   * Configuring the plugin
+
 
 - [Writing the first actions](03-first-actions)
 
@@ -33,6 +35,7 @@ templated format.
   * Extracting information to local variables
   * Predefined variables
 
+
 - [Using the callback server](06-callback-server)
 
 - [Using cleanup actions](07-cleanup-actions)
@@ -43,6 +46,7 @@ templated format.
 
   * [Predefined variables](glossary-predefined-variables)
   * [Magic tests URIs when mocking HTTP](glossary-tests-magic-uri)
+
 
 - Appendixes
 

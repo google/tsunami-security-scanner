@@ -50,6 +50,8 @@ tests: {
 }
 ```
 
+See our [convention on naming tests](appendix-naming-tests).
+
 ## Using mock servers
 
 Now we can start simulating the behavior of our vulnerable application. Two mock
@@ -149,9 +151,9 @@ You can view them in the [glossary](glossary-tests-magic-uri).
 ## Generating things for you
 
 Finally, under the hood, Tsunami will also generate unit tests for you. This
-helps us detecting flaky detectors: for example when a detector fail to pass the
-"echo server" test (when the server is just repeating the request, a detector
-should not raise a vulnerability).
+helps us detecting flaky detectors: for example when a detector fails to pass
+the "echo server" test (when the server is just repeating the request, a
+detector should not raise a vulnerability).
 
 ## Congratulations!
 
