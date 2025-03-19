@@ -37,16 +37,18 @@ templated format.
 
 - [Using cleanup actions](07-cleanup-actions)
 
-- Writing unit tests (Work in progress)
+- [Writing unit tests](08-writing-unit-tests)
 
 - Glossaries
 
   * [Predefined variables](glossary-predefined-variables)
+  * [Magic tests URIs when mocking HTTP](glossary-tests-magic-uri)
 
 - Appendixes
 
   * [Convention: How to name a plugin](appendix-naming-plugin)
   * [Convention: How to name an action](appendix-naming-actions)
+  * [Convention: Naming tests](appendix-naming-tests)
 
 ## Let's get started!
 
