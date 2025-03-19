@@ -35,7 +35,7 @@ templated format.
 
 - [Using the callback server](06-callback-server)
 
-- Using cleanup actions (Work in progress)
+- [Using cleanup actions](07-cleanup-actions)
 
 - Writing unit tests (Work in progress)
 
