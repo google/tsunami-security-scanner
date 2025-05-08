@@ -8,6 +8,7 @@ also needs the modification.
 
 import socket
 import urllib.parse
+from typing import Optional
 from common.data import network_endpoint_utils
 import network_pb2
 import network_service_pb2
@@ -183,7 +184,7 @@ def get_address_family(address_family: socket.AddressFamily) -> AddressFamily:
     raise ValueError("Invalid address family: %s" % address_family)
 
 
-def sanitize_port(port: int or None, scheme: str) -> int:
+def sanitize_port(port: Optional[int], scheme: str) -> int:
   if isinstance(port, type(None)):
     return get_port(-1, scheme)
   return get_port(port, scheme)
