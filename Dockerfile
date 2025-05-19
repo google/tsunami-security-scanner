@@ -1,8 +1,8 @@
-FROM adoptopenjdk/openjdk13:debianslim
+FROM ubuntu:latest
 
 # Install dependencies
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates \
+ && apt-get install -y --no-install-recommends git ca-certificates openjdk-21-jdk \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /usr/share/doc && rm -rf /usr/share/man \
  && apt-get clean
@@ -28,11 +28,11 @@ RUN ./gradlew shadowJar \
     && cp ./tsunami.yaml /usr/tsunami
 
 # Stage 2: Release
-FROM adoptopenjdk/openjdk13:debianslim-jre
+FROM ubuntu:latest
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates \
+    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates openjdk-21-jre \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/share/doc && rm -rf /usr/share/man \
     && apt-get clean \
