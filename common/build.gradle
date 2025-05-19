@@ -1,27 +1,27 @@
 description = 'Tsunami: Common'
 
 dependencies {
-    compile project(':tsunami-proto')
-    compile deps.autovalue
-    compile deps.classgraph
-    compile deps.flogger, deps.flogger_google_ext, deps.flogger_backend
-    compile deps.google_cloud_storage
-    compile deps.guava
-    compile deps.guice, deps.guice_assisted
-    compile deps.gson
-    compile deps.jcommander
-    compile deps.okhttp
-    compile deps.snakeyaml
-    compile deps.truth
-    runtime deps.mysql
-    runtime deps.postgresql
-    runtime deps.hive
+    implementation project(':tsunami-proto')
+    implementation deps.autovalue
+    implementation deps.classgraph
+    implementation deps.flogger, deps.flogger_google_ext, deps.flogger_backend
+    implementation deps.google_cloud_storage
+    implementation deps.guava
+    implementation deps.guice, deps.guice_assisted
+    implementation deps.gson
+    implementation deps.jcommander
+    implementation deps.okhttp
+    implementation deps.snakeyaml
+    implementation deps.truth
+    runtimeOnly deps.mysql
+    runtimeOnly deps.postgresql
+    runtimeOnly deps.hive
     annotationProcessor deps.autovalue_annotation_processor
 
-    testCompile deps.guava_testlib
-    testCompile deps.junit
-    testCompile deps.mockito
-    testCompile deps.mock_web_server
-    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+    testImplementation deps.guava_testlib
+    testImplementation deps.junit
+    testImplementation deps.mockito
+    testImplementation deps.mock_web_server
+    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
     testAnnotationProcessor deps.autovalue_annotation_processor
 }

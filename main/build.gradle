@@ -1,26 +1,32 @@
 plugins {
     id 'application'
-    id 'com.github.johnrengelman.shadow'
+    id 'com.github.johnrengelman.shadow' version "8.1.1"
 }
 
 description = 'Tsunami: main'
 
 dependencies {
-    compile project(':tsunami-common')
-    compile project(':tsunami-plugin')
-    compile project(':tsunami-proto')
-    compile project(':tsunami-workflow')
-    compile deps.flogger
-    compile deps.flogger_google_ext
-    compile deps.guava
-    compile deps.jsoup
-    compile deps.libajp
-    compile deps.grpc_netty
-    runtime deps.jaxb_runtime
+    implementation project(':tsunami-common')
+    implementation project(':tsunami-plugin')
+    implementation project(':tsunami-proto')
+    implementation project(':tsunami-workflow')
+    implementation deps.classgraph
+    implementation deps.flogger
+    implementation deps.flogger_google_ext
+    implementation deps.google_cloud_storage
+    implementation deps.guava
+    implementation deps.guice
+    implementation deps.javax_inject
+    implementation deps.jcommander
+    implementation deps.jsoup
+    implementation deps.libajp
+    implementation deps.grpc_netty
+    implementation deps.protobuf
+    runtimeOnly deps.jaxb_runtime
 
-    testCompile deps.junit
-    testCompile deps.mockito
-    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+    testImplementation deps.junit
+    testImplementation deps.mockito
+    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
 }
 
 application {
@@ -28,6 +34,5 @@ application {
 }
 
 shadowJar {
-    classifier = 'cli'
     exclude '*.proto'
 }

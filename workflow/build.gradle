@@ -1,13 +1,17 @@
 description = 'Tsunami: Workflow'
 
 dependencies {
-    compile project(':tsunami-plugin')
-    compile project(':tsunami-proto')
-    compile deps.flogger
-    compile deps.flogger_google_ext
-    compile deps.guava
+    implementation project(':tsunami-common')
+    implementation project(':tsunami-plugin')
+    implementation project(':tsunami-proto')
+    implementation deps.flogger
+    implementation deps.flogger_google_ext
+    implementation deps.guava
+    implementation deps.javax_inject
+    implementation deps.protobuf
+    implementation deps.protobuf_util
 
-    testCompile deps.guava_testlib
-    testCompile deps.junit
-    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+    testImplementation deps.guava_testlib
+    testImplementation deps.junit
+    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
 }

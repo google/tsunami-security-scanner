@@ -24,7 +24,7 @@ RUN mkdir /usr/tsunami/plugins \
 WORKDIR /usr/repos/tsunami-security-scanner
 COPY . .
 RUN ./gradlew shadowJar \
-    && cp "$(find "./" -name "tsunami-main-*-cli.jar")" /usr/tsunami/tsunami.jar \
+    && cp "$(find "./" -name "tsunami-main-*-all.jar")" /usr/tsunami/tsunami.jar \
     && cp ./tsunami.yaml /usr/tsunami
 
 # Stage 2: Release

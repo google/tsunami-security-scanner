@@ -25,6 +25,9 @@ protobuf {
     }
     generateProtoTasks {
         all()*.plugins { grpc {} }
+        all().configureEach {
+            task -> dependsOn("processResources")
+        }
     }
 }
 
@@ -36,8 +39,14 @@ idea {
 }
 
 dependencies {
-    compile deps.protobuf
-    compile deps.grpc_protobuf
-    compile deps.grpc_stub
-    compile deps.javax_annotations
+    implementation deps.protobuf
+    implementation deps.grpc_protobuf
+    implementation deps.grpc_stub
+    implementation deps.javax_annotations
+}
+
+gradle.projectsEvaluated {
+    tasks.withType(ProcessResources) {
+        dependsOn("extractProto")
+    }
 }

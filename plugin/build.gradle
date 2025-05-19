@@ -2,29 +2,31 @@
 description = 'Tsunami: Plugin'
 
 dependencies {
-    compile project(':tsunami-common')
-    compile project(':tsunami-proto')
-    compile deps.autovalue
-    compile deps.classgraph
-    compile deps.flogger
-    compile deps.flogger_google_ext
-    compile deps.guava
-    compile deps.guice
-    compile deps.gson
-    compile deps.javax_inject
-    compile deps.mock_web_server
-    compile deps.protobuf
-    compile deps.protobuf_util
-    compile deps.grpc_core
-    compile deps.grpc_netty
-    compile deps.grpc_testing
-    compile deps.grpc_context
-    compile deps.grpc_services
-    compile deps.tcs_common, deps.tcs_proto
+    implementation project(':tsunami-common')
+    implementation project(':tsunami-proto')
+    implementation deps.autovalue
+    implementation deps.classgraph
+    implementation deps.flogger
+    implementation deps.flogger_google_ext
+    implementation deps.google_http_client
+    implementation deps.guava
+    implementation deps.guice
+    implementation deps.gson
+    implementation deps.javax_inject
+    implementation deps.jcommander
+    implementation deps.mock_web_server
+    implementation deps.protobuf
+    implementation deps.protobuf_util
+    implementation deps.grpc_core
+    implementation deps.grpc_netty
+    implementation deps.grpc_testing
+    implementation deps.grpc_context
+    implementation deps.grpc_services
+    implementation deps.tcs_common, deps.tcs_proto
     annotationProcessor deps.autovalue_annotation_processor
 
-    testCompile deps.guava_testlib
-    testCompile deps.junit
-    testCompile deps.mock_web_server
-    testCompile deps.truth, deps.truth8, deps.truth_protobuf
+    testImplementation deps.guava_testlib
+    testImplementation deps.junit
+    testImplementation deps.mock_web_server
+    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
 }
