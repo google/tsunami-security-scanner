@@ -26,7 +26,10 @@ protobuf {
     generateProtoTasks {
         all()*.plugins { grpc {} }
         all().configureEach {
-            task -> dependsOn("processResources")
+            task -> {
+                dependsOn("processResources")
+                dependsOn("extractTestProto")
+            }
         }
     }
 }

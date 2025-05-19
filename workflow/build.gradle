@@ -11,6 +11,7 @@ dependencies {
     implementation deps.protobuf
     implementation deps.protobuf_util
 
+    testImplementation deps.guice
     testImplementation deps.guava_testlib
     testImplementation deps.junit
     testImplementation deps.truth, deps.truth8, deps.truth_protobuf

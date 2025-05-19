@@ -29,7 +29,7 @@ subprojects {
         // All dependency versions.
         autoValueVersion = '1.10.4'
         classGraphVersion = '4.8.65'
-        errorproneVersion = '2.4.0'
+        errorproneVersion = '2.38.0'
         floggerVersion = '0.5.1'
         googleCloudStorageVersion = '1.103.1'
         googleHttpClientVersion = '1.44.1'
