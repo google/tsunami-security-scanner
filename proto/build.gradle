@@ -29,6 +29,7 @@ protobuf {
             task -> {
                 dependsOn("processResources")
                 dependsOn("extractTestProto")
+                dependsOn("sourcesJar")
             }
         }
     }
