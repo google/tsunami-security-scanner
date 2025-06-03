@@ -24,7 +24,7 @@ import 'google/protobuf/wrappers.proto';
 option java_multiple_files = true;
 option java_outer_classname = "PayloadGeneratorProtos";
 option java_package = "com.google.tsunami.proto";
-option go_package = "github.com/google/tsunami-security-scanner/proto";
+option go_package = "github.com/google/tsunami-security-scanner/proto/tsunami_go_proto";
 
 // Attributes utilized by the PayloadGenerator to select a payload
 message PayloadGeneratorConfig {
