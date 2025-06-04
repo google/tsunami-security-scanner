@@ -166,7 +166,7 @@ subprojects {
         publishing {
             publications {
                 maven(MavenPublication) {
-                    artifact project.tasks.shadowJar
+                    from components.java
 
                     pom {
                         name = project.group + ':' + project.name
