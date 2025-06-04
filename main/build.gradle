@@ -36,3 +36,19 @@ application {
 shadowJar {
     exclude '*.proto'
 }
+
+tasks.named("distZip") {
+    dependsOn(":tsunami-main:shadowJar")
+}
+
+tasks.named("distTar") {
+    dependsOn(":tsunami-main:shadowJar")
+}
+
+tasks.named("startScripts") {
+    dependsOn(":tsunami-main:shadowJar")
+}
+
+tasks.named("startShadowScripts") {
+    dependsOn(":tsunami-main:jar")
+}
