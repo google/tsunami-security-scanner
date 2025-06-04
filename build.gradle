@@ -21,8 +21,8 @@ subprojects {
         maven { // The google mirror is less flaky than mavenCentral()
             url 'https://maven-central.storage-download.googleapis.com/repos/central/data/'
         }
+
         mavenCentral()
-        mavenLocal()
     }
 
     ext {
@@ -166,7 +166,7 @@ subprojects {
         publishing {
             publications {
                 maven(MavenPublication) {
-                    from components.java
+                    artifact project.tasks.shadowJar
 
                     pom {
                         name = project.group + ':' + project.name
@@ -202,6 +202,7 @@ subprojects {
                     }
                 }
             }
+
             repositories {
                 maven {
                     def stagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
@@ -216,23 +217,11 @@ subprojects {
                         }
                     }
                 }
-                mavenLocal()
             }
         }
 
         signing {
-            required false
             sign publishing.publications.maven
-        }
-
-        plugins.withId('com.github.johnrengelman.shadow') {
-            publishing {
-                publications {
-                    maven {
-                        artifact project.tasks.shadowJar
-                    }
-                }
-            }
         }
     }
 }
