@@ -30,3 +30,7 @@ dependencies {
     testImplementation deps.mock_web_server
     testImplementation deps.truth, deps.truth8, deps.truth_protobuf
 }
+
+tasks.named("compileJava") {
+    dependsOn(":tsunami-common:shadowJar")
+}

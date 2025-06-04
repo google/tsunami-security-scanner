@@ -2,7 +2,7 @@
 
 plugins {
     id 'net.ltgt.errorprone' apply false version "4.2.0"
-    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id "com.gradleup.shadow" version "8.3.6"
 }
 
 subprojects {
@@ -12,7 +12,7 @@ subprojects {
     apply plugin: "signing"
 
     apply plugin: 'net.ltgt.errorprone'
-    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'com.gradleup.shadow'
 
     group = 'com.google.tsunami'
     version = '0.0.27-SNAPSHOT' // Current Tsunami version
@@ -23,6 +23,7 @@ subprojects {
         }
 
         mavenCentral()
+        mavenLocal()
     }
 
     ext {
@@ -217,11 +218,17 @@ subprojects {
                         }
                     }
                 }
+
+                mavenLocal()
             }
         }
 
         signing {
             sign publishing.publications.maven
+        }
+
+        shadowJar {
+            archiveClassifier = null
         }
     }
 }

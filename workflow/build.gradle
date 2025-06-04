@@ -16,3 +16,13 @@ dependencies {
     testImplementation deps.junit
     testImplementation deps.truth, deps.truth8, deps.truth_protobuf
 }
+
+tasks.named("javadoc") {
+    dependsOn(":tsunami-plugin:shadowJar")
+    dependsOn(":tsunami-proto:shadowJar")
+}
+
+tasks.named("shadowJar") {
+    dependsOn(":tsunami-proto:shadowJar")
+    dependsOn(":tsunami-plugin:shadowJar")
+}
