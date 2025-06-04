@@ -9,6 +9,17 @@ RUN apt-get update \
  && rm -rf /usr/share/doc && rm -rf /usr/share/man \
  && apt-get clean
 
+### 1.1. Compile the core of Tsunami
+
+WORKDIR /usr/repos/tsunami-security-scanner
+COPY . .
+RUN mkdir /usr/tsunami \
+    && ./gradlew shadowJar \
+    && cp "$(find "./" -name "tsunami-main-*.jar")" /usr/tsunami/tsunami.jar \
+    && cp ./tsunami.yaml /usr/tsunami
+
+### 1.2. Compile the plugins
+
 # Install a specific version of protoc
 WORKDIR /usr/tsunami/deps
 RUN mkdir /usr/tsunami/deps/protoc \
@@ -31,13 +42,6 @@ WORKDIR /usr/tsunami/repos/tsunami-security-scanner-plugins/google
 RUN chmod +x build_all.sh \
     && ./build_all.sh \
     && cp build/plugins/*.jar /usr/tsunami/plugins
-
-# Compile Tsunami
-WORKDIR /usr/repos/tsunami-security-scanner
-COPY . .
-RUN ./gradlew shadowJar \
-    && cp "$(find "./" -name "tsunami-main-*-all.jar")" /usr/tsunami/tsunami.jar \
-    && cp ./tsunami.yaml /usr/tsunami
 
 ## Stage 2: Release
 
