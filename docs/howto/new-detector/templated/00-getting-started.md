@@ -53,6 +53,7 @@ templated format.
   * [Convention: How to name a plugin](appendix-naming-plugin)
   * [Convention: How to name an action](appendix-naming-actions)
   * [Convention: Naming tests](appendix-naming-tests)
+  * [Using the linter](appendinx-using-linter)
 
 ## Let's get started!
 

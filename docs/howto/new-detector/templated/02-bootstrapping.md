@@ -4,6 +4,15 @@
 *This section assumes that you already know how to
 [build and run Tsunami](https://google.github.io/tsunami-security-scanner/howto/howto).*
 
+## Before starting
+
+Before we start, we encourage you to take a quick look at the setup guide for
+the linter of the configuration language. Your plugin will be expected to pass
+all the checks in this linter. Warnings will have to be justified before being
+merged as well.
+
+[See the instructions for the linter](appendix-using-linter)
+
 ## Our vulnerable application
 
 For this tutorial series, we will write a simple detector for a non-existing
