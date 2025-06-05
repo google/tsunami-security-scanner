@@ -1,0 +1,54 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Description: This is the build script for jdwp_rce_detector plugin.
+
+plugins {
+  id 'java-library'
+  id 'com.google.protobuf' version "${protobuf_version}"
+  id 'com.google.tsunami.plugin'
+}
+
+// Always build with the latest Guava version.
+// This is required by Bazel build system.
+// See https://github.com/google/guava#adding-guava-as-a-dependency
+// Note: this will be applied to all sub-projects.
+rootProject.configurations.all {
+  resolutionStrategy {
+    force "com.google.guava:guava:${guava_version}"
+  }
+}
+
+dependencies {
+  // Compile time only dependencies.
+  annotationProcessor "com.google.auto.value:auto-value:${auto_value_version}"
+  annotationProcessor "com.google.dagger:dagger-compiler:${dagger_version}"
+  compileOnly "com.google.auto.value:auto-value-annotations:${auto_value_version}"
+  compileOnly "javax.inject:javax.inject:1"
+
+  // Direct dependencies of the plugin.
+  implementation "com.google.dagger:dagger:${dagger_version}"
+  implementation "com.google.flogger:flogger:${flogger_version}"
+  implementation "com.google.flogger:flogger-system-backend:${flogger_version}"
+  implementation "com.google.guava:guava:${guava_version}"
+  implementation "com.google.protobuf:protobuf-java:${protobuf_java_version}"
+  implementation project(':plugin_common')
+  implementation project(':proto')
+
+  // Test dependencies.
+  testImplementation "com.google.truth:truth:${truth_version}"
+  testImplementation "com.google.truth.extensions:truth-java8-extension:${truth_version}"
+  testImplementation "junit:junit:${junit_version}"
+  testImplementation "org.mockito:mockito-core:${mockito_version}"
+}
