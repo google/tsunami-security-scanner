@@ -21,82 +21,39 @@ repository.
 
 ## Quick Start
 
-To quickly get started with Tsunami scans,
+For simplicity, we provide a Dockerfile that should cover most of the use
+cases.
 
-### Traditional install
- 1.  install the following required dependencies:
+1. You need to check-out the plugins and the callback server of Tsunami at the
+root of directory, next to the Dockerfile. We do not perform this step in the
+Dockerfile so that you can modify plugins or the callback server configuration
+easily during the development phase.
 
-     ```
-     nmap >= 7.80
-     ncrack >= 0.7
-     ```
+```
+$ git clone https://github.com/google/tsunami-security-scanner-plugins
+$ git clone https://github.com/google/tsunami-security-scanner-callback-server
+$ docker build -t tsunami:latest .
+```
 
- 1.  start a vulnerable application that can be identified by Tsunami, e.g. an
-      unauthenticated Jupyter Notebook server. The easiest way is to use a docker
-      image:
-     ```shell
-     docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
-     ```
+1. You will then be able to use the docker image, for example:
 
- 1.  execute the following command:
+```
+$ docker run -it --rm tsunami:latest bash
+(docker) # tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
+(docker) # tsunami-tcs ## runs the callback server
+```
 
-     ```
-     bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start.sh)"
-     ```
+Whenever you make a change to a plugin, you need to reiterate the build phase.
+While in the middle of development, we recommend commenting out the Stage 2 of
+the Dockerfile so that you can directly build changed plugins directly in the
+Docker.
 
- The `quick_start.sh` script performs the following tasks:
+Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
+and `/usr/tsunami/tcs_config.yaml` for the callback server.
 
- 1.  Clone the
-     [google/tsunami-security-scanner](https://github.com/google/tsunami-security-scanner)
-     and
-     [google/tsunami-security-scanner-plugins](https://github.com/google/tsunami-security-scanner-plugins)
-     repos into `$HOME/tsunami/repos` directory.
- 1.  Compile all
-     [Google Tsunami plugins](https://github.com/google/tsunami-security-scanner-plugins/tree/master/google)
-     and move all plugin `jar` files into `$HOME/tsunami/plugins` directory.
- 1.  Compile the Tsunami scanner Fat Jar file and move it into `$HOME/tsunami`
-     directory.
- 1.  Move the `tsunami.yaml` example config into `$HOME/tsunami` directory.
- 1.  Print example Tsunami command for scanning `127.0.0.1` using the previously
-     generated artifacts.
-
-#### Advanced Configuration with Callback Server and Python Language Server
-
- 1.  execute the following command:
-
-     ```
-     bash -c "$(curl -sfL https://raw.githubusercontent.com/google/tsunami-security-scanner/master/quick_start_advanced.sh)"
-     ```
-
-### Docker install
-
-1.  start a vulnerable application that can be identified by Tsunami, e.g. an
-    unauthenticated Jupyter Notebook server. The easiest way is to use a docker
-    image:
-
-    ```shell
-    docker run --name unauthenticated-jupyter-notebook -p 8888:8888 -d jupyter/base-notebook start-notebook.sh --NotebookApp.token=''
-    ```
-
-1.  build the docker image for Tsunami:
-
-    ```shell
-    docker build -t tsunami .
-    ```
-
-1.  run the Tsunami image. The logs can be saved to the host machine by mounting
-    a volume:
-
-    ```shell
-    docker run --network="host" -v "$(pwd)/logs":/usr/tsunami/logs tsunami
-    ```
-
-1.  debugging issues with Tsunami container. The tsunami container is based on
-    Debian. To run debug tools simply exec into the container and install them:
-
-    ```shell
-    docker exec -it tsunami bash
-    ```
+Also note that to use the callback server, you might have to setup port forward
+with your docker when starting it. We encourage you to refer to the `-p` option
+of Docker.
 
 ## Contributing
 
@@ -107,7 +64,7 @@ Read how to [contribute to Tsunami](docs/contribute/contributing.md).
 Tsunami is released under the [Apache 2.0 license](LICENSE).
 
 ```
-Copyright 2019 Google Inc.
+Copyright 2025 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
