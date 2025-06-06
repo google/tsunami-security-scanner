@@ -41,6 +41,7 @@ $ docker build -t tsunami:latest .
 $ docker run -it --rm tsunami:latest bash
 (docker) # tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
 (docker) # tsunami-tcs ## runs the callback server
+(docker) # tsunami-linter ## linter for the templated language
 ```
 
 Whenever you make a change to a plugin, you need to reiterate the build phase.

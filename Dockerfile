@@ -5,7 +5,7 @@ FROM ubuntu:latest
 ### 1.0. Dependencies
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates wget unzip openjdk-21-jdk python3 python3-venv \
+ && apt-get install -y --no-install-recommends git ca-certificates wget unzip openjdk-21-jdk \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /usr/share/doc && rm -rf /usr/share/man \
  && apt-get clean
@@ -67,7 +67,7 @@ FROM ubuntu:latest
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates openjdk-21-jre \
+    && apt-get install -y --no-install-recommends nmap ncrack ca-certificates openjdk-21-jre golang \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/share/doc && rm -rf /usr/share/man \
     && apt-get clean \
@@ -79,6 +79,9 @@ RUN echo '#!/bin/bash\njava -cp /usr/tsunami/tsunami.jar:/usr/tsunami/plugins/* 
     && chmod +x /usr/bin/tsunami \
     && echo '#!/bin/bash\njava -cp /usr/tsunami/tsunami-tcs.jar com.google.tsunami.callbackserver.main.TcsMain --custom-config=/usr/tsunami/tcs_config.yaml $*\n' > /usr/bin/tsunami-tcs \
     && chmod +x /usr/bin/tsunami-tcs
+# Install the linter
+RUN go install github.com/google/tsunami-security-scanner-plugins/templated/utils/linter@latest \
+    && ln -s /root/go/bin/linter /usr/bin/tsunami-linter
 
 # Copy previous build results
 COPY --from=0 /usr/tsunami /usr/tsunami

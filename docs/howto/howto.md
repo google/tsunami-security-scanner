@@ -1,61 +1,51 @@
 # Build and run Tsunami
 
-## Build and run the scanner
+## Using Docker
 
-To build the scanner, go to the root path of the project and execute the
-following command:
+For simplicity, we provide a Dockerfile that should cover most of the use
+cases.
 
-```shell
-./gradlew shadowJar
-```
-
-When the command finishes, the generated scanner `jar` file is located in the
-`main/build/libs` folder with the name of `tsunami-main-[version]-cli.jar`. This
-is a fat jar file so can be treated as a standalone binary.
-
-To execute the scanner, first you need to install plugins into a chosen folder.
-The minimal required plugin is a `PortScanner` plugin.
-
-Assuming plugins are installed under `~/tsunami-plugins/`, then you could use
-the following command to execute a Tsunami scan:
-
-```shell
-java \
-    # Tsunami classpath, as of now plugins must be installed into classpath.
-    -cp "tsunami-main-[version]-cli.jar:~/tsunami-plugins/*" \
-    # Specify the config file of Tsunami, by default Tsunami loads a tsunami.yaml
-    # file from there the command is executed.
-    -Dtsunami.config.location=/path/to/config/tsunami.yaml \
-    # Main class for TsunamiCli.
-    com.google.tsunami.main.cli.TsunamiCli \
-    # Scan target.
-    --ip-v4-target=127.0.0.1 \
-    # Scan output file and data format.
-    --scan-results-local-output-format=JSON \
-    --scan-results-local-output-filename=/tmp/tsunami-result.json
-```
-
-NOTE: Currently Tsunami only supports loading plugins from its `classpath`. We
-are adding new features to allow users specifying plugin installation folders in
-the config file of Tsunami.
-
-## Install Tsunami plugins
-
-As mentioned above, Tsunami plugins must be installed into a folder that can be
-recognized by Tsunami at runtime. This directory can be any arbitrary folder as
-long as it is present in the runtime classpath of Tsunami.
-
-Usually each Tsunami plugin is a standalone `jar` file. You can put whatever
-support plugin `jar` file into the chosen directory. For example, if
-`~/tsunami-plugins/` is where all plugins are installed, then the expected
-layout of `~/tsunami-plugins/` would be:
+1. You need to check-out the plugins and the callback server of Tsunami in the
+root directory, next to the Dockerfile. We do not perform this step in the
+Dockerfile so that you can modify plugins or the callback server configuration
+easily during the development phase.
 
 ```
-$ ls ~/tsunami-plugins
-
-awesome-port-scanner.jar         my-web-fingerprinter.jar      weak-ssh-cred-detector.jar
-wordpress-installation.jar       exposed-jupyter-notebook.jar
+$ git clone https://github.com/google/tsunami-security-scanner-plugins
+$ git clone https://github.com/google/tsunami-security-scanner-callback-server
+$ docker build -t tsunami:latest .
 ```
 
-NOTE: We are adding new features to allow users specifying plugin installation
-folders in the config file of Tsunami.
+1. You will then be able to use the docker image, for example:
+
+```
+$ docker run -it --rm tsunami:latest bash
+(docker) # tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
+(docker) # tsunami-tcs ## runs the callback server
+(docker) # tsunami-linter ## linter for the templated language
+```
+
+Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
+and `/usr/tsunami/tcs_config.yaml` for the callback server.
+
+Also note that to use the callback server, you might have to setup port
+forwarding with your docker when starting it. We encourage you to refer to the
+`-p` option of Docker.
+
+## Development workflow
+
+When using the default Docker image, you will notice that it gets rid of all
+compilation artifacts before finalizing the image.
+
+When you are in the middle of the development of a plugin, this might not be
+very convenient; We generally recommend commenting out all of the `Stage 2` from
+the Dockerfile. We also recommend commenting out the other plugins section so
+that the compilation process is faster.
+
+A few important things:
+
+- Everything related to Tsunami is in `/usr/tsunami` (config, jar, ...);
+- The source-code is contained in `/usr/tsunami/repos` where you can make your
+changes;
+- When you compile your plugin, you need to add it to `/usr/tsunami/plugins` so
+that it is used by the `tsunami` wrapper;
