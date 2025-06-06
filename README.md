@@ -24,8 +24,8 @@ repository.
 For simplicity, we provide a Dockerfile that should cover most of the use
 cases.
 
-1. You need to check-out the plugins and the callback server of Tsunami at the
-root of directory, next to the Dockerfile. We do not perform this step in the
+1. You need to check-out the plugins and the callback server of Tsunami in the
+root directory, next to the Dockerfile. We do not perform this step in the
 Dockerfile so that you can modify plugins or the callback server configuration
 easily during the development phase.
 
