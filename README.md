@@ -24,7 +24,7 @@ repository.
 For simplicity, we provide a Dockerfile that should cover most of the use
 cases.
 
-1. You need to check-out the plugins and the callback server of Tsunami in the
+You need to check-out the plugins and the callback server of Tsunami in the
 root directory, next to the Dockerfile. We do not perform this step in the
 Dockerfile so that you can modify plugins or the callback server configuration
 easily during the development phase.
@@ -35,7 +35,7 @@ $ git clone https://github.com/google/tsunami-security-scanner-callback-server
 $ docker build -t tsunami:latest .
 ```
 
-1. You will then be able to use the docker image, for example:
+You will then be able to use the docker image, for example:
 
 ```
 $ docker run -it --rm tsunami:latest bash
