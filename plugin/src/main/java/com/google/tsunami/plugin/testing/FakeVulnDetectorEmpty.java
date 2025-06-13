@@ -22,6 +22,7 @@ import com.google.tsunami.plugin.annotations.PluginInfo;
 import com.google.tsunami.proto.DetectionReportList;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.Vulnerability;
 
 /** A fake VulnDetector plugin for testing purpose only. */
 @PluginInfo(
@@ -37,5 +38,10 @@ public class FakeVulnDetectorEmpty implements VulnDetector {
   public DetectionReportList detect(
       TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
     return DetectionReportList.newBuilder().build();
+  }
+
+  @Override
+  public ImmutableList<Vulnerability> getAdvisories() {
+    return ImmutableList.of();
   }
 }

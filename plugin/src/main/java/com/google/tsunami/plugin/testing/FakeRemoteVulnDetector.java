@@ -63,6 +63,12 @@ public final class FakeRemoteVulnDetector implements RemoteVulnDetector {
   }
 
   @Override
+  public ImmutableList<Vulnerability> getAdvisories() {
+    // This is a fake detector, there are no real advisories attached to it.
+    return ImmutableList.of();
+  }
+
+  @Override
   public DetectionReportList detect(TargetInfo target, ImmutableList<NetworkService> services) {
     ImmutableList<ImmutableList<DetectionReport>> detectionReports =
         matchedPluginsToRun.stream()

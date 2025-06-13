@@ -33,6 +33,7 @@ import com.google.tsunami.proto.PluginDefinition;
 import com.google.tsunami.proto.RunRequest;
 import com.google.tsunami.proto.RunResponse;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.Vulnerability;
 import io.grpc.Channel;
 import io.grpc.Deadline;
 import io.grpc.health.v1.HealthCheckRequest;
@@ -98,6 +99,12 @@ public final class RemoteVulnDetectorImpl implements RemoteVulnDetector {
       throw new LanguageServerException("Failed to get response from language server.", e);
     }
     return DetectionReportList.getDefaultInstance();
+  }
+
+  @Override
+  public ImmutableList<Vulnerability> getAdvisories() {
+    // TODO: b/422968545 - The remote detectors also need to support getAdvisories().
+    return ImmutableList.of();
   }
 
   @Override

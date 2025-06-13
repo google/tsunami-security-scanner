@@ -30,6 +30,7 @@ import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.PortScanningReport;
 import com.google.tsunami.proto.ScanTarget;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.Vulnerability;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.util.Map;
@@ -161,6 +162,11 @@ public final class PluginLoadingModuleTest {
         TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
       return null;
     }
+
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
+    }
   }
 
   private static final class FakeVulnDetectorBootstrapModule extends PluginBootstrapModule {
@@ -184,6 +190,11 @@ public final class PluginLoadingModuleTest {
       return null;
     }
 
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
+    }
+
     static final class FakeVulnDetector2BootstrapModule extends PluginBootstrapModule {
       @Override
       protected void configurePlugin() {
@@ -197,6 +208,11 @@ public final class PluginLoadingModuleTest {
     public DetectionReportList detect(
         TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
       return null;
+    }
+
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
     }
   }
 }

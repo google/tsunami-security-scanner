@@ -26,6 +26,7 @@ import com.google.tsunami.proto.MatchedPlugin;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.PluginDefinition;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.Vulnerability;
 import java.util.Set;
 
 /** Fake {@link RemoteVulnDetector} implementation that fails to run. */
@@ -42,6 +43,11 @@ public final class FailedRemoteVulnDetector implements RemoteVulnDetector {
 
   public FailedRemoteVulnDetector() {
     this.matchedPluginsToRun = Sets.newHashSet();
+  }
+
+  @Override
+  public ImmutableList<Vulnerability> getAdvisories() {
+    return ImmutableList.of();
   }
 
   @Override

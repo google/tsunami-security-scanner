@@ -58,6 +58,12 @@ public class FakeVulnDetector2 implements VulnDetector {
   }
 
   @Override
+  public ImmutableList<Vulnerability> getAdvisories() {
+    // This is a fake detector, there are no real advisories attached to it.
+    return ImmutableList.of();
+  }
+
+  @Override
   public DetectionReportList detect(
       TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
     return DetectionReportList.newBuilder()

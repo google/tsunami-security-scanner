@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.tsunami.proto.DetectionReportList;
 import com.google.tsunami.proto.NetworkService;
 import com.google.tsunami.proto.TargetInfo;
+import com.google.tsunami.proto.Vulnerability;
 
 /**
  * A {@link TsunamiPlugin} that detects potential vulnerabilities on the target.
@@ -39,4 +40,12 @@ public interface VulnDetector extends TsunamiPlugin {
    */
   DetectionReportList detect(
       TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices);
+
+  /**
+   * Provides access to the information on the vulnerabilities detected by this plugin. To avoid
+   * confusion, information about a vulnerability is referred to as an advisory.
+   *
+   * @return the advisory details.
+   */
+  abstract ImmutableList<Vulnerability> getAdvisories();
 }

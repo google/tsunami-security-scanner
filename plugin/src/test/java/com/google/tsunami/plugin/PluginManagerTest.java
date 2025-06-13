@@ -55,6 +55,7 @@ import com.google.tsunami.proto.TargetOperatingSystemClass;
 import com.google.tsunami.proto.TargetServiceName;
 import com.google.tsunami.proto.TargetSoftware;
 import com.google.tsunami.proto.TransportProtocol;
+import com.google.tsunami.proto.Vulnerability;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import java.security.SecureRandom;
@@ -1099,6 +1100,11 @@ public class PluginManagerTest {
       return null;
     }
 
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
+    }
+
     static FakeServiceNameFilteringDetectorBootstrapModule getModule() {
       return new FakeServiceNameFilteringDetectorBootstrapModule();
     }
@@ -1126,6 +1132,11 @@ public class PluginManagerTest {
     public DetectionReportList detect(
         TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
       return null;
+    }
+
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
     }
 
     static FakeSofwareFilteringDetectorBootstrapModule getModule() {
@@ -1156,6 +1167,11 @@ public class PluginManagerTest {
       return null;
     }
 
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
+    }
+
     static FakeOsFilteringDetectorBootstrapModule getModule() {
       return new FakeOsFilteringDetectorBootstrapModule();
     }
@@ -1184,6 +1200,11 @@ public class PluginManagerTest {
     public DetectionReportList detect(
         TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
       return null;
+    }
+
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
     }
 
     static FakeOsServiceFilteringDetectorBootstrapModule getModule() {
@@ -1223,6 +1244,11 @@ public class PluginManagerTest {
     public DetectionReportList detect(
         TargetInfo targetInfo, ImmutableList<NetworkService> matchedServices) {
       return null;
+    }
+
+    @Override
+    public ImmutableList<Vulnerability> getAdvisories() {
+      return ImmutableList.of();
     }
 
     @Override
