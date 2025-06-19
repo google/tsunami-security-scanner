@@ -1,5 +1,9 @@
 # Writing a Tsunami detector (Java)
 
+NOTE: We now expect you to write plugins using the templated format first. Only
+resort to Java or Python if the plugin cannot be written with the templated
+format.
+
 ## Overview
 
 Each Tsunami detector needs the following pieces which we will create in this

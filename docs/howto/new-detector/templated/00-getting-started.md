@@ -1,8 +1,4 @@
 
-IMPORTANT: The templated language is not yet approved for wide usage. We are
-currently running it as part of a beta with a selected fews. This warning will
-be removed once the language can be used as the default.
-
 # Getting started with templated plugins
 
 In this documentation, you will learn how to write a plugin for Tsunami in the
