@@ -47,20 +47,13 @@ public class FakeVulnDetector implements VulnDetector {
         .setNetworkService(networkService)
         .setDetectionTimestamp(Timestamps.fromMillis(1234567890L))
         .setDetectionStatus(DetectionStatus.VULNERABILITY_VERIFIED)
-        .setVulnerability(
-            Vulnerability.newBuilder()
-                .setMainId(
-                    VulnerabilityId.newBuilder().setPublisher("GOOGLE").setValue("FakeVuln1"))
-                .setSeverity(Severity.CRITICAL)
-                .setTitle("FakeTitle1")
-                .setDescription("FakeDescription1"))
+        .setVulnerability(getAdvisoriesStatic().get(0))
         .build();
   }
 
   @Override
   public ImmutableList<Vulnerability> getAdvisories() {
-    // This is a fake detector, there are no real advisories attached to it.
-    return ImmutableList.of();
+    return getAdvisoriesStatic();
   }
 
   @Override
@@ -72,5 +65,15 @@ public class FakeVulnDetector implements VulnDetector {
                 .map(networkService -> getFakeDetectionReport(targetInfo, networkService))
                 .collect(toImmutableList()))
         .build();
+  }
+
+  private static ImmutableList<Vulnerability> getAdvisoriesStatic() {
+    return ImmutableList.of(
+        Vulnerability.newBuilder()
+            .setMainId(VulnerabilityId.newBuilder().setPublisher("GOOGLE").setValue("FakeVuln1"))
+            .setSeverity(Severity.CRITICAL)
+            .setTitle("FakeTitle1")
+            .setDescription("FakeDescription1")
+            .build());
   }
 }
