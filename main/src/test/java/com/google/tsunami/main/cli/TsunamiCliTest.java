@@ -60,16 +60,20 @@ import com.google.tsunami.proto.WebServiceContext;
 import com.google.tsunami.workflow.ScanningWorkflowException;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
@@ -86,6 +90,7 @@ public final class TsunamiCliTest {
   private static final String URI_TARGET = "https://localhost/function1";
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+  @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Mock ScanResultsArchiver scanResultsArchiver;
 
@@ -305,6 +310,39 @@ public final class TsunamiCliTest {
       assertThat(storedScanResult.getScanStatus()).isEqualTo(ScanStatus.FAILED);
       assertThat(storedScanResult.getStatusMessage()).isEqualTo("All VulnDetectors failed.");
     }
+  }
+
+  @Test
+  public void run_whenAdvisoryMode_generatesAdvisories()
+      throws InterruptedException, ExecutionException, ScanningWorkflowException, IOException {
+    File tempFile = tempFolder.newFile("advisories.csv");
+    Path tempPath = tempFile.toPath();
+    boolean scanSucceeded = runCli(ImmutableMap.of(), "--dump-advisories=" + tempPath.toString());
+
+    String advisories = Files.readString(tempPath);
+    String expectedAdvisories =
+        """
+        vulnerabilities {
+          main_id {
+            publisher: "GOOGLE"
+            value: "FakeVuln1"
+          }
+          severity: CRITICAL
+          title: "FakeTitle1"
+          description: "FakeDescription1"
+        }
+        vulnerabilities {
+          main_id {
+            publisher: "GOOGLE"
+            value: "FakeVuln2"
+          }
+          severity: MEDIUM
+          title: "FakeTitle2"
+          description: "FakeDescription2"
+        }
+        """;
+    assertThat(scanSucceeded).isTrue();
+    assertThat(advisories).isEqualTo(expectedAdvisories);
   }
 
   private static ScanFinding buildScanFindingFromDetectionReport(DetectionReport detectionReport) {

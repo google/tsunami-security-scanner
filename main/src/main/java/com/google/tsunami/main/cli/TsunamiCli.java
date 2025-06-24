@@ -51,6 +51,7 @@ import com.google.tsunami.plugin.payload.PayloadGeneratorModule;
 import com.google.tsunami.proto.ScanResults;
 import com.google.tsunami.proto.ScanStatus;
 import com.google.tsunami.proto.ScanTarget;
+import com.google.tsunami.workflow.AdvisoriesWorkflow;
 import com.google.tsunami.workflow.DefaultScanningWorkflow;
 import com.google.tsunami.workflow.ScanningWorkflowException;
 import io.github.classgraph.ClassGraph;
@@ -70,6 +71,7 @@ public final class TsunamiCli {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final DefaultScanningWorkflow scanningWorkflow;
+  private final AdvisoriesWorkflow advisoriesWorkflow;
   private final ScanResultsArchiver scanResultsArchiver;
   private final MainCliOptions mainCliOptions;
   private final RemoteServerLoader remoteServerLoader;
@@ -77,10 +79,12 @@ public final class TsunamiCli {
   @Inject
   TsunamiCli(
       DefaultScanningWorkflow scanningWorkflow,
+      AdvisoriesWorkflow advisoriesWorkflow,
       ScanResultsArchiver scanResultsArchiver,
       MainCliOptions mainCliOptions,
       RemoteServerLoader remoteServerLoader) {
     this.scanningWorkflow = checkNotNull(scanningWorkflow);
+    this.advisoriesWorkflow = checkNotNull(advisoriesWorkflow);
     this.scanResultsArchiver = checkNotNull(scanResultsArchiver);
     this.mainCliOptions = checkNotNull(mainCliOptions);
     this.remoteServerLoader = checkNotNull(remoteServerLoader);
@@ -93,6 +97,12 @@ public final class TsunamiCli {
     logger.atInfo().log("%sTsunamiCli starting...", logId);
 
     ImmutableList<Process> languageServerProcesses = remoteServerLoader.runServerProcesses();
+    if (mainCliOptions.dumpAdvisoriesPath != null && !mainCliOptions.dumpAdvisoriesPath.isEmpty()) {
+      logger.atInfo().log("No scan will be performed. Dumping advisories.");
+      advisoriesWorkflow.run(mainCliOptions.dumpAdvisoriesPath);
+      return true;
+    }
+
     ScanResults scanResults = scanningWorkflow.run(buildScanTarget());
     languageServerProcesses.forEach(Process::destroy);
 

@@ -53,8 +53,19 @@ public final class MainCliOptions implements CliOption {
               + " parameter is set, port scan is automatically skipped.")
   public String uriTarget;
 
+  @Parameter(
+      names = "--dump-advisories",
+      description =
+          "Disable scanning. Reports the list of currently enabled advisories to the specified"
+              + " file, in textproto format.")
+  public String dumpAdvisoriesPath;
+
   @Override
   public void validate() {
+    if (dumpAdvisoriesPath != null && !dumpAdvisoriesPath.isEmpty()) {
+      return;
+    }
+
     List<String> portScanEnabledTargets = new ArrayList<>();
     List<String> portScanDisabledTargets = new ArrayList<>();
     if (ipV4Target != null) {

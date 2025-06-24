@@ -27,6 +27,14 @@ import org.junit.runners.JUnit4;
 public class MainCliOptionsTest {
 
   @Test
+  public void validate_whenDumpAdvisoriesPathPassed_doesNotThrowParameterException() {
+    MainCliOptions cliOptions = new MainCliOptions();
+
+    cliOptions.dumpAdvisoriesPath = "path/to/dump/advisories";
+    cliOptions.validate();
+  }
+
+  @Test
   public void validate_whenMissingScanTarget_throwsParameterException() {
     MainCliOptions cliOptions = new MainCliOptions();
 

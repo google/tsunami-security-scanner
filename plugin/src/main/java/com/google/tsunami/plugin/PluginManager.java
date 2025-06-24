@@ -127,6 +127,20 @@ public class PluginManager {
         .collect(toImmutableList());
   }
 
+  public ImmutableList<VulnDetector> getAllVulnDetectors() {
+    return tsunamiPlugins.entrySet().stream()
+        .filter(entry -> isVulnDetector(entry.getKey()))
+        .map(
+            entry -> {
+              if (entry.getKey().type().equals(PluginType.VULN_DETECTION)) {
+                return (VulnDetector) entry.getValue().get();
+              }
+
+              return (RemoteVulnDetector) entry.getValue().get();
+            })
+        .collect(toImmutableList());
+  }
+
   private static boolean isPluginListed(
       PluginDefinition pluginDefinition, ImmutableSet<String> pluginNames, boolean defaultValue) {
     if (pluginNames.isEmpty()) {
