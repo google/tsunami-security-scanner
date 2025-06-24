@@ -277,7 +277,7 @@ public final class TsunamiCli {
     }
   }
 
-  public static void main(String[] args) {
+  public static int doMain(String[] args) {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     TsunamiConfig tsunamiConfig = loadConfig();
@@ -298,17 +298,21 @@ public final class TsunamiCli {
 
       // Exit with non-zero code if scan failed.
       if (!injector.getInstance(TsunamiCli.class).run()) {
-        System.exit(1);
+        return 1;
       }
       logger.atInfo().log("Full Tsunami scan took %s.", stopwatch.stop());
-      System.exit(0);
+      return 0;
     } catch (Throwable e) {
       logger.atSevere().withCause(e).log("Exiting due to workflow execution exceptions.");
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
-      System.exit(1);
+      return 1;
     }
+  }
+
+  public static void main(String[] args) {
+    System.exit(doMain(args));
   }
 
   private static TsunamiConfig loadConfig() {
