@@ -2,27 +2,29 @@
 
 ## Using Docker
 
-For simplicity, we provide a Dockerfile that should cover most of the use
-cases.
+We provide a set of Docker images to help you build and use Tsunami. We provide
+a minimal (scratch) image for:
 
-You need to check-out the plugins and the callback server of Tsunami in the
-root directory, next to the Dockerfile. We do not perform this step in the
-Dockerfile so that you can modify plugins or the callback server configuration
-easily during the development phase.
+- The core engine only;
+- The callback server only;
+- Each category of plugin;
 
-```
-$ git clone https://github.com/google/tsunami-security-scanner-plugins
-$ git clone https://github.com/google/tsunami-security-scanner-callback-server
-$ docker build -t tsunami:latest .
-```
+Using these minimal images is not recommended, instead we recommend composing
+on top of them.
 
-You will then be able to use the docker image, for example:
+If you just intend to run Tsunami, we recommend using the latest complete
+image:
 
-```
-$ docker run -it --rm tsunami:latest bash
-(docker) # tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
-(docker) # tsunami-tcs ## runs the callback server
-(docker) # tsunami-linter ## linter for the templated language
+```sh
+$ docker pull ghcr.io/google/tsunami-scanner-full:latest
+$ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
+
+# note: you will need to install a port scanner and a credential brute-forcer.
+# We recommend installing nmap and ncrack using apt.
+
+$ tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
+(docker) $ tsunami-tcs ## runs the callback server
+(docker) $ tsunami-linter ## linter for the templated language
 ```
 
 Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
@@ -34,18 +36,28 @@ forwarding with your docker when starting it. We encourage you to refer to the
 
 ## Development workflow
 
-When using the default Docker image, you will notice that it gets rid of all
-compilation artifacts before finalizing the image.
+To set-up your own development workflow, we recommend composing on top of the
+tsunami full image but to delete existing plugins to minimize noise:
 
-When you are in the middle of the development of a plugin, this might not be
-very convenient; We generally recommend commenting out all of the `Stage 2` from
-the Dockerfile. We also recommend commenting out the other plugins section so
-that the compilation process is faster.
+```dockerfile
+FROM ghcr.io/google/tsunami-scanner-full:latest AS full
+FROM ubuntu:latest AS devel
 
-A few important things:
+WORKDIR /usr/tsunami
+COPY --from=core /usr/tsunami/* /usr/tsunami
+RUN rm -f /usr/tsunami/plugins/*
 
-- Everything related to Tsunami is in `/usr/tsunami` (config, jar, ...);
-- The source-code is contained in `/usr/tsunami/repos` where you can make your
-changes;
-- When you compile your plugin, you need to add it to `/usr/tsunami/plugins` so
-that it is used by the `tsunami` wrapper;
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-21-jdk git
+```
+
+You can then build that image and use it with your local copy of the plugins:
+
+```sh
+$ docker build -t tsunadev:latest . -f myDockerfile
+$ docker run -it --rm tsunadev:latest -v /path/to/tsunami-security-scanner-plugins:/usr/tsunami/repos/plugins bash
+(docker) $ cd /usr/tsunami/repos/plugins/to/my/plugin
+(docker) $ ./gradlew build
+(docker) $ cp build/libs/*.jar /usr/tsunami/plugins
+(docker) $ tsunami --ip-v4-target=127.0.0.1
+```
