@@ -43,23 +43,23 @@ RUN cp build/libs/*.jar /usr/tsunami/plugins
 WORKDIR /usr/repos/tsunami-security-scanner-plugins/google
 RUN chmod +x build_all.sh \
     && ./build_all.sh
-RUN cp build/plugins/*.jar /usr/tsunami/plugins
+RUN cp build/libs/*.jar /usr/tsunami/plugins
 
 # Build all other plugins
 WORKDIR /usr/repos/tsunami-security-scanner-plugins/community
 RUN chmod +x build_all.sh \
     && ./build_all.sh
-RUN cp build/plugins/*.jar /usr/tsunami/plugins
+RUN cp build/libs/*.jar /usr/tsunami/plugins
 
 WORKDIR /usr/repos/tsunami-security-scanner-plugins/doyensec
 RUN chmod +x build_all.sh \
     && ./build_all.sh
-RUN cp build/plugins/*.jar /usr/tsunami/plugins
+RUN cp build/libs/*.jar /usr/tsunami/plugins
 
 WORKDIR /usr/repos/tsunami-security-scanner-plugins/govtech
 RUN chmod +x build_all.sh \
     && ./build_all.sh
-RUN cp build/plugins/*.jar /usr/tsunami/plugins
+RUN cp build/libs/*.jar /usr/tsunami/plugins
 
 ## Stage 2: Release
 
