@@ -1,6 +1,6 @@
 # Tsunami
 
-![build](https://github.com/google/tsunami-security-scanner/workflows/build/badge.svg)
+![build](https://github.com/google/tsunami-security-scanner/actions/workflows/core-build.yml/badge.svg)
 
 Tsunami is a general purpose network security scanner with an extensible plugin
 system for detecting high severity vulnerabilities with high confidence.
