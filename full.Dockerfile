@@ -10,6 +10,7 @@ FROM ghcr.io/google/tsunami-plugins-templated:latest AS plugins-templated
 FROM ghcr.io/google/tsunami-plugins-doyensec:latest AS plugins-doyensec
 FROM ghcr.io/google/tsunami-plugins-community:latest AS plugins-community
 FROM ghcr.io/google/tsunami-plugins-govtech:latest AS plugins-govtech
+FROM ghcr.io/google/tsunami-plugins-facebook:latest AS plugins-facebook
 
 # Release a full version
 FROM ubuntu:latest AS release
@@ -29,6 +30,7 @@ COPY --from=plugins-templated /usr/tsunami/plugins/ /usr/tsunami/plugins/
 COPY --from=plugins-doyensec /usr/tsunami/plugins/ /usr/tsunami/plugins/
 COPY --from=plugins-community /usr/tsunami/plugins/ /usr/tsunami/plugins/
 COPY --from=plugins-govtech /usr/tsunami/plugins/ /usr/tsunami/plugins/
+COPY --from=plugins-facebook /usr/tsunami/plugins/ /usr/tsunami/plugins/
 
 # Create wrapper scripts
 WORKDIR /usr/tsunami
