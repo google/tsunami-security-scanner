@@ -55,7 +55,7 @@ You can then build that image and use it with your local copy of the plugins:
 $ docker build -t tsunadev:latest . -f myDockerfile
 $ docker run -it --rm tsunadev:latest -v /path/to/tsunami-security-scanner-plugins:/usr/tsunami/repos/plugins bash
 (docker) $ cd /usr/tsunami/repos/plugins/to/my/plugin
-(docker) $ ./gradlew build
+(docker) $ gradle build
 (docker) $ cp build/libs/*.jar /usr/tsunami/plugins
 (docker) $ tsunami --ip-v4-target=127.0.0.1
 ```
