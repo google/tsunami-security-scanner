@@ -45,7 +45,7 @@ FROM ghcr.io/google/tsunami-scanner-full:latest AS full
 FROM ghcr.io/google/tsunami-scanner-devel:latest AS devel
 
 WORKDIR /usr/tsunami
-COPY --from=core /usr/tsunami/* /usr/tsunami
+COPY --from=full /usr/tsunami/* /usr/tsunami
 RUN rm -f /usr/tsunami/plugins/*
 ```
 
