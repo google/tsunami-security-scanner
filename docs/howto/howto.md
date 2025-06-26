@@ -18,7 +18,6 @@ If you just intend to run Tsunami, we recommend using the latest complete
 image:
 
 ```sh
-$ docker pull ghcr.io/google/tsunami-scanner-full:latest
 $ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
 
 # note: you will need to install a port scanner and a credential brute-forcer.
@@ -43,14 +42,11 @@ tsunami full image but to delete existing plugins to minimize noise:
 
 ```dockerfile
 FROM ghcr.io/google/tsunami-scanner-full:latest AS full
-FROM ubuntu:latest AS devel
+FROM ghcr.io/google/tsunami-scanner-devel:latest AS devel
 
 WORKDIR /usr/tsunami
 COPY --from=core /usr/tsunami/* /usr/tsunami
 RUN rm -f /usr/tsunami/plugins/*
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends openjdk-21-jdk git
 ```
 
 You can then build that image and use it with your local copy of the plugins:
