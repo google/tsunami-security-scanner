@@ -12,6 +12,8 @@ a minimal (scratch) image for:
 Using these minimal images is not recommended, instead we recommend composing
 on top of them.
 
+![docker-images](img/docker-images.png)
+
 If you just intend to run Tsunami, we recommend using the latest complete
 image:
 

@@ -15,33 +15,8 @@ repository.
 
 ## Quick start
 
-We provide a set of Docker images to help you build and use Tsunami. We provide
-a minimal (scratch) image for:
-
-- The core engine only;
-- The callback server only;
-- Each category of plugin;
-
-Using these minimal images is not recommended, instead we recommend composing
-on top of them.
-
-If you just intend to run Tsunami, we recommend using the latest complete
-image:
-
-```sh
-$ docker pull ghcr.io/google/tsunami-scanner-full:latest
-$ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
-
-# note: you will need to install a port scanner and a credential brute-forcer.
-# We recommend installing nmap and ncrack using apt.
-
-$ tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
-(docker) $ tsunami-tcs ## runs the callback server
-(docker) $ tsunami-linter ## linter for the templated language
-```
-
-For more information, please see our documentation about
-[building and running Tsunami](https://google.github.io/tsunami-security-scanner/howto/howto)
+Please see the documentation on how to
+[build and run Tsunami](https://google.github.io/tsunami-security-scanner/howto/howto)
 
 ## Contributing
 
