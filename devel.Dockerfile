@@ -7,15 +7,15 @@ RUN apt-get update \
  && apt-get clean
 
 # Install a specific version of protoc for the templated plugins
-WORKDIR /usr/tsunami/deps
-RUN mkdir /usr/tsunami/deps/protoc \
-    && wget https://github.com/protocolbuffers/protobuf/releases/download/v25.5/protoc-25.5-linux-x86_64.zip -O /usr/tsunami/deps/protoc.zip \
-    && unzip /usr/tsunami/deps/protoc.zip -d /usr/tsunami/deps/protoc/
-ENV PATH="${PATH}:/usr/tsunami/deps/protoc/bin"
+WORKDIR /usr/dependencies
+RUN mkdir /usr/dependencies/protoc \
+    && wget https://github.com/protocolbuffers/protobuf/releases/download/v25.5/protoc-25.5-linux-x86_64.zip -O /usr/dependencies/protoc.zip \
+    && unzip /usr/dependencies/protoc.zip -d /usr/dependencies/protoc/
+ENV PATH="${PATH}:/usr/dependencies/protoc/bin"
 
 # Install a specific version of Gradle
-WORKDIR /usr/tsunami/deps
-RUN wget https://services.gradle.org/distributions/gradle-8.14.2-bin.zip -O /usr/tsunami/deps/gradle.zip \
-    && unzip /usr/tsunami/deps/gradle.zip -d /usr/tsunami/deps/ \
-    && mv /usr/tsunami/deps/gradle-8.14.2/ /usr/tsunami/deps/gradle/
-ENV PATH="${PATH}:/usr/tsunami/deps/gradle/bin"
+WORKDIR /usr/dependencies
+RUN wget https://services.gradle.org/distributions/gradle-8.14.2-bin.zip -O /usr/dependencies/gradle.zip \
+    && unzip /usr/dependencies/gradle.zip -d /usr/dependencies/ \
+    && mv /usr/dependencies/gradle-8.14.2/ /usr/dependencies/gradle/
+ENV PATH="${PATH}:/usr/dependencies/gradle/bin"
