@@ -45,17 +45,31 @@ FROM ghcr.io/google/tsunami-scanner-full:latest AS full
 FROM ghcr.io/google/tsunami-scanner-devel:latest AS devel
 
 WORKDIR /usr/tsunami
-COPY --from=full /usr/tsunami/* /usr/tsunami
+COPY --from=full /usr/tsunami /usr/tsunami/
+COPY --from=full /usr/bin/tsunami /usr/bin/tsunami
+COPY --from=full /usr/bin/tsunami-tcs /usr/bin/tsunami-tcs
 RUN rm -f /usr/tsunami/plugins/*
 ```
 
-You can then build that image and use it with your local copy of the plugins:
+You can then build that image and use it with your local copy of the plugins,
+where `/path/to/my/plugin` must point to your plugin. This is usually the folder
+containing your `build.gradle` if using Java or the `templated` folder of the
+plugins repository if using templated plugins.
 
 ```sh
 $ docker build -t tsunadev:latest . -f myDockerfile
-$ docker run -it --rm tsunadev:latest -v /path/to/tsunami-security-scanner-plugins:/usr/tsunami/repos/plugins bash
-(docker) $ cd /usr/tsunami/repos/plugins/to/my/plugin
+$ docker run -it --rm -v /path/to/my/plugin:/usr/tsunami/repos/myplugin tsunadev:latest bash
+
+## Java plugins
+(docker) $ cd /usr/tsunami/repos/myplugin
 (docker) $ gradle build
 (docker) $ cp build/libs/*.jar /usr/tsunami/plugins
+
+## Templated plugins
+(docker) $ cd /usr/tsunami/repos/myplugin/templateddetector
+(docker) $ gradle build
+(docker) $ cp build/libs/*.jar /usr/tsunami/plugins
+
+## Once the plugin is added, you can run Tsunami
 (docker) $ tsunami --ip-v4-target=127.0.0.1
 ```
