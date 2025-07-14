@@ -2,26 +2,34 @@ description = 'Tsunami: Common'
 
 dependencies {
     implementation project(':tsunami-proto')
-    implementation deps.autovalue
-    implementation deps.classgraph
-    implementation deps.flogger, deps.flogger_google_ext, deps.flogger_backend
-    implementation deps.google_cloud_storage
-    implementation deps.guava
-    implementation deps.guice, deps.guice_assisted
-    implementation deps.gson
-    implementation deps.jcommander
-    implementation deps.okhttp
-    implementation deps.snakeyaml
-    implementation deps.truth
-    runtimeOnly deps.mysql
-    runtimeOnly deps.postgresql
-    runtimeOnly deps.hive
-    annotationProcessor deps.autovalue_annotation_processor
 
-    testImplementation deps.guava_testlib
-    testImplementation deps.junit
-    testImplementation deps.mockito
-    testImplementation deps.mock_web_server
-    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
-    testAnnotationProcessor deps.autovalue_annotation_processor
+    implementation "com.beust:jcommander:1.48"
+    implementation "com.google.auto.value:auto-value-annotations:1.10.4"
+    implementation "com.google.cloud:google-cloud-storage:1.103.1"
+    implementation "com.google.code.gson:gson:2.8.6"
+    implementation "com.google.flogger:flogger-system-backend:0.5.1"
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.flogger:google-extensions:0.5.1"
+    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.inject:guice:6.0.0"
+    implementation "com.google.inject.extensions:guice-assistedinject:6.0.0"
+    implementation "com.google.truth:truth:1.4.0"
+    implementation "com.squareup.okhttp3:okhttp:3.12.0"
+    implementation "io.github.classgraph:classgraph:4.8.65"
+    implementation "org.yaml:snakeyaml:1.26"
+
+    runtimeOnly "com.mysql:mysql-connector-j:8.0.33"
+    runtimeOnly "org.apache.hive:hive-jdbc:4.0.1"
+    runtimeOnly "org.postgresql:postgresql:42.6.0"
+
+    annotationProcessor "com.google.auto.value:auto-value:1.10.4"
+    testAnnotationProcessor "com.google.auto.value:auto-value:1.10.4"
+
+    testImplementation "com.google.guava:guava-testlib:28.2-jre"
+    testImplementation "com.google.truth:truth:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
+    testImplementation "com.squareup.okhttp3:mockwebserver:3.12.0"
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:5.12.0"
 }

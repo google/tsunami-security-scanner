@@ -10,23 +10,27 @@ dependencies {
     implementation project(':tsunami-plugin')
     implementation project(':tsunami-proto')
     implementation project(':tsunami-workflow')
-    implementation deps.classgraph
-    implementation deps.flogger
-    implementation deps.flogger_google_ext
-    implementation deps.google_cloud_storage
-    implementation deps.guava
-    implementation deps.guice
-    implementation deps.javax_inject
-    implementation deps.jcommander
-    implementation deps.jsoup
-    implementation deps.libajp
-    implementation deps.grpc_netty
-    implementation deps.protobuf
-    runtimeOnly deps.jaxb_runtime
 
-    testImplementation deps.junit
-    testImplementation deps.mockito
-    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
+    implementation "com.beust:jcommander:1.48"
+    implementation "com.doyensec:libajp:1.0.0"
+    implementation "com.google.cloud:google-cloud-storage:1.103.1"
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.flogger:google-extensions:0.5.1"
+    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.inject:guice:6.0.0"
+    implementation "com.google.protobuf:protobuf-java:3.25.2"
+    implementation "io.github.classgraph:classgraph:4.8.65"
+    implementation "io.grpc:grpc-netty:1.60.0"
+    implementation "javax.inject:javax.inject:1"
+    implementation "org.jsoup:jsoup:1.9.2"
+
+    runtimeOnly "org.glassfish.jaxb:jaxb-runtime:2.3.1"
+
+    testImplementation "com.google.truth:truth:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:5.12.0"
 }
 
 application {

@@ -4,17 +4,19 @@ dependencies {
     implementation project(':tsunami-common')
     implementation project(':tsunami-plugin')
     implementation project(':tsunami-proto')
-    implementation deps.flogger
-    implementation deps.flogger_google_ext
-    implementation deps.guava
-    implementation deps.javax_inject
-    implementation deps.protobuf
-    implementation deps.protobuf_util
 
-    testImplementation deps.guice
-    testImplementation deps.guava_testlib
-    testImplementation deps.junit
-    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.flogger:google-extensions:0.5.1"
+    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.protobuf:protobuf-java-util:3.25.2"
+    implementation "com.google.protobuf:protobuf-java:3.25.2"
+    implementation "javax.inject:javax.inject:1"
+
+    testImplementation "com.google.guava:guava-testlib:28.2-jre"
+    testImplementation "com.google.truth:truth:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
+    testImplementation "junit:junit:4.13"
 }
 
 tasks.named("javadoc") {

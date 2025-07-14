@@ -4,31 +4,37 @@ description = 'Tsunami: Plugin'
 dependencies {
     implementation project(':tsunami-common')
     implementation project(':tsunami-proto')
-    implementation deps.autovalue
-    implementation deps.classgraph
-    implementation deps.flogger
-    implementation deps.flogger_google_ext
-    implementation deps.google_http_client
-    implementation deps.guava
-    implementation deps.guice
-    implementation deps.gson
-    implementation deps.javax_inject
-    implementation deps.jcommander
-    implementation deps.mock_web_server
-    implementation deps.protobuf
-    implementation deps.protobuf_util
-    implementation deps.grpc_core
-    implementation deps.grpc_netty
-    implementation deps.grpc_testing
-    implementation deps.grpc_context
-    implementation deps.grpc_services
-    implementation deps.tcs_common, deps.tcs_proto
-    annotationProcessor deps.autovalue_annotation_processor
 
-    testImplementation deps.guava_testlib
-    testImplementation deps.junit
-    testImplementation deps.mock_web_server
-    testImplementation deps.truth, deps.truth8, deps.truth_protobuf
+    implementation "com.beust:jcommander:1.48"
+    implementation "com.google.auto.value:auto-value-annotations:1.10.4"
+    implementation "com.google.code.gson:gson:2.8.6"
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.flogger:google-extensions:0.5.1"
+    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.http-client:google-http-client:1.44.1"
+    implementation "com.google.inject:guice:6.0.0"
+    implementation "com.google.protobuf:protobuf-java-util:3.25.2"
+    implementation "com.google.protobuf:protobuf-java:3.25.2"
+    implementation "com.google.tsunami:tcs-common:0.0.1"
+    implementation "com.google.tsunami:tcs-proto:0.0.1"
+    implementation "com.squareup.okhttp3:mockwebserver:3.12.0"
+    implementation "io.github.classgraph:classgraph:4.8.65"
+    implementation "io.grpc:grpc-context:1.60.0"
+    implementation "io.grpc:grpc-core:1.60.0"
+    implementation "io.grpc:grpc-netty:1.60.0"
+    implementation "io.grpc:grpc-services:1.60.0"
+    implementation "io.grpc:grpc-testing:1.60.0"
+    implementation "javax.inject:javax.inject:1"
+    implementation "org.yaml:snakeyaml:1.26"
+
+    annotationProcessor "com.google.auto.value:auto-value:1.10.4"
+
+    testImplementation "com.google.guava:guava-testlib:28.2-jre"
+    testImplementation "com.google.truth:truth:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
+    testImplementation "com.squareup.okhttp3:mockwebserver:3.12.0"
+    testImplementation "junit:junit:4.13"
 }
 
 tasks.named("compileJava") {
