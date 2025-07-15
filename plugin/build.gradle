@@ -4,6 +4,12 @@ description = 'Tsunami: Plugin'
 dependencies {
     implementation project(':tsunami-common')
     implementation project(':tsunami-proto')
+    implementation("com.google.tsunami:tcs-common") {
+        version { branch = "stable" }
+    }
+    implementation("com.google.tsunami:tcs-proto") {
+        version { branch = "stable" }
+    }
 
     implementation "com.beust:jcommander:1.48"
     implementation "com.google.auto.value:auto-value-annotations:1.10.4"
@@ -15,8 +21,6 @@ dependencies {
     implementation "com.google.inject:guice:6.0.0"
     implementation "com.google.protobuf:protobuf-java-util:3.25.2"
     implementation "com.google.protobuf:protobuf-java:3.25.2"
-    implementation "com.google.tsunami:tcs-common:0.0.1"
-    implementation "com.google.tsunami:tcs-proto:0.0.1"
     implementation "com.squareup.okhttp3:mockwebserver:3.12.0"
     implementation "io.github.classgraph:classgraph:4.8.65"
     implementation "io.grpc:grpc-context:1.60.0"
