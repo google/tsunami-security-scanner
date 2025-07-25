@@ -18,14 +18,18 @@ If you just intend to run Tsunami, we recommend using the latest complete
 image:
 
 ```sh
+$ docker pull ghcr.io/google/tsunami-scanner-full # make sure to use the latest
 $ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
 
 # note: you will need to install a port scanner and a credential brute-forcer.
 # We recommend installing nmap and ncrack using apt.
 
-$ tsunami --ip-v4-target=127.0.0.1 ## starts tsunami
+(docker) $ tsunami-py-server # run the Python server
 (docker) $ tsunami-tcs ## runs the callback server
 (docker) $ tsunami-linter ## linter for the templated language
+
+## starts tsunami and connect to the Python server
+(docker) $ tsunami --ip-v4-target=127.0.0.1 --remote-plugin-server-ports=34567
 ```
 
 Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
@@ -57,6 +61,8 @@ containing your `build.gradle` if using Java or the `templated` folder of the
 plugins repository if using templated plugins.
 
 ```sh
+$ docker pull ghcr.io/google/tsunami-scanner-full:latest
+$ docker pull ghcr.io/google/tsunami-scanner-devel:latest
 $ docker build -t tsunadev:latest . -f myDockerfile
 $ docker run -it --rm -v /path/to/my/plugin:/usr/tsunami/repos/myplugin tsunadev:latest bash
 
