@@ -3,23 +3,34 @@
 Welcome to the Tsunami community, we are thrilled that you want to contribute.
 This page contains information to get you started with your first contributions.
 
+## Contributing to Google code
+
+- [Contributing rules]({{ site.baseurl }}/contribute/index.md)
+
 ## Understanding Tsunami
 
+- [About Tsunami]({{ site.baseurl }}/about/index.md)
 - [How tsunami works]({{ site.baseurl }}/howto/orchestration)
 
 ## Building and running Tsunami
 
 - [How to build and run Tsumami]({{ site.baseurl }}/howto/howto)
 
-## Writing detectors
+## Writing plugins
 
-NOTE: By default we require every new detector to use our custom configuration
-format. If you think that the format does not meet the need for your use case,
-feel free to mention it when opening the issue on GitHub.
+### Vulnerability detectors
 
 - [Using our custom configuration format]({{ site.baseurl }}/howto/new-detector/templated/00-getting-started) (preferred approach)
 - [Using Java]({{ site.baseurl }}/howto/new-detector/new-detector-java)
 - Using Python *(not documented yet)*
+
+### Weak credentials detectors
+
+Not documented yet.
+
+### Fingerprinting plugins
+
+Not documented yet.
 
 ## Other guides
 
