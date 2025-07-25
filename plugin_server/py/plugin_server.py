@@ -32,6 +32,7 @@ from grpc_reflection.v1alpha import reflection
 import plugin_service
 import tsunami_plugin
 from common.net.http.requests_http_client import RequestsHttpClientBuilder
+from plugin.payload import payload_utility
 from plugin.payload.payload_generator import PayloadGenerator
 from plugin.payload.payload_secret_generator import PayloadSecretGenerator
 from plugin.payload.payload_utility import get_parsed_payload
@@ -67,10 +68,16 @@ _CALLBACK_POLLING_URI = flags.DEFINE_string(
     'http://127.0.0.1:8880',
     'Callback server URI for log polling service.',
 )
+_PAYLOAD_FILE_PATH = flags.DEFINE_string(
+    'payload_file_path',
+    '',
+    'Path to the payload_definitions.yaml file.',
+)
 
 
 def main(unused_argv):
   _configure_log()
+  payload_utility.set_payload_file_path(_PAYLOAD_FILE_PATH.value)
 
   # Load plugins from tsunami_plugins repository.
   plugin_pkg = importlib.import_module(

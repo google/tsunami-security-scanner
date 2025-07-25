@@ -7,6 +7,20 @@ import payload_generator_pb2 as pg
 
 _PATH = '../../plugin/src/main/resources/com/google/tsunami/plugin/payload/payload_definitions.yaml'
 
+
+def set_payload_file_path(path: str):
+  """Set the path to the payload file.
+
+  Args:
+    path: The path to the payload file.
+  """
+  if not path:
+    return
+
+  global _PATH
+  _PATH = path
+
+
 def get_parsed_payload() -> list[pg.PayloadDefinition]:
   """Get payload from payload_definitions.yaml.
 
