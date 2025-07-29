@@ -95,6 +95,34 @@ This action is very similar to the previous one but:
 - The expectation has been changed to check that the response body
 contains `tsunami_1253_marker`.
 
+## Redirects
+
+Note that by default, the HTTP client will follow any HTTP redirects.
+If you wish to change that behavior, you can configure your HTTP request using
+the `client_options` stanza. For example, with our previous request:
+
+```proto
+actions: {
+  name: "exploitation"
+  http_request: {
+    method: POST
+    uri: "/exploit"
+    data: "process=%{ print(\"tsunami_%d_marker\", 1250*1+3) }%"
+    client_options: {
+      disable_follow_redirects: true
+    }
+    response: {
+      http_status: 200
+      expect_all: {
+        conditions: [
+          { body: {} contains: "tsunami_1253_marker" }
+        ]
+      }
+    }
+  }
+}
+```
+
 ## What is next
 
 [Putting it together in workflows](04-workflows)
