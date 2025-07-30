@@ -29,7 +29,7 @@ $ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
 (docker) $ tsunami-linter ## linter for the templated language
 
 ## starts tsunami and connect to the Python server
-(docker) $ tsunami --ip-v4-target=127.0.0.1 --remote-plugin-server-ports=34567
+(docker) $ tsunami --ip-v4-target=127.0.0.1 --python-plugin-server-address=127.0.0.1 --python-plugin-server-port=34567
 ```
 
 Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
@@ -78,4 +78,8 @@ $ docker run -it --rm -v /path/to/my/plugin:/usr/tsunami/repos/myplugin tsunadev
 
 ## Once the plugin is added, you can run Tsunami
 (docker) $ tsunami --ip-v4-target=127.0.0.1
+
+## If you need to run Python plugins
+(docker) $ tsunami-py-server >/tmp/py_server.log 2>&1 &
+(docker) $ tsunami --ip-v4-target=127.0.0.1 --python-plugin-server-address=127.0.0.1 --python-plugin-server-port=34567
 ```
