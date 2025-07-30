@@ -41,6 +41,12 @@ RUN go install github.com/google/tsunami-security-scanner-plugins/templated/util
 # Symlink the Python plugins so that they are discoverable by Python.
 RUN ln -s /usr/tsunami/py_plugins/ /usr/tsunami/py_server/py_plugins
 
+# Create the __init__.py files to ensure all plugins are discoverable.
+RUN find /usr/tsunami/py_plugins/ \
+        -type d \
+        ! -name '__pycache__' \
+        -exec touch '{}/__init__.py' \;
+
 # Create wrapper scripts
 WORKDIR /usr/tsunami
 RUN echo '#!/bin/bash\njava -cp /usr/tsunami/tsunami.jar:/usr/tsunami/plugins/* -Dtsunami.config.location=/usr/tsunami/tsunami.yaml com.google.tsunami.main.cli.TsunamiCli $*\n' > /usr/bin/tsunami \
