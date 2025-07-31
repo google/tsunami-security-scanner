@@ -53,5 +53,5 @@ RUN echo '#!/bin/bash\njava -cp /usr/tsunami/tsunami.jar:/usr/tsunami/plugins/* 
     && chmod +x /usr/bin/tsunami \
     && echo '#!/bin/bash\njava -cp /usr/tsunami/tsunami-tcs.jar com.google.tsunami.callbackserver.main.TcsMain --custom-config=/usr/tsunami/tcs_config.yaml $*\n' > /usr/bin/tsunami-tcs \
     && chmod +x /usr/bin/tsunami-tcs \
-    && echo '#!/bin/bash\n/usr/tsunami/py_venv/bin/python3 /usr/tsunami/py_server/plugin_server.py --payload_file_path="/usr/tsunami/payload_definitions.yaml" $*\n' > /usr/bin/tsunami-py-server \
+    && echo '#!/bin/bash\n/usr/tsunami/py_venv/bin/python3 /usr/tsunami/py_server/plugin_server.py $*\n' > /usr/bin/tsunami-py-server \
     && chmod +x /usr/bin/tsunami-py-server

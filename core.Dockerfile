@@ -12,6 +12,11 @@ RUN cp ./tsunami_tcs.yaml /usr/tsunami/tsunami.yaml
 RUN cp plugin/src/main/resources/com/google/tsunami/plugin/payload/payload_definitions.yaml /usr/tsunami/payload_definitions.yaml
 RUN cp -r plugin_server/py/ /usr/tsunami/py_server
 
+## We perform a hotpatch of the path pointing to the payload definitions file
+## for easier usage in the Dockerized environment.
+RUN sed -i "s%'../../plugin/src/main/resources/com/google/tsunami/plugin/payload/payload_definitions.yaml'%'/usr/tsunami/payload_definitions.yaml'%g" \
+      /usr/tsunami/py_server/plugin/payload/payload_utility.py
+
 ## generate the protos for Python plugins
 WORKDIR /usr/repos/tsunami-security-scanner/
 RUN python3 -m grpc_tools.protoc \
