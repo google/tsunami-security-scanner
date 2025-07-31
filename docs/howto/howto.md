@@ -52,6 +52,7 @@ WORKDIR /usr/tsunami
 COPY --from=full /usr/tsunami /usr/tsunami/
 COPY --from=full /usr/bin/tsunami /usr/bin/tsunami
 COPY --from=full /usr/bin/tsunami-tcs /usr/bin/tsunami-tcs
+COPY --from=full /usr/bin/tsunami-py-server /usr/bin/tsunami-py-server
 RUN rm -f /usr/tsunami/plugins/*
 ```
 
