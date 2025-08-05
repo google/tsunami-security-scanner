@@ -10,6 +10,7 @@ grpcio-tools==1.63.0
 idna==3.7
 protobuf==5.26.1
 python-gflags==3.1.2
+pyzmq==27.0.1
 requests==2.31.0
 requests-mock==1.12.1
 ruamel.yaml==0.18.6
