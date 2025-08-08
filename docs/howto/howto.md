@@ -1,6 +1,6 @@
 # Build and run Tsunami
 
-## Using Docker
+## Tsunami docker's environment
 
 We provide a set of Docker images to help you build and use Tsunami. We provide
 a minimal (scratch) image for:
@@ -14,73 +14,162 @@ on top of them.
 
 ![docker-images](img/docker-images.png)
 
-If you just intend to run Tsunami, we recommend using the latest complete
+## Running the latest version of Tsunami
+
+If you just want to run the latest version of Tsunami, without having to
+recompile anything, you can directly use the latest full image of Tsunami.
+
+```sh
+# Important: If you built a local version of the container, do not pull as it
+# will overwrite your changes. Otherwise, do pull as you would be using a stale
+# version of the image.
+$ docker pull ghcr.io/google/tsunami-scanner-full
+
+# Run the image
+$ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
+
+# If you want to use Python plugins
+(docker) $ tsunami-py-server >/tmp/py_server.log 2>&1 &
+
+# If you want to use the callback server
+(docker) $ tsunami-tcs >/tmp/tcs_server.log 2>&1 &
+
+# Run Tsunami
+# Note: If you did not start the python server, omit the `--python-` arguments.
+(docker) $ tsunami --ip-v4-target=127.0.0.1 --python-plugin-server-address=127.0.0.1 --python-plugin-server-port=34567
+```
+
+This images contains everything necessary under the `/usr/tsunami` directory.
+
+To use the callback server, you might have to setup port forwarding with your
+docker container when starting it. We encourage you to refer to the `-p` option
+of Docker.
+
+A few tips:
+
+- Only scan one port: `--port-ranges-target`
+- Only run your detector: `--detectors-include="detector-name"`; where detector
+name is the name defined in `PluginInfo` section for Java and Python plugins and
+the `info.name` section on templated plugins.
+
+## Using docker to build Tsunami
+
+In this section, we go through the different ways to compile the core engine
+or a plugin locally so that you can test your changes.
+
+It assumes that you have cloned both the `tsunami-security-scanner` and
+`tsunami-security-scanner-plugins` repositories.
+
+### Rebuilding the core engine
+
+If you need to make changes to the core engine during the development cycle, you
+will have to perform the following actions to test your change:
+
+- Rebuild the core engine container;
+- If your change required changing plugins: you will have to rebuild their
+associated container as well;
+- Rebuild the `-full` container;
+- Run the scanner to check that everything works.
+
+```sh
+# Build the core engine container
+$ cd tsunami-security-scanner
+$ docker build -t ghcr.io/google/tsunami-scanner-core:latest -f core.Dockerfile .
+
+# (Optional) Rebuild affected plugins
+# See "Rebuilding a whole category of plugins" section on this page and do it
+# for every category that is affected by your change.
+
+# Build the full container
+$ docker build -t ghcr.io/google/tsunami-scanner-full:latest -f full.Dockerfile .
+
+# See the "Running the latest version of Tsunami" section on this page to run
+# Tsunami with the newly built image. DO NOT perform a docker pull.
+```
+
+### Rebuilding a whole category of plugins
+
+Tsunami groups plugins per categories. From the root folder of the plugin
+repository, you can see that the categories are `google`, `community`,
+`templated` and so on.
+
+Our docker images are built separately for each category. The same Dockerfile
+is used, but it is parameterized to use a different folder with
+`TSUNAMI_PLUGIN_FOLDER`.
+
+```sh
+$ cd tsunami-security-scanner-plugins
+$ build -t ghcr.io/google/tsunami-plugins-category:latest --build-arg TSUNAMI_PLUGIN_FOLDER=category .
+
+# For example with the community category:
+$ build -t ghcr.io/google/tsunami-plugins-community:latest --build-arg TSUNAMI_PLUGIN_FOLDER=community .
+```
+
+For **Python plugins**, you need to use the dedicated Dockerfile, which only
+supports bundling all plugins:
+
+```sh
+$ cd tsunami-security-scanner-plugins
+$ build -t ghcr.io/google/tsunami-plugins-python:latest -f python.Dockerfile .
+```
+
+Once you have rebuilt the categories that you need, you can rebuild the `-full`
 image:
 
 ```sh
-$ docker pull ghcr.io/google/tsunami-scanner-full # make sure to use the latest
-$ docker run -it --rm ghcr.io/google/tsunami-scanner-full bash
-
-# note: you will need to install a port scanner and a credential brute-forcer.
-# We recommend installing nmap and ncrack using apt.
-
-(docker) $ tsunami-py-server # run the Python server
-(docker) $ tsunami-tcs ## runs the callback server
-(docker) $ tsunami-linter ## linter for the templated language
-
-## starts tsunami and connect to the Python server
-(docker) $ tsunami --ip-v4-target=127.0.0.1 --python-plugin-server-address=127.0.0.1 --python-plugin-server-port=34567
+$ cd tsunami-security-scanner
+$ docker build -t ghcr.io/google/tsunami-scanner-full:latest -f full.Dockerfile .
 ```
 
-Configuration files can be found in `/usr/tsunami/tsunami.yaml` for the scanner
-and `/usr/tsunami/tcs_config.yaml` for the callback server.
+Then follow "Running the latest version of Tsunami" to use this new image. DO
+NOT perform a `docker pull`.
 
-Also note that to use the callback server, you might have to setup port
-forwarding with your docker when starting it. We encourage you to refer to the
-`-p` option of Docker.
+### Building an image for one plugin
 
-## Development workflow
+Now, if during development you only wish to build your plugin, you can do so
+by creating a new local-only category.
 
-To set-up your own development workflow, we recommend composing on top of the
-tsunami full image but to delete existing plugins to minimize noise:
+Before you start, you will need to change the definition of the
+`full.Dockerfile` file:
 
-```dockerfile
-FROM ghcr.io/google/tsunami-scanner-full:latest AS full
-FROM ghcr.io/google/tsunami-scanner-devel:latest AS devel
+- Add a `FROM` directive in the Plugins section:
 
-WORKDIR /usr/tsunami
-COPY --from=full /usr/tsunami /usr/tsunami/
-COPY --from=full /usr/bin/tsunami /usr/bin/tsunami
-COPY --from=full /usr/bin/tsunami-tcs /usr/bin/tsunami-tcs
-COPY --from=full /usr/bin/tsunami-py-server /usr/bin/tsunami-py-server
-RUN rm -f /usr/tsunami/plugins/*
+```diff
+FROM ghcr.io/google/tsunami-plugins-python:latest AS plugins-python
++ FROM ghcr.io/google/tsunami-plugins-local:latest AS plugins-local
 ```
 
-You can then build that image and use it with your local copy of the plugins,
-where `/path/to/my/plugin` must point to your plugin. This is usually the folder
-containing your `build.gradle` if using Java or the `templated` folder of the
-plugins repository if using templated plugins.
+- Add a `COPY` directive in the section that copies everything:
+
+```diff
+COPY --from=plugins-python /usr/tsunami/py_plugins/ /usr/tsunami/py_plugins/
++ COPY --from=plugins-local /usr/tsunami/plugins/ /usr/tsunami/plugins/
+```
+
+Then, you can build the actual image containing only your plugin:
 
 ```sh
-$ docker pull ghcr.io/google/tsunami-scanner-full:latest
-$ docker pull ghcr.io/google/tsunami-scanner-devel:latest
-$ docker build -t tsunadev:latest . -f myDockerfile
-$ docker run -it --rm -v /path/to/my/plugin:/usr/tsunami/repos/myplugin tsunadev:latest bash
-
-## Java plugins
-(docker) $ cd /usr/tsunami/repos/myplugin
-(docker) $ gradle build
-(docker) $ cp build/libs/*.jar /usr/tsunami/plugins
-
-## Templated plugins
-(docker) $ cd /usr/tsunami/repos/myplugin/templateddetector
-(docker) $ gradle build
-(docker) $ cp build/libs/*.jar /usr/tsunami/plugins
-
-## Once the plugin is added, you can run Tsunami
-(docker) $ tsunami --ip-v4-target=127.0.0.1
-
-## If you need to run Python plugins
-(docker) $ tsunami-py-server >/tmp/py_server.log 2>&1 &
-(docker) $ tsunami --ip-v4-target=127.0.0.1 --python-plugin-server-address=127.0.0.1 --python-plugin-server-port=34567
+$ cd tsunami-security-scanner-plugins
+$ build -t ghcr.io/google/tsunami-plugins-local:latest --build-arg TSUNAMI_PLUGIN_FOLDER=path/to/my/plugin .
 ```
+
+Finally, compile the `-full` image:
+
+```sh
+$ cd tsunami-security-scanner
+$ docker build -t ghcr.io/google/tsunami-scanner-full:latest -f full.Dockerfile .
+```
+
+Then follow "Running the latest version of Tsunami" to use this new image. DO
+NOT perform a `docker pull`.
+
+**Python plugins** do not support building only one plugin. See building the
+whole category instead.
+
+## Building Tsunami without docker
+
+We do not provide support for building Tsunami outside of our docker
+environment.
+
+You can use the Dockerfile provided in the repositories to build your own
+toolchain if you so wish.
