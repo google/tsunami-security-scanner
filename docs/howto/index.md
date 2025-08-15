@@ -5,11 +5,11 @@ This page contains information to get you started with your first contributions.
 
 ## Contributing to Google code
 
-- [Contributing rules]({{ site.baseurl }}/contribute/index.md)
+- [Contributing rules]({{ site.baseurl }}/contribute/index)
 
 ## Understanding Tsunami
 
-- [About Tsunami]({{ site.baseurl }}/about/index.md)
+- [About Tsunami]({{ site.baseurl }}/about/index)
 - [How tsunami works]({{ site.baseurl }}/howto/orchestration)
 
 ## Building and running Tsunami
