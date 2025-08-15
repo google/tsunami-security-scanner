@@ -28,5 +28,4 @@ COPY plugin_server/py/requirements.in /usr/tsunami/py_venv/requirements.in
 COPY plugin_server/py/requirements.txt /usr/tsunami/py_venv/requirements.txt
 RUN python3 -m venv /usr/tsunami/py_venv
 ENV PATH="/usr/tsunami/py_venv/bin:${PATH}"
-RUN pip install setuptools \
-    && pip install --require-hashes -r /usr/tsunami/py_venv/requirements.txt
+RUN pip install --require-hashes -r /usr/tsunami/py_venv/requirements.txt
