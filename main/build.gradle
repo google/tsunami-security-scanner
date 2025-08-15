@@ -14,11 +14,11 @@ dependencies {
     implementation "com.beust:jcommander:1.48"
     implementation "com.doyensec:libajp:1.0.0"
     implementation "com.google.cloud:google-cloud-storage:1.103.1"
-    implementation "com.google.flogger:flogger:0.5.1"
-    implementation "com.google.flogger:google-extensions:0.5.1"
-    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.flogger:flogger:0.9"
+    implementation "com.google.flogger:google-extensions:0.9"
+    implementation "com.google.guava:guava:33.0.0-jre"
     implementation "com.google.inject:guice:6.0.0"
-    implementation "com.google.protobuf:protobuf-java:3.25.2"
+    implementation "com.google.protobuf:protobuf-java:3.25.5"
     implementation "io.github.classgraph:classgraph:4.8.65"
     implementation "io.grpc:grpc-netty:1.60.0"
     implementation "javax.inject:javax.inject:1"
@@ -26,11 +26,11 @@ dependencies {
 
     runtimeOnly "org.glassfish.jaxb:jaxb-runtime:2.3.1"
 
-    testImplementation "com.google.truth:truth:1.4.0"
-    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
-    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
-    testImplementation "junit:junit:4.13"
-    testImplementation "org.mockito:mockito-core:5.12.0"
+    testImplementation "com.google.truth:truth:1.4.4"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.4"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.4"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.mockito:mockito-core:5.18.0"
 }
 
 application {

@@ -12,15 +12,15 @@ dependencies {
     }
 
     implementation "com.beust:jcommander:1.48"
-    implementation "com.google.auto.value:auto-value-annotations:1.10.4"
-    implementation "com.google.code.gson:gson:2.8.6"
-    implementation "com.google.flogger:flogger:0.5.1"
-    implementation "com.google.flogger:google-extensions:0.5.1"
-    implementation "com.google.guava:guava:28.2-jre"
+    implementation "com.google.auto.value:auto-value-annotations:1.11.0"
+    implementation "com.google.code.gson:gson:2.10.1"
+    implementation "com.google.flogger:flogger:0.9"
+    implementation "com.google.flogger:google-extensions:0.9"
+    implementation "com.google.guava:guava:33.0.0-jre"
     implementation "com.google.http-client:google-http-client:1.44.1"
     implementation "com.google.inject:guice:6.0.0"
-    implementation "com.google.protobuf:protobuf-java-util:3.25.2"
-    implementation "com.google.protobuf:protobuf-java:3.25.2"
+    implementation "com.google.protobuf:protobuf-java-util:3.25.5"
+    implementation "com.google.protobuf:protobuf-java:3.25.5"
     implementation "com.squareup.okhttp3:mockwebserver:3.12.0"
     implementation "io.github.classgraph:classgraph:4.8.65"
     implementation "io.grpc:grpc-context:1.60.0"
@@ -33,12 +33,12 @@ dependencies {
 
     annotationProcessor "com.google.auto.value:auto-value:1.10.4"
 
-    testImplementation "com.google.guava:guava-testlib:28.2-jre"
-    testImplementation "com.google.truth:truth:1.4.0"
-    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.0"
-    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.0"
+    testImplementation "com.google.guava:guava-testlib:33.0.0-jre"
+    testImplementation "com.google.truth:truth:1.4.4"
+    testImplementation "com.google.truth.extensions:truth-java8-extension:1.4.4"
+    testImplementation "com.google.truth.extensions:truth-proto-extension:1.4.4"
     testImplementation "com.squareup.okhttp3:mockwebserver:3.12.0"
-    testImplementation "junit:junit:4.13"
+    testImplementation "junit:junit:4.13.2"
 }
 
 tasks.named("compileJava") {
