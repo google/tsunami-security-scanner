@@ -2,13 +2,13 @@
 import hashlib
 from typing import Optional
 from absl import logging
-from google.protobuf import json_format
+from google3.net.proto2.python.public import json_format
 from common.data import network_endpoint_utils
 from common.net.http.http_client import HttpClient
 from common.net.http.http_headers import HttpHeaders
 from common.net.http.http_request import HttpRequest
 import network_pb2
-import polling_pb2
+from google3.third_party.java_src.tsunami_callbackserver.proto import polling_pb2
 
 
 class TcsClient:

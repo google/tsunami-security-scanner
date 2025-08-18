@@ -19,8 +19,8 @@ import time
 from absl.testing import absltest
 import grpc_testing
 
-from google3.google.protobuf import timestamp_pb2
-import plugin_service
+from google.protobuf import timestamp_pb2
+from google3.third_party.java_src.tsunami.plugin_server.py import plugin_service
 import tsunami_plugin
 from common.net.http.http_client import HttpClient
 from common.net.http.requests_http_client import RequestsHttpClientBuilder
@@ -32,7 +32,7 @@ import detection_pb2
 import network_pb2
 import network_service_pb2
 import plugin_representation_pb2
-import plugin_service_pb2
+from google3.third_party.java_src.tsunami.proto import plugin_service_pb2
 import reconnaissance_pb2
 import vulnerability_pb2
 

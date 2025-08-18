@@ -7,7 +7,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import requests_mock
 
-from google3.google.protobuf import wrappers_pb2
+from google.protobuf import wrappers_pb2
 from common.net.http.requests_http_client import RequestsHttpClientBuilder
 from plugin.payload.payload_generator import PayloadGenerator
 from plugin.payload.payload_generator_test_helper import ANY_SSRF_CONFIG

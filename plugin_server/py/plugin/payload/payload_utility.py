@@ -1,7 +1,7 @@
 """Utility service for retrieving and parsing payload."""
 
 from ruamel import yaml
-from google.protobuf import json_format
+from google3.net.proto2.python.public import json_format
 from pathlib import Path
 import payload_generator_pb2 as pg
 
