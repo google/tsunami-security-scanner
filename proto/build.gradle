@@ -30,7 +30,6 @@ protobuf {
                 dependsOn("processResources")
                 dependsOn("extractTestProto")
                 dependsOn("sourcesJar")
-                dependsOn("generatePomFileForMavenPublication")
             }
         }
     }
