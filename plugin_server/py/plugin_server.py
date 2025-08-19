@@ -29,7 +29,7 @@ from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 
-from google3.third_party.java_src.tsunami.plugin_server.py import plugin_service
+import plugin_service
 import tsunami_plugin
 from common.net.http.requests_http_client import RequestsHttpClientBuilder
 from plugin.payload import payload_utility
@@ -37,8 +37,8 @@ from plugin.payload.payload_generator import PayloadGenerator
 from plugin.payload.payload_secret_generator import PayloadSecretGenerator
 from plugin.payload.payload_utility import get_parsed_payload
 from plugin.tcs_client import TcsClient
-from google3.third_party.java_src.tsunami.proto import plugin_service_pb2
-from google3.third_party.java_src.tsunami.proto import plugin_service_pb2_grpc
+import plugin_service_pb2
+import plugin_service_pb2_grpc
 
 
 _HOST = '127.0.0.1'

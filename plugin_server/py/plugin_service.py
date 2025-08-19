@@ -21,8 +21,8 @@ from absl import logging
 import tsunami_plugin
 import detection_pb2
 import plugin_representation_pb2
-from google3.third_party.java_src.tsunami.proto import plugin_service_pb2
-from google3.third_party.java_src.tsunami.proto import plugin_service_pb2_grpc
+import plugin_service_pb2
+import plugin_service_pb2_grpc
 
 RunResponse = plugin_service_pb2.RunResponse
 ListPluginsRequest = plugin_service_pb2.ListPluginsRequest
