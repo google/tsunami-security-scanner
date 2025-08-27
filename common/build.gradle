@@ -13,7 +13,7 @@ dependencies {
     implementation "com.google.guava:guava:33.0.0-jre"
     implementation "com.google.inject:guice:6.0.0"
     implementation "com.google.inject.extensions:guice-assistedinject:6.0.0"
-    implementation "com.google.truth:truth:1.4.0"
+    implementation "com.google.truth:truth:1.4.4"
     implementation "com.squareup.okhttp3:okhttp:3.12.0"
     implementation "io.github.classgraph:classgraph:4.8.65"
     implementation "org.yaml:snakeyaml:1.26"
