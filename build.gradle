@@ -7,6 +7,7 @@ plugins {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'maven-publish'
     apply plugin: 'idea'
 
     apply plugin: 'net.ltgt.errorprone'
@@ -71,6 +72,12 @@ subprojects {
                 showStackTraces true
             }
             maxHeapSize = '1500m'
+        }
+    }
+
+    plugins.withId('maven-publish') {
+        shadowJar {
+            archiveClassifier = null
         }
     }
 }
