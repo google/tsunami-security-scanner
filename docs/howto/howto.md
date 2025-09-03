@@ -66,26 +66,94 @@ If you need to make changes to the core engine during the development cycle, you
 will have to perform the following actions to test your change:
 
 - Rebuild the core engine container;
-- If your change required changing plugins: you will have to rebuild their
-associated container as well;
-- Rebuild the `-full` container;
-- Run the scanner to check that everything works.
 
 ```sh
 # Build the core engine container
 $ cd tsunami-security-scanner
 $ docker build -t ghcr.io/google/tsunami-scanner-core:latest -f core.Dockerfile .
-
-# (Optional) Rebuild affected plugins
-# See "Rebuilding a whole category of plugins" section on this page and do it
-# for every category that is affected by your change.
-
-# Build the full container
-$ docker build -t ghcr.io/google/tsunami-scanner-full:latest -f full.Dockerfile .
-
-# See the "Running the latest version of Tsunami" section on this page to run
-# Tsunami with the newly built image. DO NOT perform a docker pull.
 ```
+
+- Rebuild all plugins to ensure your change is compatible
+
+IMPORTANT: Your changes must be committed via git to be picked. They do not need
+to be pushed to GitHub, they can be local only.
+
+In the following example, we will use docker volumes to mount our changes to
+`/usr/tsunami/repos/tsunami-security-scanner`. This assumes that our
+`tsunami-security-scanner` and `tsunami-security-scanner-plugins` clones are in
+`/tsunami/` on our host. Also, our changes are committed to the `master` branch.
+You can change the commands accordingly if your repositories path or branch are
+different.
+
+```sh
+$ cd tsunami-security-scanner-plugins
+```
+
+First, we need to change the `Dockerfile` to use our changes:
+
+```diff
+-ENV GITREPO_TSUNAMI_CORE="https://github.com/google/tsunami-security-scanner.git"
+-ENV GITBRANCH_TSUNAMI_CORE="stable"
++ENV GITREPO_TSUNAMI_CORE="/usr/tsunami/repos/tsunami-security-scanner"
++ENV GITBRANCH_TSUNAMI_CORE="master"
+```
+
+We also need to instruct docker to bind our changes in `/usr/tsunami/repos`:
+
+```diff
+- RUN gradle build
++ RUN --mount=type=bind,source=/tsunami-security-scanner,target=/usr/tsunami/repos/tsunami-security-scanner \
++     gradle build
++
+```
+
+Then we can rebuild all plugins in one swoop:
+
+```sh
+$ docker build -t ghcr.io/google/tsunami-plugins-all:latest --build-arg=TSUNAMI_PLUGIN_FOLDER=tsunami-security-scanner-plugins -f tsunami-security-scanner-plugins/Dockerfile /tsunami/
+```
+
+- Rebuild the `-full` container;
+
+```sh
+$ cd tsunami-security-scanner
+```
+
+We need to change the `full.Dockerfile` to use our newly created container:
+
+```diff
+# Plugins
+- FROM ghcr.io/google/tsunami-plugins-google:latest AS plugins-google
+- FROM ghcr.io/google/tsunami-plugins-templated:latest AS plugins-templated
+- FROM ghcr.io/google/tsunami-plugins-doyensec:latest AS plugins-doyensec
+- FROM ghcr.io/google/tsunami-plugins-community:latest AS plugins-community
+- FROM ghcr.io/google/tsunami-plugins-govtech:latest AS plugins-govtech
+- FROM ghcr.io/google/tsunami-plugins-facebook:latest AS plugins-facebook
+- FROM ghcr.io/google/tsunami-plugins-python:latest AS plugins-python
++ FROM ghcr.io/google/tsunami-plugins-all:latest AS plugins-all
+
+{...}
+
+- COPY --from=plugins-google /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-templated /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-doyensec /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-community /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-govtech /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-facebook /usr/tsunami/plugins/ /usr/tsunami/plugins/
+- COPY --from=plugins-python /usr/tsunami/py_plugins/ /usr/tsunami/py_plugins/
++ COPY --from=plugins-all /usr/tsunami/plugins/ /usr/tsunami/plugins/
+```
+
+And then rebuild it:
+
+```sh
+$ docker build -t ghcr.io/google/tsunami-scanner-full:latest -f full.Dockerfile .
+```
+
+- Run the scanner to check that everything works.
+
+See the "Running the latest version of Tsunami" section on this page to run
+Tsunami with the newly built image. DO NOT perform a docker pull.
 
 ### Rebuilding a whole category of plugins
 
