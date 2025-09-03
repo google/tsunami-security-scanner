@@ -22,9 +22,10 @@ project(':tsunami-plugin').projectDir = "$rootDir/plugin" as File
 project(':tsunami-proto').projectDir = "$rootDir/proto" as File
 project(':tsunami-workflow').projectDir = "$rootDir/workflow" as File
 
+def tcsRepository = System.getenv("GITREPO_TSUNAMI_TCS") ?: "https://github.com/google/tsunami-security-scanner-callback-server.git"
 
 sourceControl {
-    gitRepository("https://github.com/google/tsunami-security-scanner-callback-server.git") {
+    gitRepository("${tcsRepository}") {
         producesModule("com.google.tsunami:tcs-common")
         producesModule("com.google.tsunami:tcs-proto")
     }

@@ -1,14 +1,16 @@
 
 description = 'Tsunami: Plugin'
 
+def tcsRepoBranch = System.getenv("GITBRANCH_TSUNAMI_TCS") ?: "stable"
+
 dependencies {
     implementation project(':tsunami-common')
     implementation project(':tsunami-proto')
     implementation("com.google.tsunami:tcs-common") {
-        version { branch = "stable" }
+        version { branch = "${tcsRepoBranch}" }
     }
     implementation("com.google.tsunami:tcs-proto") {
-        version { branch = "stable" }
+        version { branch = "${tcsRepoBranch}" }
     }
 
     implementation "com.beust:jcommander:1.48"
