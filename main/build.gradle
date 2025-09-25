@@ -60,3 +60,7 @@ tasks.named("startShadowScripts") {
 tasks.named("compileJava") {
     dependsOn(":tsunami-plugin:shadowJar")
 }
+
+tasks.named('compileJava') {
+    dependsOn(':tsunami-proto:shadowJar')
+}

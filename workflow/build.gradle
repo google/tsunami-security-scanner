@@ -37,3 +37,8 @@ tasks.named("compileTestJava") {
 tasks.named("compileJava") {
     dependsOn(":tsunami-plugin:shadowJar")
 }
+
+tasks.named('compileJava') {
+    dependsOn(':tsunami-proto:shadowJar')
+}
+
