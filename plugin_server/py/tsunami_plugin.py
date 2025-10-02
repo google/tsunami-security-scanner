@@ -17,6 +17,7 @@ import detection_pb2
 import network_service_pb2
 import plugin_representation_pb2
 import reconnaissance_pb2
+import vulnerability_pb2
 
 TargetInfo = reconnaissance_pb2.TargetInfo
 NetworkService = network_service_pb2.NetworkService
@@ -32,8 +33,9 @@ class TsunamiPlugin(metaclass=abc.ABCMeta):
 
   @classmethod
   def __subclasshook__(cls, subclass: abc.ABCMeta) -> bool:
-    return (hasattr(subclass, 'GetPluginDefinition') and
-            callable(subclass.GetPluginDefinition))
+    return hasattr(subclass, 'GetPluginDefinition') and callable(
+        subclass.GetPluginDefinition
+    )
 
 
 class VulnDetector(TsunamiPlugin):
@@ -47,6 +49,10 @@ class VulnDetector(TsunamiPlugin):
   @classmethod
   def __init_subclass__(cls, **kwargs):
     super().__init_subclass__(**kwargs)
+
+  @abc.abstractmethod
+  def GetAdvisories(self) -> list[vulnerability_pb2.Vulnerability]:
+    """Returns the list of vulnerabilities detected by this plugin."""
 
   @abc.abstractmethod
   def Detect(
