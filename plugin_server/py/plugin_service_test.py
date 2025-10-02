@@ -43,7 +43,8 @@ _PluginInfo = plugin_representation_pb2.PluginInfo
 _TargetInfo = reconnaissance_pb2.TargetInfo
 _AddressFamily = network_pb2.AddressFamily
 _ServiceDescriptor = plugin_service_pb2.DESCRIPTOR.services_by_name[
-    'PluginService']
+    'PluginService'
+]
 _RunMethod = _ServiceDescriptor.methods_by_name['Run']
 _ListPluginsMethod = _ServiceDescriptor.methods_by_name['ListPlugins']
 MAX_WORKERS = 1
@@ -110,8 +111,10 @@ class PluginServiceTest(absltest.TestCase):
     self.assertLen(response.reports.detection_reports, 1)
     self.assertEqual(
         plugin_to_test._BuildFakeDetectionReport(
-            target=target, network_service=services[0]),
-        response.reports.detection_reports[0])
+            target=target, network_service=services[0]
+        ),
+        response.reports.detection_reports[0],
+    )
 
   def test_run_no_plugins_registered_returns_empty_response(self):
     endpoint = _build_network_endpoint('1.1.1.1', 80)
@@ -129,14 +132,18 @@ class PluginServiceTest(absltest.TestCase):
     response, _, _, _ = rpc.termination()
     self.assertEqual(
         plugin_service.ListPluginsResponse(
-            plugins=[self.test_plugin.GetPluginDefinition()]), response)
+            plugins=[self.test_plugin.GetPluginDefinition()]
+        ),
+        response,
+    )
 
 
 def _build_network_endpoint(ip: str, port: int) -> _NetworkEndpoint:
   return _NetworkEndpoint(
       type=_NetworkEndpoint.IP,
       ip_address=network_pb2.IpAddress(address_family=_get_address_family(ip)),
-      port=network_pb2.Port(port_number=port))
+      port=network_pb2.Port(port_number=port),
+  )
 
 
 def _get_address_family(ip: str) -> _AddressFamily:
@@ -160,6 +167,19 @@ class FakeVulnDetector(tsunami_plugin.VulnDetector):
     self.http_client = http_client
     self.payload_generator = payload_generator
 
+  def GetAdvisories(self) -> list[vulnerability_pb2.Vulnerability]:
+    """Returns the advisories for this plugin."""
+    return [
+        vulnerability_pb2.Vulnerability(
+            main_id=vulnerability_pb2.VulnerabilityId(
+                publisher='GOOGLE', value='FakeVuln1'
+            ),
+            severity=vulnerability_pb2.CRITICAL,
+            title='FakeTitle1',
+            description='FakeDescription1',
+        ),
+    ]
+
   def GetPluginDefinition(self):
     return tsunami_plugin.PluginDefinition(
         info=_PluginInfo(
@@ -167,17 +187,23 @@ class FakeVulnDetector(tsunami_plugin.VulnDetector):
             name='fake',
             version='v0.1',
             description='fake description',
-            author='fake author'),
+            author='fake author',
+        ),
         target_service_name=plugin_representation_pb2.TargetServiceName(
-            value=['fake service']),
+            value=['fake service']
+        ),
         target_software=plugin_representation_pb2.TargetSoftware(
-            name='fake software'),
-        for_web_service=False)
+            name='fake software'
+        ),
+        for_web_service=False,
+    )
 
   def Detect(self, target, matched_services):
-    return detection_pb2.DetectionReportList(detection_reports=[
-        self._BuildFakeDetectionReport(target, matched_services[0])
-    ])
+    return detection_pb2.DetectionReportList(
+        detection_reports=[
+            self._BuildFakeDetectionReport(target, matched_services[0])
+        ]
+    )
 
   def _BuildFakeDetectionReport(self, target, network_service):
     return detection_pb2.DetectionReport(
@@ -185,12 +211,8 @@ class FakeVulnDetector(tsunami_plugin.VulnDetector):
         network_service=network_service,
         detection_timestamp=timestamp_pb2.Timestamp(nanos=1234567890),
         detection_status=detection_pb2.VULNERABILITY_VERIFIED,
-        vulnerability=vulnerability_pb2.Vulnerability(
-            main_id=vulnerability_pb2.VulnerabilityId(
-                publisher='GOOGLE', value='FakeVuln1'),
-            severity=vulnerability_pb2.CRITICAL,
-            title='FakeTitle1',
-            description='FakeDescription1'))
+        vulnerability=self.GetAdvisories()[0],
+    )
 
 
 # TODO(b/239628051): Add a failed VulnDetector class to test failed cases.
