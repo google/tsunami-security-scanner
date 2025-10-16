@@ -68,35 +68,24 @@ strong impact; this generally translates to remote code execution (RCE).**
 
 Here is an example table for common vulnerability types:
 
-| Category                 | Decision        | Additional information          |
-| :----------------------: | :-------------: | :-----------------------------: |
-| XSS                      | Rejected        |                                 |
-| CSRF                     | Rejected        |                                 |
-| SSRF                     | Likely rejected | Unless it can be instrumented   |
-:                          :                 : to reach remote code execution. :
-| SQLi                     | Likely rejected | Unless it can trivially be      |
-:                          :                 : turned into an RCE (i.e. no     :
-:                          :                 : dependency to a specific SQL    :
-:                          :                 : backend)                        :
-| Local file include       | It depends      | Unless the application provides |
-:                          :                 : by default files that can be    :
-:                          :                 : used to turn the include into   :
-:                          :                 : an RCE.                         :
-| Path traversal           | It depends      | Unless it can lead to RCE, for  |
-:                          :                 : example with a secret file that :
-:                          :                 : allows administrative access    :
-:                          :                 : and remote code execution.      :
-| XXE                      | It depends      | Unless it can be used to        |
-:                          :                 : trigger RCE                     :
-| Remote file include      | Likely accepted | Only if a remote file can be    |
-:                          :                 : included in a way that results  :
-:                          :                 : in remote code execution.       :
-| File upload              | Likely accepted | Only if the upload allows       |
-:                          :                 : remote code execution           :
-| Exposed interface,       | Likely accepted | Only if the service that it     |
-: authentication bypass or :                 : provides access to allows       :
-: weak credentials         :                 : remote code execution           :
-| OS command injection     | Likely accepted |                                 |
+| Category                 | Decision        |
+| :----------------------: | :-------------: |
+| XSS                      | Rejected        |
+| CSRF                     | Rejected        |
+| SSRF                     | Likely rejected |
+| SQLi                     | Likely rejected |
+| Local file include       | It depends      |
+| Path traversal           | It depends      |
+| XXE                      | It depends      |
+| Remote file include      | Likely accepted |
+| File upload              | Likely accepted |
+| Exposed interface        | Likely accepted |
+| Authentication bypass    | Likely accepted |
+| Weak credentials         | Likely accepted |
+| OS command injection     | Likely accepted |
+
+As mentioned before, that decision depends heavily on the ability to create a
+full chain of exploitation that leads to remote code execution.
 
 ## Tsunami versioning
 
