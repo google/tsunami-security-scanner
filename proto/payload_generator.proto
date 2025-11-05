@@ -25,6 +25,7 @@ option java_multiple_files = true;
 option java_outer_classname = "PayloadGeneratorProtos";
 option java_package = "com.google.tsunami.proto";
 option go_package = "github.com/google/tsunami-security-scanner/proto/tsunami_go_proto";
+option go_api_flag = "OPAQUE_V0";
 
 // Attributes utilized by the PayloadGenerator to select a payload
 message PayloadGeneratorConfig {
