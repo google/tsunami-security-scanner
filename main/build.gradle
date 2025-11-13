@@ -63,4 +63,5 @@ tasks.named("compileJava") {
 
 tasks.named('compileJava') {
     dependsOn(':tsunami-proto:shadowJar')
+    dependsOn(':tsunami-workflow:shadowJar')
 }
