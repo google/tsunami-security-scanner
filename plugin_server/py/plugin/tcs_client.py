@@ -104,12 +104,13 @@ class TcsClient:
     request = self._build_polling_request(secret_string)
     try:
       response = self.http_client.send(request)
-      if response.status.is_success():
+      if response.status and response.status.is_success():
         return json_format.Parse(
             response.body_string(), polling_pb2.PollingResult()
         )
       else:
-        logging.info('OOB server returned %s.', response.status.code)
+        code = response.status.code if response.status else 'UNKNOWN'
+        logging.info('OOB server returned %s.', code)
     except (json_format.ParseError, ValueError):
       logging.exception('Polling request failed.')
     return None

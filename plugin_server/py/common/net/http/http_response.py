@@ -1,8 +1,9 @@
 """HTTP response utility."""
 
 import abc
+from collections.abc import Mapping
 import json
-from typing import Any, Optional
+from typing import Any
 from common.net.http.http_headers import HttpHeaders
 from common.net.http.http_status import HttpStatus
 
@@ -20,19 +21,18 @@ class HttpResponse(metaclass=abc.ABCMeta):
   """
 
   def __init__(self):
-    self.status: HttpStatus = None
-    self.url: Optional[str] = None
-    self.headers: HttpHeaders = None
-    self.body: Optional[bytes] = None
+    self.status: HttpStatus | None = None
+    self.url: str | None = None
+    self.headers: HttpHeaders | None = None
+    self.body: bytes | None = None
 
   def body_string(self) -> str:
     """Get the body data as a UTF-8 encoded string."""
-    try:
-      return self.body.decode('utf-8')
-    except AttributeError:
+    if self.body is None:
       return ''
+    return self.body.decode('utf-8')
 
-  def body_json(self) -> Optional[dict[str, Any]]:
+  def body_json(self) -> Mapping[str, Any] | None:
     """Parse the response body as JSON. Returns null if parsing failed."""
     try:
       return json.loads(self.body_string())
@@ -71,7 +71,7 @@ class Builder:
     self.http_response.headers = headers
     return self
 
-  def set_response_body(self, response_body: Optional[bytes]):
+  def set_response_body(self, response_body: bytes | None):
     """Set the body for the response."""
     self.http_response.body = response_body
     return self
