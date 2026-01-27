@@ -225,6 +225,8 @@ public final class MyVulnDetector implements VulnDetector {
 #### Creating a plain TCP socket with default timeouts
 
 ```java
+private final TsunamiSocketFactory socketFactory;
+
 // Socket will have connect timeout of 10s and read timeout of 30s (configurable)
 Socket socket = socketFactory.createSocket("example.com", 80);
 try {
