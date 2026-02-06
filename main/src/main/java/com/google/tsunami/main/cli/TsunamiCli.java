@@ -38,6 +38,7 @@ import com.google.tsunami.common.config.YamlConfigLoader;
 import com.google.tsunami.common.io.archiving.GoogleCloudStorageArchiverModule;
 import com.google.tsunami.common.net.http.HttpClientCliOptions;
 import com.google.tsunami.common.net.http.HttpClientModule;
+import com.google.tsunami.common.net.socket.TsunamiSocketFactoryModule;
 import com.google.tsunami.common.reflection.ClassGraphModule;
 import com.google.tsunami.common.server.LanguageServerCommand;
 import com.google.tsunami.common.time.SystemUtcClockModule;
@@ -195,6 +196,7 @@ public final class TsunamiCli {
       install(new SystemUtcClockModule());
       install(new CommandExecutorModule());
       install(new HttpClientModule.Builder().setLogId(mco.getLogId()).build());
+      install(new TsunamiSocketFactoryModule());
       install(new GoogleCloudStorageArchiverModule());
       install(new ScanResultsArchiverModule());
       install(new PluginExecutionModule());
