@@ -8,7 +8,7 @@ grpcio-health-checking==1.63.0
 grpcio-reflection==1.63.0
 grpcio-tools==1.63.0
 idna==3.7
-protobuf==5.29.5
+protobuf==5.29.6
 python-gflags==3.1.2
 pyzmq==27.0.1
 requests==2.32.4
