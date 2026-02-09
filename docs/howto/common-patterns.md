@@ -195,3 +195,129 @@ my:
 
 To use the configuration file, you need to set the `tsunami.config.location`
 option when calling Tsunami.
+
+### Creating TCP sockets with proper timeouts
+
+*Use case: My detector needs to create raw TCP or SSL sockets to communicate
+with a service.*
+
+When writing detectors that need to create raw TCP or SSL sockets, you **must**
+use the `TsunamiSocketFactory` API instead of directly creating sockets through
+`javax.net.SocketFactory` or `javax.net.ssl.SSLSocketFactory`. This ensures that
+all sockets have proper timeout configurations, preventing plugins from hanging
+indefinitely when servers don't respond.
+
+#### Injecting the socket factory
+
+```java
+public final class MyVulnDetector implements VulnDetector {
+  private final TsunamiSocketFactory socketFactory;
+
+  @Inject
+  MyVulnDetector(TsunamiSocketFactory socketFactory) {
+    this.socketFactory = checkNotNull(socketFactory);
+  }
+
+  // {...}
+}
+```
+
+#### Creating a plain TCP socket with default timeouts
+
+```java
+private final TsunamiSocketFactory socketFactory;
+
+// Socket will have connect timeout of 10s and read timeout of 30s (configurable)
+Socket socket = socketFactory.createSocket("example.com", 80);
+try {
+  // Use the socket...
+  OutputStream out = socket.getOutputStream();
+  InputStream in = socket.getInputStream();
+  // ...
+} finally {
+  socket.close();
+}
+```
+
+#### Creating a socket with custom timeouts
+
+```java
+Socket socket = socketFactory.createSocket(
+    "example.com",
+    80,
+    Duration.ofSeconds(5),   // Connect timeout
+    Duration.ofSeconds(15)   // Read timeout
+);
+```
+
+#### Creating an SSL/TLS socket
+
+```java
+// Create an SSL socket with default timeouts
+SSLSocket sslSocket = socketFactory.createSslSocket("secure.example.com", 443);
+
+// Or with custom timeouts
+SSLSocket sslSocket = socketFactory.createSslSocket(
+    "secure.example.com",
+    443,
+    Duration.ofSeconds(5),
+    Duration.ofSeconds(15)
+);
+```
+
+#### Upgrading a plain socket to SSL (STARTTLS)
+
+```java
+// First, create a plain socket
+Socket plainSocket = socketFactory.createSocket("mail.example.com", 25);
+
+// Send STARTTLS command...
+// ...
+
+// Then upgrade to SSL
+SSLSocket sslSocket = socketFactory.wrapWithSsl(
+    plainSocket,
+    "mail.example.com",
+    25,
+    true  // autoClose
+);
+```
+
+#### Configuring socket timeouts
+
+Socket timeouts can be configured via:
+
+1.  **Configuration file** (tsunami.yaml):
+
+```yaml
+common:
+  net:
+    socket:
+      connect_timeout_seconds: 10
+      read_timeout_seconds: 30
+      trust_all_certificates: true
+```
+
+1.  **Command line options**:
+
+```bash
+--socket-connect-timeout-seconds=10
+--socket-read-timeout-seconds=30
+--socket-trust-all-certificates=true
+```
+
+CLI options take precedence over configuration file settings.
+
+#### DO NOT create sockets directly
+
+**NEVER** create sockets directly like this:
+
+```java
+// BAD: No timeout configured, socket may hang forever
+Socket socket = new Socket("example.com", 80);
+
+// BAD: Even with SocketFactory, timeout is missing
+Socket socket = SocketFactory.getDefault().createSocket("example.com", 80);
+```
+
+Always use `TsunamiSocketFactory` to ensure proper timeout handling.

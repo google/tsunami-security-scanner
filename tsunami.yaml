@@ -1,2 +1,15 @@
 # This is an example YAML config file for Tsunami security scanner.
 # TODO: add examples for all available configuration options.
+
+# Socket factory configuration for TCP connections.
+# These settings ensure all sockets created by plugins have proper timeouts,
+# preventing plugins from hanging indefinitely when servers don't respond.
+common:
+  net:
+    socket:
+      # Timeout in seconds for establishing TCP connections (default: 10)
+      connect_timeout_seconds: 10
+      # Timeout in seconds for read operations on sockets (default: 30)
+      read_timeout_seconds: 30
+      # Whether to trust all SSL certificates (default: true)
+      trust_all_certificates: true
