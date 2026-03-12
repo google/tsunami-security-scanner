@@ -104,15 +104,10 @@ public final class TcsClient {
       throw new AssertionError("Invalid callbackPort number specified");
     }
 
-    HostAndPort hostAndPort =
-        callbackPort == 80
-            ? HostAndPort.fromHost(callbackAddress)
-            : HostAndPort.fromParts(callbackAddress, callbackPort);
-
     String cbid = cbidGenerator.generate(secretString);
     // always just return the dns version
     if (InternetDomainName.isValid(callbackAddress)) {
-      return CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
+      return CbidProcessor.addCbidToSubdomain(cbid, HostAndPort.fromHost(callbackAddress));
     }
     // Should never reach here
     throw new AssertionError("Invalid address format for DNS mode");
