@@ -70,6 +70,11 @@ public final class TcsClient {
         && !this.pollingBaseUrl.isEmpty();
   }
 
+  public boolean isDnsCallback() {
+    // Checks if the callback address is a DNS one
+    return InternetDomainName.isValid(callbackAddress);
+  }
+
   public String getCallbackUri(String secretString) {
     String cbid = cbidGenerator.generate(secretString);
 
@@ -105,11 +110,12 @@ public final class TcsClient {
             : HostAndPort.fromParts(callbackAddress, callbackPort);
 
     String cbid = cbidGenerator.generate(secretString);
-    if (InetAddresses.isInetAddress(callbackAddress)) {
+    // always just return the dns version
+    if (InternetDomainName.isValid(callbackAddress)) {
       return CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
     }
     // Should never reach here
-    throw new AssertionError("Unrecognized address format, should be IP address or valid domain");
+    throw new AssertionError("Invalid address format for DNS mode");
   }
 
   public String getCallbackAddress() {
