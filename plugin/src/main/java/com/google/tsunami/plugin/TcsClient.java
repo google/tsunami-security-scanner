@@ -86,6 +86,26 @@ public final class TcsClient {
     if (InetAddresses.isInetAddress(callbackAddress)) {
       return CbidProcessor.addCbidToUrl(cbid, hostAndPort);
     } else if (InternetDomainName.isValid(callbackAddress)) {
+      String subdomain = CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
+      return CbidProcessor.addCbidToUrl(cbid, HostAndPort.fromString(subdomain));
+    }
+    // Should never reach here
+    throw new AssertionError("Unrecognized address format, should be IP address or valid domain");
+  }
+
+  public String getCallbackDns(String secretString) {
+
+    if (!isValidPortNumber(callbackPort)) {
+      throw new AssertionError("Invalid callbackPort number specified");
+    }
+
+    HostAndPort hostAndPort =
+        callbackPort == 80
+            ? HostAndPort.fromHost(callbackAddress)
+            : HostAndPort.fromParts(callbackAddress, callbackPort);
+
+    String cbid = cbidGenerator.generate(secretString);
+    if (InetAddresses.isInetAddress(callbackAddress)) {
       return CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
     }
     // Should never reach here
