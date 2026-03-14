@@ -74,7 +74,7 @@ public final class TcsClient {
    * Checks whether the callback server is configured using DNS. Detectors should use this to determine if
    * they can use the callback server for detecting vulnerabilities that require 
    *
-   * @return whether the callback server is enabled
+   * @return whether the callback server is enabled with DNS
    */
   public boolean isCallbackServerEnabled() {
     // only return false when all config fields are empty so that improper config (e.g., missing
