@@ -85,7 +85,7 @@ class PluginExecutorImpl implements PluginExecutor {
   private <T> PluginExecutionResult<T> buildFailedResult(
       Throwable t, PluginExecutorConfig<T> executorConfig) {
     logger.atWarning().log(
-        "Plugin '%s' failed: %s", executorConfig.matchedPlugin().pluginId(), t.getMessage());
+        "Plugin '%s' failed: %s", executorConfig.matchedPlugin().pluginId(), t.getStackTrace().toString());
     if (executionStopwatch.isRunning()) {
       executionStopwatch.stop();
     }
