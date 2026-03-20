@@ -65,14 +65,12 @@ public final class TcsClient {
     // only return false when all config fields are empty so that improper config (e.g., missing
     // certain fields) can be exposed. Note that {@link TcsClient} already checks that all the
     // class variables are not null.
-    return !this.callbackAddress.isEmpty()
-        && isDnsCallback()
-        && !this.pollingBaseUrl.isEmpty();
+    return !this.callbackAddress.isEmpty() && isDnsCallback() && !this.pollingBaseUrl.isEmpty();
   }
 
   /**
-   * Checks whether the callback server is configured using DNS. Detectors should use this to determine if
-   * they can use the callback server for detecting vulnerabilities that require 
+   * Checks whether the callback server is configured using DNS. Detectors should use this to
+   * determine if they can use the callback server for detecting vulnerabilities that require
    *
    * @return whether the callback server is enabled with DNS
    */
