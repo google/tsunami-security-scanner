@@ -245,22 +245,29 @@ public final class DefaultTsunamiSocketFactory implements TsunamiSocketFactory {
    * @param readTimeout the timeout for read operations
    * @throws IOException if an I/O error occurs
    */
-  private void configureAndConnect(
-      Socket socket, InetSocketAddress address, Duration connectTimeout, Duration readTimeout)
-      throws IOException {
-    // Set read timeout before connecting
-    socket.setSoTimeout((int) readTimeout.toMillis());
-
-    // Enable TCP keep-alive to detect dead connections
-    socket.setKeepAlive(true);
-
-    // Disable Nagle's algorithm for better latency in security scanning
-    socket.setTcpNoDelay(true);
-
-    // Connect with timeout
-    socket.connect(address, (int) connectTimeout.toMillis());
-
-    logger.atFine().log(
-        "Socket connected to %s with SO_TIMEOUT=%dms", address, readTimeout.toMillis());
-  }
+      private void configureAndConnect(
+           Socket socket, InetSocketAddress address, Duration connectTimeout, Duration readTimeout)
+           throws IOException {
+     
+         // SECURITY FIX: Prevent SSRF by blocking internal/private IP addresses
+         InetAddress inetAddress = address.getAddress();
+         if (inetAddress != null && (inetAddress.isLoopbackAddress() || inetAddress.isSiteLocalAddress() || 
+      inetAddress.isLinkLocalAddress())) {
+           throw new IOException("Security Exception: Connections to internal IPs are blocked to prevent SSRF.");
+         }
+    
+        // Set read timeout before connecting
+        socket.setSoTimeout((int) readTimeout.toMillis());
+    
+        // Enable TCP keep-alive to detect dead connections
+        socket.setKeepAlive(true);
+    
+        // Disable Nagle's algorithm for better latency in security scanning
+        socket.setTcpNoDelay(true);
+    
+        // Connect with timeout
+        socket.connect(address, (int) connectTimeout.toMillis());
+    
+        logger.atFine().log("Socket connected to %s with SO_TIMEOUT=%dms", address, readTimeout.toMillis());
+      }
 }
