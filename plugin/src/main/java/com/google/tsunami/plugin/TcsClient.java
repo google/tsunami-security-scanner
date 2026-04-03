@@ -103,7 +103,7 @@ public final class TcsClient {
     // check if the specified address is raw IP or domain
     if (InetAddresses.isInetAddress(callbackAddress)) {
       return CbidProcessor.addCbidToUrl(cbid, hostAndPort);
-    } else if (InternetDomainName.isValid(callbackAddress)) {
+    } else if (isDnsCallback()) {
       String subdomain = CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
       return CbidProcessor.addCbidToUrl(cbid, HostAndPort.fromString(subdomain));
     }
