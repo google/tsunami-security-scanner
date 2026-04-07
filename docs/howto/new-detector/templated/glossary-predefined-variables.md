@@ -11,6 +11,7 @@ core engine;
 scanned network service;
 - `_CBS_` stands for callback server and provides information about the
 callback server.
+- `_TST_` stands for variables used only for tests.
 
 Here is the list of variables that are provided:
 
@@ -36,3 +37,5 @@ run; note that it is not hashed and is not relevant in most cases (e.g.
 `somesecret`);
 - `T_CBS_ADDRESS`: Address of the callback server (e.g. `tsunami-callback.lan`);
 - `T_CBS_PORT`: Port of the callback server (e.g. `80`);
+- `T_TST_DISABLE_SLEEP`: Used internally by the engine to disable the `sleep`
+action during tests.
