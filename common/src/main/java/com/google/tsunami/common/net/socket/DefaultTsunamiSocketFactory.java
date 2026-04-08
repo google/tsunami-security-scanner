@@ -249,10 +249,13 @@ public final class DefaultTsunamiSocketFactory implements TsunamiSocketFactory {
       Socket socket, InetSocketAddress address, Duration connectTimeout, Duration readTimeout)
       throws IOException {
     InetAddress inetAddress = address.getAddress();
-    if (inetAddress != null && (inetAddress.isLoopbackAddress() || inetAddress.isSiteLocalAddress() || 
-inetAddress.isLinkLocalAddress())) {
-      throw new IOException("Security Exception: Connections to internal IPs are blocked.");
-    }
+boolean blockInternalIps = !Boolean.getBoolean("tsunami.allowInternalConnections");
+if (blockInternalIps && inetAddress != null && 
+    (inetAddress.isLoopbackAddress() || 
+     inetAddress.isSiteLocalAddress() || 
+     inetAddress.isLinkLocalAddress())) {
+    throw new IOException("Security Exception: Connections to internal IPs are blocked.");
+}
 
     // Set read timeout before connecting
     socket.setSoTimeout((int) readTimeout.toMillis());
