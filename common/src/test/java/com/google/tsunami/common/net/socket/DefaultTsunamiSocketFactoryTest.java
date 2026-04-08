@@ -54,6 +54,7 @@ public final class DefaultTsunamiSocketFactoryTest {
 
   @Before
   public void setUp() throws IOException {
+    System.setProperty("tsunami.allowInternalConnections", "true");
     mockSocketFactory = mock(SocketFactory.class);
     mockSslSocketFactory = mock(SSLSocketFactory.class);
     mockSocket = mock(Socket.class);
