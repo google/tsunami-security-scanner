@@ -101,11 +101,8 @@ public final class TcsClient {
             : HostAndPort.fromParts(callbackAddress, callbackPort);
 
     // check if the specified address is raw IP or domain
-    if (InetAddresses.isInetAddress(callbackAddress)) {
+    if (InetAddresses.isInetAddress(callbackAddress) || isDnsCallback()) {
       return CbidProcessor.addCbidToUrl(cbid, hostAndPort);
-    } else if (isDnsCallback()) {
-      String subdomain = CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
-      return CbidProcessor.addCbidToUrl(cbid, HostAndPort.fromString(subdomain));
     }
     // Should never reach here
     throw new AssertionError("Unrecognized address format, should be IP address or valid domain");

@@ -29,7 +29,7 @@ this variable is only available if Tsunami was invoked with a hostname target
 - `T_NS_IP`: The IP of the network service being scanned (e.g. `127.0.0.1`);
 - `T_CBS_URI`: The callback server URL used to trigger the callback server. This
 is the main variable used when using the callback server. It contains the
-address and hashed secret (e.g. `http://8fe7d878787d65.tsunami-callback.lan/8fe7d878787d65`
+address and hashed secret (e.g. `http://tsunami-callback.lan/8fe7d878787d65`
 or `http://xxx.xxx.xxx.xxx/8fe7d878787d65` in the case of an IP-based callback
 server address where `8fe7d878787d65` is the **hashed** secret);
 - `T_CBS_DNS`: The callback server hostname only. This is used for cases where
