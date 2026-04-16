@@ -14,7 +14,7 @@ This page contains information to get you started with your first contributions.
 
 ## Building and running Tsunami
 
-- [How to build and run Tsumami]({{ site.baseurl }}/howto/howto)
+-   [How to build and run Tsunami]({{ site.baseurl }}/howto/howto)
 
 ## Writing plugins
 
