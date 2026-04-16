@@ -78,13 +78,37 @@ public final class TcsClientTest {
   }
 
   @Test
-  public void getCallbackUri_validDomainAddress_returnsUriWithCbidInSubdomain() {
+  public void getCallbackUri_validDomainAddress_returnsUriWithCbidInPath() {
     client = new TcsClient(VALID_DOMAIN, VALID_PORT, VALID_URL, httpClient);
 
     String url = client.getCallbackUri(SECRET);
 
-    String expectedUriString = String.format("%s.%s:%d", CBID, VALID_DOMAIN, VALID_PORT);
+    String expectedUriString = String.format("https://%s:%d/%s", VALID_DOMAIN, VALID_PORT, CBID);
     assertThat(url).isEqualTo(expectedUriString);
+  }
+
+  @Test
+  public void getCallbackDns_validDomainAddress_returnsDomainWithCbidInSubdomain() {
+    client = new TcsClient(VALID_DOMAIN, VALID_PORT, VALID_URL, httpClient);
+
+    String dns = client.getCallbackDns(SECRET);
+
+    String expectedDnsString = String.format("%s.%s", CBID, VALID_DOMAIN);
+    assertThat(dns).isEqualTo(expectedDnsString);
+  }
+
+  @Test
+  public void getCallbackDns_validIpv4Address_throwsError() {
+    client = new TcsClient(VALID_IPV4_ADDRESS, VALID_PORT, VALID_URL, httpClient);
+
+    assertThrows(AssertionError.class, () -> client.getCallbackDns(SECRET));
+  }
+
+  @Test
+  public void getCallbackDns_validIpv6Address_throwsError() {
+    client = new TcsClient(VALID_IPV6_ADDRESS, VALID_PORT, VALID_URL, httpClient);
+
+    assertThrows(AssertionError.class, () -> client.getCallbackDns(SECRET));
   }
 
   @Test

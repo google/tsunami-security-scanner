@@ -11,7 +11,8 @@ In a nutshell, the callback server works this way:
 1. A secret is generated (and stored in `T_CBS_SECRET`);
 2. This secret is hashed;
 3. The exploit uses the hashed secret and the URL of the callback server
-(`T_CBS_URI`) to trigger an out-of-band communication with the callback server;
+(`T_CBS_URI`) to trigger an out-of-band communication with the callback server
+(or `T_CBS_DNS` for the callback hostname only if using a DNS-only payload);
 4. The secret can be used to ask the callback server if a communication using
 the hashed secret has been logged (i.e. if the vulnerability has been
 triggered);
@@ -22,7 +23,8 @@ so communication with the callback server has to be handled semi-manually.
 Every workflow run will automatically generate a new secret, its hash and the
 adequate trigger URL. That means that, as part of your exploit, you will need to
 make sure a request to the callback server is made with the trigger URL. The
-trigger URL is stored in the `T_CBS_URI` variable. For example, in our previous
+trigger URL is stored in the `T_CBS_URI` variable. If using a DNS interaction,
+the hostname is stored in the `T_CBS_DNS` variable. For example, in our previous
 example we could change the payload to:
 
 {% raw %}
@@ -50,6 +52,23 @@ for the workflow to be executed. With our example:
 
 {% raw %}
 ```proto
+# Workflow that uses the callback server with DNS interactions
+workflows: {
+  condition: REQUIRES_DNS_CALLBACK_SERVER
+  variables: [
+    { name: "payload" value: "%{ import os; os.system('dig {{ T_CBS_DNS }}') }%" }
+    ## note: empty string is always present in the body. This cancels out the
+    ## body content expectation.
+    { name: "payload_result" value: "" }
+  ]
+
+  actions: [
+    "fingerprinting",
+    "exploitation",
+    "check_callback_server_logs"
+  ]
+}
+
 # Workflow that uses the callback server.
 workflows: {
   condition: REQUIRES_CALLBACK_SERVER

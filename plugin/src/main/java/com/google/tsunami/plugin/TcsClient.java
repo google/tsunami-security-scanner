@@ -61,6 +61,19 @@ public final class TcsClient {
    *
    * @return whether the callback server is enabled
    */
+  public boolean isDnsCallbackServerEnabled() {
+    // only return false when all config fields are empty so that improper config (e.g., missing
+    // certain fields) can be exposed. Note that {@link TcsClient} already checks that all the
+    // class variables are not null.
+    return !this.callbackAddress.isEmpty() && isDnsCallback() && !this.pollingBaseUrl.isEmpty();
+  }
+
+  /**
+   * Checks whether the callback server is configured using DNS. Detectors should use this to
+   * determine if they can use the callback server for detecting vulnerabilities that require
+   *
+   * @return whether the callback server is enabled with DNS
+   */
   public boolean isCallbackServerEnabled() {
     // only return false when all config fields are empty so that improper config (e.g., missing
     // certain fields) can be exposed. Note that {@link TcsClient} already checks that all the
@@ -68,6 +81,11 @@ public final class TcsClient {
     return !this.callbackAddress.isEmpty()
         && isValidPortNumber(this.callbackPort)
         && !this.pollingBaseUrl.isEmpty();
+  }
+
+  public boolean isDnsCallback() {
+    // Checks if the callback address is a DNS one
+    return InternetDomainName.isValid(callbackAddress);
   }
 
   public String getCallbackUri(String secretString) {
@@ -83,13 +101,26 @@ public final class TcsClient {
             : HostAndPort.fromParts(callbackAddress, callbackPort);
 
     // check if the specified address is raw IP or domain
-    if (InetAddresses.isInetAddress(callbackAddress)) {
+    if (InetAddresses.isInetAddress(callbackAddress) || isDnsCallback()) {
       return CbidProcessor.addCbidToUrl(cbid, hostAndPort);
-    } else if (InternetDomainName.isValid(callbackAddress)) {
-      return CbidProcessor.addCbidToSubdomain(cbid, hostAndPort);
     }
     // Should never reach here
     throw new AssertionError("Unrecognized address format, should be IP address or valid domain");
+  }
+
+  public String getCallbackDns(String secretString) {
+
+    if (!isValidPortNumber(callbackPort)) {
+      throw new AssertionError("Invalid callbackPort number specified");
+    }
+
+    String cbid = cbidGenerator.generate(secretString);
+    // always just return the dns version
+    if (InternetDomainName.isValid(callbackAddress)) {
+      return CbidProcessor.addCbidToSubdomain(cbid, HostAndPort.fromHost(callbackAddress));
+    }
+    // Should never reach here
+    throw new AssertionError("Invalid address format for DNS mode");
   }
 
   public String getCallbackAddress() {
