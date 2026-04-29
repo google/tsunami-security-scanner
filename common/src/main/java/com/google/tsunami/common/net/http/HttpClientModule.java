@@ -141,9 +141,16 @@ public final class HttpClientModule extends AbstractModule {
       ConnectionFactory connectionFactory,
       @LogId String logId,
       @ConnectTimeout Duration connectTimeout,
-      @UserAgent String userAgent) {
+      @UserAgent String userAgent,
+      @MaxResponseBodyBytes long maxResponseBodyBytes) {
     return new OkHttpHttpClient(
-        okHttpClient, trustAllCertificates, connectionFactory, logId, connectTimeout, userAgent);
+        okHttpClient,
+        trustAllCertificates,
+        connectionFactory,
+        logId,
+        connectTimeout,
+        userAgent,
+        maxResponseBodyBytes);
   }
 
   @Provides
@@ -271,6 +278,23 @@ public final class HttpClientModule extends AbstractModule {
     return HttpClient.TSUNAMI_USER_AGENT;
   }
 
+  @Provides
+  @MaxResponseBodyBytes
+  long provideMaxResponseBodyBytes(
+      HttpClientCliOptions httpClientCliOptions,
+      HttpClientConfigProperties httpClientConfigProperties) {
+    Integer megabytes = null;
+    if (httpClientCliOptions.maxResponseBodyMb != null) {
+      megabytes = httpClientCliOptions.maxResponseBodyMb;
+    } else if (httpClientConfigProperties.maxResponseBodyMb != null) {
+      megabytes = httpClientConfigProperties.maxResponseBodyMb;
+    }
+    if (megabytes == null) {
+      return OkHttpHttpClient.DEFAULT_MAX_RESPONSE_BODY_BYTES;
+    }
+    return ((long) megabytes) * 1024L * 1024L;
+  }
+
   @Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
@@ -325,6 +349,11 @@ public final class HttpClientModule extends AbstractModule {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
   @interface UserAgent {}
+
+  @Qualifier
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
+  @interface MaxResponseBodyBytes {}
 
   /** Builder for {@link HttpClientModule}. */
   public static final class Builder {

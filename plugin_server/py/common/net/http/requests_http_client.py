@@ -25,6 +25,12 @@ _DEFAULT_POOL_MAXSIZE = 10
 _DEFAULT_MAX_WORKERS = 64
 _TIMEOUT_SEC = 10
 _VERIFY_SSL = True
+# Default ceiling on response body bytes a single HTTP call may buffer in memory. Targets
+# probed by the scanner are by definition adversarial, so an unbounded read is a remote DoS
+# primitive (CWE-770 / CWE-400). 100 MB comfortably accommodates any HTML/JSON payload a
+# detector should ever need while bounding the worst-case allocation per call.
+_DEFAULT_MAX_RESPONSE_BODY_BYTES = 100 * 1024 * 1024
+_READ_CHUNK_BYTES = 8192
 
 
 class RequestsHttpClient(HttpClient):
@@ -51,6 +57,7 @@ class RequestsHttpClient(HttpClient):
       max_workers: Optional[int],
       timeout_sec: Optional[float],
       verify_ssl: Optional[bool],
+      max_response_body_bytes: int = _DEFAULT_MAX_RESPONSE_BODY_BYTES,
   ):
     self.session = session
     self.allow_redirects = allow_redirects
@@ -58,6 +65,7 @@ class RequestsHttpClient(HttpClient):
     self.max_workers = max_workers
     self.timeout_sec = timeout_sec
     self.verify_ssl = verify_ssl
+    self.max_response_body_bytes = max_response_body_bytes
 
   def get_log_id(self) -> str:
     return self.log_id
@@ -75,6 +83,11 @@ class RequestsHttpClient(HttpClient):
         verify=self.verify_ssl,
         timeout=self.timeout_sec,
         allow_redirects=self.allow_redirects,
+        # stream=True keeps the body off the response object so we can drain it
+        # ourselves with a hard byte ceiling. Without it, requests buffers the
+        # entire body inside session.send() and a malicious chunked peer can OOM
+        # the process before we ever return.
+        stream=True,
     )
     return self._parse_response(resp)
 
@@ -104,6 +117,7 @@ class RequestsHttpClient(HttpClient):
     return headers_builder.build()
 
   def _parse_response(self, res: requests.Response) -> HttpResponse:
+    body = self._read_body_with_cap(res)
     response_header = self._build_response_headers(res.headers)
     status = HttpStatus.from_code(res.status_code)
     return (
@@ -111,9 +125,46 @@ class RequestsHttpClient(HttpClient):
         .set_url(res.url)
         .set_status(status)
         .set_headers(response_header)
-        .set_response_body(res.content)
+        .set_response_body(body)
         .build()
     )
+
+  def _read_body_with_cap(self, res: requests.Response) -> bytes:
+    """Drain a streamed response body with a hard byte ceiling.
+
+    Targets probed by Tsunami are adversarial by definition; a malicious peer
+    can serve an unbounded chunked body and force the process OOM. This method
+    reads in 8 KiB chunks and aborts the moment the cap is exceeded, closing
+    the underlying connection so the peer cannot keep the socket alive.
+    """
+    advertised = res.headers.get('Content-Length')
+    if advertised is not None:
+      try:
+        if int(advertised) > self.max_response_body_bytes:
+          raise IOError(
+              'Response body for %s advertised %s bytes, exceeds cap of %d'
+              ' bytes.'
+              % (res.url, advertised, self.max_response_body_bytes)
+          )
+      except ValueError:
+        pass
+
+    buf = bytearray()
+    try:
+      for chunk in res.iter_content(
+          chunk_size=_READ_CHUNK_BYTES, decode_unicode=False
+      ):
+        if not chunk:
+          continue
+        buf.extend(chunk)
+        if len(buf) > self.max_response_body_bytes:
+          raise IOError(
+              'Response body for %s exceeds cap of %d bytes (read so far: %d).'
+              % (res.url, self.max_response_body_bytes, len(buf))
+          )
+    finally:
+      res.close()
+    return bytes(buf)
 
   async def _prepare_future(
       self,
@@ -131,6 +182,7 @@ class RequestsHttpClient(HttpClient):
             verify=self.verify_ssl,
             timeout=self.timeout_sec,
             allow_redirects=self.allow_redirects,
+            stream=True,
         ),
     )
     return await future
@@ -193,6 +245,8 @@ class RequestsHttpClientBuilder(Builder):
     self.pool_connections = _DEFAULT_POOL_CONNECTIONS
     # Maximum number of connections to save in the pool.
     self.pool_maxsize = _DEFAULT_POOL_MAXSIZE
+    # Maximum response body bytes the client will buffer in memory.
+    self.max_response_body_bytes = _DEFAULT_MAX_RESPONSE_BODY_BYTES
 
   def set_allow_redirects(
       self, allow_redirects: bool
@@ -226,6 +280,12 @@ class RequestsHttpClientBuilder(Builder):
     self.verify_ssl = verify_ssl
     return self
 
+  def set_max_response_body_bytes(
+      self, max_response_body_bytes: int
+  ) -> 'RequestsHttpClientBuilder':
+    self.max_response_body_bytes = max_response_body_bytes
+    return self
+
   def build(self) -> RequestsHttpClient:
     session = requests.Session()
     adapter = HostResolverHttpAdapter(
@@ -241,4 +301,5 @@ class RequestsHttpClientBuilder(Builder):
         max_workers=self.max_workers,
         timeout_sec=self.timeout_sec,
         verify_ssl=self.verify_ssl,
+        max_response_body_bytes=self.max_response_body_bytes,
     )
