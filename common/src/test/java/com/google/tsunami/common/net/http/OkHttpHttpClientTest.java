@@ -711,6 +711,63 @@ public final class OkHttpHttpClientTest {
   }
 
   @Test
+  public void send_whenResponseBodyExceedsCap_throwsIOException() throws IOException {
+    String responseBody = "0123456789ABCDEF response body that comfortably exceeds 16 bytes";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpClient cappedClient = buildCappedClient(httpClient, 16L);
+
+    String requestUrl = mockWebServer.url("/test/get-oversized").toString();
+    IOException thrown =
+        assertThrows(
+            IOException.class,
+            () -> cappedClient.send(get(requestUrl).withEmptyHeaders().build()));
+    assertThat(thrown).hasMessageThat().contains("exceeds cap of 16 bytes");
+  }
+
+  @Test
+  public void sendAsIs_whenResponseBodyExceedsCap_throwsIOException() throws IOException {
+    mockWebServer.setDispatcher(new SendAsIsTestDispatcher());
+    mockWebServer.start();
+
+    HttpClient cappedClient = buildCappedClient(httpClient, 8L);
+
+    HttpUrl baseUrl = mockWebServer.url("/");
+    String requestUrl =
+        new URL(baseUrl.scheme(), baseUrl.host(), baseUrl.port(), "/send-as-is/oversized")
+            .toString();
+
+    IOException thrown =
+        assertThrows(
+            IOException.class,
+            () -> cappedClient.sendAsIs(get(requestUrl).withEmptyHeaders().build()));
+    assertThat(thrown).hasMessageThat().contains("exceeds cap of 8 bytes");
+  }
+
+  @Test
+  public void send_whenResponseBodyWithinCap_returnsExpectedHttpResponse() throws IOException {
+    String responseBody = "tiny";
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.OK.code())
+            .setHeader(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString())
+            .setBody(responseBody));
+    mockWebServer.start();
+
+    HttpClient cappedClient = buildCappedClient(httpClient, 16L);
+
+    String requestUrl = mockWebServer.url("/test/within-cap").toString();
+    HttpResponse response = cappedClient.send(get(requestUrl).withEmptyHeaders().build());
+
+    assertThat(response.bodyBytes()).hasValue(ByteString.copyFrom(responseBody, UTF_8));
+  }
+
+  @Test
   public void send_default_userAgent() throws IOException, InterruptedException {
     String responseBody = "test response";
     mockWebServer.enqueue(
@@ -759,6 +816,16 @@ public final class OkHttpHttpClientTest {
     httpClient.send(get(baseUrl.toString()).withEmptyHeaders().build());
 
     assertThat(mockWebServer.takeRequest().getHeader(USER_AGENT)).isEqualTo(userAgentOverride);
+  }
+
+  // Returns a copy of the supplied client whose response-body cap is set to {@code capBytes}.
+  // The test only exercises the OkHttp builder, but the cast is safe because the injected
+  // HttpClient is always backed by OkHttpHttpClientBuilder in this module.
+  @SuppressWarnings("unchecked")
+  private static HttpClient buildCappedClient(HttpClient client, long capBytes) {
+    OkHttpHttpClient.OkHttpHttpClientBuilder builder =
+        (OkHttpHttpClient.OkHttpHttpClientBuilder) (HttpClient.Builder<?>) client.modify();
+    return builder.setMaxResponseBodyBytes(capBytes).build();
   }
 
   private MockWebServer startMockWebServerWithSsl(InetAddress serverAddress)

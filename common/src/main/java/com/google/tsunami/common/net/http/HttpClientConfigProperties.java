@@ -50,4 +50,11 @@ public final class HttpClientConfigProperties {
    * more details.
    */
   Integer writeTimeoutSeconds;
+
+  /**
+   * Maximum size in megabytes of an HTTP response body the client will buffer in memory. Responses
+   * larger than this cause the affected probe to fail with an IOException while the surrounding
+   * scan continues. Defaults to 100 MB when unset.
+   */
+  Integer maxResponseBodyMb;
 }

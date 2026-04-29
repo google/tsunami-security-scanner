@@ -295,6 +295,53 @@ class RequestsHttpClientTest(absltest.TestCase):
     )
     self._assert_response_is_expected(response, expected)
 
+  @requests_mock.mock()
+  def test_send_when_response_body_exceeds_cap_raises_io_error(self, mock):
+    url = 'http://example.com/get/oversized'
+    body = b'A' * 1024
+    mock.register_uri(HttpMethod.GET, url, content=body)
+    capped_client = (
+        RequestsHttpClientBuilder().set_max_response_body_bytes(16).build()
+    )
+    with self.assertRaisesRegex(IOError, 'exceeds cap of 16 bytes'):
+      capped_client.send(
+          HttpRequest().get(url).with_empty_headers().build()
+      )
+
+  @requests_mock.mock()
+  def test_send_when_advertised_content_length_exceeds_cap_raises_io_error(
+      self, mock
+  ):
+    url = 'http://example.com/get/oversized-advertised'
+    mock.register_uri(
+        HttpMethod.GET,
+        url,
+        content=b'A' * 8,
+        headers={'Content-Length': '999999'},
+    )
+    capped_client = (
+        RequestsHttpClientBuilder().set_max_response_body_bytes(16).build()
+    )
+    with self.assertRaisesRegex(IOError, 'advertised 999999 bytes'):
+      capped_client.send(
+          HttpRequest().get(url).with_empty_headers().build()
+      )
+
+  @requests_mock.mock()
+  def test_send_when_response_body_within_cap_returns_expected_response(
+      self, mock
+  ):
+    url = 'http://example.com/get/within-cap'
+    body = b'tiny'
+    mock.register_uri(HttpMethod.GET, url, content=body)
+    capped_client = (
+        RequestsHttpClientBuilder().set_max_response_body_bytes(16).build()
+    )
+    response = capped_client.send(
+        HttpRequest().get(url).with_empty_headers().build()
+    )
+    self.assertEqual(response.body, body)
+
   def test_send_when_request_failed_raise_error(self):
     url = 'http://example.com/post/test-path'
     with self.assertRaises(requests.exceptions.RequestException):
