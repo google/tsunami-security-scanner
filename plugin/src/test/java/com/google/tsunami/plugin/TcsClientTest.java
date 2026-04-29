@@ -29,6 +29,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -154,8 +155,11 @@ public final class TcsClientTest {
 
     client.hasOobLog(SECRET);
 
-    assertThat(mockWebServer.takeRequest().getPath())
-        .isEqualTo(String.format("/?secret=%s", SECRET));
+    RecordedRequest recordedRequest = mockWebServer.takeRequest();
+    // Secret travels in a request header, not in the URL query string. The path is "/"
+    // with no query parameters; the X-Tsunami-TCS-Secret header carries the raw secret.
+    assertThat(recordedRequest.getPath()).isEqualTo("/");
+    assertThat(recordedRequest.getHeader("X-Tsunami-TCS-Secret")).isEqualTo(SECRET);
     mockWebServer.shutdown();
   }
 

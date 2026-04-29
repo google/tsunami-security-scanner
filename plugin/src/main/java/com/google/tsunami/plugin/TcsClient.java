@@ -39,6 +39,14 @@ public final class TcsClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final JsonFormat.Parser jsonParser = JsonFormat.parser();
 
+  // Per-scan correlation secret used to be sent in the polling URL query string
+  // ('/?secret=<raw>'), but URL query strings are routinely captured by web-server access
+  // logs, cloud LB logs, browser history / Referer, ps-output of debugging curl invocations,
+  // and CDN analytics — none of which are appropriate channels for a secret. The polling
+  // server (callback-server) accepts the secret via this header instead. See
+  // https://www.rfc-editor.org/rfc/rfc9110#section-17.9 (Sensitive Information in URIs).
+  private static final String SECRET_HEADER_NAME = "X-Tsunami-TCS-Secret";
+
   private final String callbackAddress;
   private final int callbackPort;
   private final String pollingBaseUrl;
@@ -127,9 +135,12 @@ public final class TcsClient {
 
   private Optional<PollingResult> sendPollingRequest(String secretString) {
     HttpRequest request =
-        HttpRequest.get(
-                String.format("%s/?secret=%s", removeTrailingSlashes(pollingBaseUrl), secretString))
-            .setHeaders(HttpHeaders.builder().addHeader("Cache-Control", "no-cache").build())
+        HttpRequest.get(removeTrailingSlashes(pollingBaseUrl) + "/")
+            .setHeaders(
+                HttpHeaders.builder()
+                    .addHeader("Cache-Control", "no-cache")
+                    .addHeader(SECRET_HEADER_NAME, secretString)
+                    .build())
             .build();
     try {
       HttpResponse response = httpClient.send(request);
