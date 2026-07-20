@@ -50,6 +50,13 @@ _OUTPUT = flags.DEFINE_string('log_output', '/tmp',
 _TIMEOUT_SEC = flags.DEFINE_float(
     'timeout_seconds', 10, 'Timeout in seconds for complete HTTP calls.'
 )
+_MAX_RESPONSE_BODY_MB = flags.DEFINE_integer(
+    'max_response_body_mb',
+    100,
+    'Maximum size in megabytes of an HTTP response body the client will buffer'
+    ' in memory. Responses larger than this cause the affected probe to fail'
+    ' with an IOError while the surrounding scan continues.',
+)
 _LOG_ID = flags.DEFINE_string('log_id', '',
                               'id to track logs for all outgoing HTTP calls.')
 _TRUST_ALL_SSL_CERT = flags.DEFINE_boolean(
@@ -143,6 +150,7 @@ def _configure_plugin_service(server):
       .set_timeout_sec(_TIMEOUT_SEC.value)
       .set_verify_ssl(not _TRUST_ALL_SSL_CERT.value)
       .set_log_id(_LOG_ID.value)
+      .set_max_response_body_bytes(_MAX_RESPONSE_BODY_MB.value * 1024 * 1024)
       .build()
   )
   callback_client = TcsClient(

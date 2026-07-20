@@ -65,12 +65,26 @@ public final class HttpClientCliOptions implements CliOption {
       description = "User-Agent to use in HTTP requests.")
   public String userAgent = HttpClient.TSUNAMI_USER_AGENT;
 
+  @Parameter(
+      names = "--http-client-max-response-body-mb",
+      description =
+          "Maximum size in megabytes of an HTTP response body the client will buffer in memory."
+              + " Responses larger than this cause the affected probe to fail with an IOException"
+              + " while the surrounding scan continues. Defaults to 100 MB.")
+  Integer maxResponseBodyMb;
+
   @Override
   public void validate() {
     validateTimeout("--http-client-call-timeout-seconds", callTimeoutSeconds);
     validateTimeout("--http-client-connect-timeout-seconds", connectTimeoutSeconds);
     validateTimeout("--http-client-read-timeout-seconds", readTimeoutSeconds);
     validateTimeout("--http-client-write-timeout-seconds", writeTimeoutSeconds);
+    if (maxResponseBodyMb != null && maxResponseBodyMb <= 0) {
+      throw new ParameterException(
+          String.format(
+              "--http-client-max-response-body-mb must be positive, received %d.",
+              maxResponseBodyMb));
+    }
   }
 
   private static void validateTimeout(String flagName, @Nullable Integer value) {

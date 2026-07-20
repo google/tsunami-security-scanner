@@ -30,7 +30,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import com.google.tsunami.common.net.http.javanet.ConnectionFactory;
 import com.google.tsunami.proto.NetworkService;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.util.List;
@@ -46,6 +48,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.Buffer;
+import okio.BufferedSource;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -55,12 +59,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class OkHttpHttpClient extends HttpClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
+  // Default ceiling on response body bytes a single HTTP call may buffer in memory. Targets
+  // probed by the scanner are by definition adversarial, so an unbounded read is a remote DoS
+  // primitive (CWE-770 / CWE-400). 100 MB comfortably accommodates any HTML/JSON payload a
+  // detector should ever need while bounding the worst-case allocation per call.
+  static final long DEFAULT_MAX_RESPONSE_BODY_BYTES = 100L * 1024 * 1024;
+
   private final OkHttpClient okHttpClient;
   private final boolean trustAllCertificates;
   private final ConnectionFactory connectionFactory;
   private final String logId;
   private final Duration connectionTimeout;
   private final String userAgent;
+  private final long maxResponseBodyBytes;
 
   OkHttpHttpClient(
       OkHttpClient okHttpClient,
@@ -69,12 +80,31 @@ final class OkHttpHttpClient extends HttpClient {
       String logId,
       Duration connectionTimeout,
       String userAgent) {
+    this(
+        okHttpClient,
+        trustAllCertificates,
+        connectionFactory,
+        logId,
+        connectionTimeout,
+        userAgent,
+        DEFAULT_MAX_RESPONSE_BODY_BYTES);
+  }
+
+  OkHttpHttpClient(
+      OkHttpClient okHttpClient,
+      boolean trustAllCertificates,
+      ConnectionFactory connectionFactory,
+      String logId,
+      Duration connectionTimeout,
+      String userAgent,
+      long maxResponseBodyBytes) {
     this.okHttpClient = checkNotNull(okHttpClient);
     this.trustAllCertificates = trustAllCertificates;
     this.connectionFactory = checkNotNull(connectionFactory);
     this.logId = logId;
     this.connectionTimeout = connectionTimeout;
     this.userAgent = isNullOrEmpty(userAgent) ? TSUNAMI_USER_AGENT : userAgent;
+    this.maxResponseBodyBytes = maxResponseBodyBytes;
   }
 
   /**
@@ -134,7 +164,7 @@ final class OkHttpHttpClient extends HttpClient {
     return HttpResponse.builder()
         .setStatus(HttpStatus.fromCode(responseCode))
         .setHeaders(responseHeadersBuilder.build())
-        .setBodyBytes(ByteString.readFrom(connection.getInputStream()))
+        .setBodyBytes(readStreamWithCap(connection.getInputStream(), httpRequest.url()))
         .build();
   }
 
@@ -310,7 +340,7 @@ final class OkHttpHttpClient extends HttpClient {
         mediaType, httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray());
   }
 
-  private static HttpResponse parseResponse(Response okResponse) throws IOException {
+  private HttpResponse parseResponse(Response okResponse) throws IOException {
     logger.atInfo().log(
         "Received HTTP response with code '%d' for request to '%s'.",
         okResponse.code(), okResponse.request().url());
@@ -322,9 +352,63 @@ final class OkHttpHttpClient extends HttpClient {
             .setResponseUrl(okResponse.request().url());
     if (!okResponse.request().method().equals(HttpMethod.HEAD.name())
         && okResponse.body() != null) {
-      httpResponseBuilder.setBodyBytes(ByteString.copyFrom(okResponse.body().bytes()));
+      httpResponseBuilder.setBodyBytes(
+          readBodyWithCap(okResponse.body(), okResponse.request().url().toString()));
     }
     return httpResponseBuilder.build();
+  }
+
+  // Reads an OkHttp response body with a hard byte ceiling. Bypasses ResponseBody.bytes()
+  // because that buffers the entire body and only enforces a 2 GB ceiling on bodies whose
+  // Content-Length is advertised (a malicious chunked-encoded peer with no Content-Length
+  // bypasses it entirely).
+  private ByteString readBodyWithCap(ResponseBody body, String requestUrl) throws IOException {
+    long advertised = body.contentLength();
+    if (advertised > maxResponseBodyBytes) {
+      throw new IOException(
+          String.format(
+              "Response body for %s advertised %d bytes, exceeds cap of %d bytes.",
+              requestUrl, advertised, maxResponseBodyBytes));
+    }
+    Buffer sink = new Buffer();
+    long total = 0L;
+    try (BufferedSource source = body.source()) {
+      long n;
+      while ((n = source.read(sink, 8192L)) != -1L) {
+        total += n;
+        if (total > maxResponseBodyBytes) {
+          sink.clear();
+          throw new IOException(
+              String.format(
+                  "Response body for %s exceeds cap of %d bytes (read so far: %d).",
+                  requestUrl, maxResponseBodyBytes, total));
+        }
+      }
+    }
+    return ByteString.copyFrom(sink.readByteArray());
+  }
+
+  // Reads from a raw InputStream (used by sendAsIs, which goes through HttpURLConnection
+  // rather than OkHttp). Strictly worse than the OkHttp path absent a cap because the
+  // underlying ByteString.readFrom drains until EOF with no ceiling whatsoever.
+  private ByteString readStreamWithCap(InputStream stream, String requestUrl) throws IOException {
+    ByteArrayOutputStream sink = new ByteArrayOutputStream();
+    byte[] buffer = new byte[8192];
+    long total = 0L;
+    try (InputStream in = stream) {
+      int read;
+      while ((read = in.read(buffer)) != -1) {
+        total += read;
+        if (total > maxResponseBodyBytes) {
+          throw new IOException(
+              String.format(
+                  "Response body for %s exceeds cap of %d bytes (read so far: %d).",
+                  requestUrl, maxResponseBodyBytes, total));
+        }
+        sink.write(buffer, 0, read);
+      }
+    }
+    return ByteString.copyFrom(sink.toByteArray());
   }
 
   private static HttpHeaders convertHeaders(Headers headers) {
@@ -357,6 +441,7 @@ final class OkHttpHttpClient extends HttpClient {
     private String logId;
     private Duration connectionTimeout;
     private String userAgent;
+    private long maxResponseBodyBytes;
 
     private OkHttpHttpClientBuilder(OkHttpHttpClient okHttpHttpClient) {
       this.okHttpClient = okHttpHttpClient.okHttpClient;
@@ -366,6 +451,7 @@ final class OkHttpHttpClient extends HttpClient {
       this.logId = okHttpHttpClient.logId;
       this.connectionTimeout = okHttpHttpClient.connectionTimeout;
       this.userAgent = okHttpHttpClient.userAgent;
+      this.maxResponseBodyBytes = okHttpHttpClient.maxResponseBodyBytes;
     }
 
     @Override
@@ -392,6 +478,12 @@ final class OkHttpHttpClient extends HttpClient {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public OkHttpHttpClientBuilder setMaxResponseBodyBytes(long maxResponseBodyBytes) {
+      this.maxResponseBodyBytes = maxResponseBodyBytes;
+      return this;
+    }
+
     @Override
     public OkHttpHttpClient build() {
       return new OkHttpHttpClient(
@@ -400,7 +492,8 @@ final class OkHttpHttpClient extends HttpClient {
           connectionFactory,
           logId,
           connectionTimeout,
-          userAgent);
+          userAgent,
+          maxResponseBodyBytes);
     }
   }
 }
