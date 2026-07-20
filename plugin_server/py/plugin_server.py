@@ -41,8 +41,28 @@ import plugin_service_pb2
 import plugin_service_pb2_grpc
 
 
-_HOST = '127.0.0.1'
+_HOST = flags.DEFINE_string(
+    'host',
+    '127.0.0.1',
+    'address the gRPC server binds on. Defaults to 127.0.0.1 (loopback). Any'
+    ' non-loopback bind exposes the PluginService RPC surface to every'
+    ' caller able to reach the address — combine with --tls_cert_path and'
+    ' --tls_key_path so traffic is at least encrypted on the wire.',
+)
 _PORT = flags.DEFINE_integer('port', 34567, 'port to listen on.')
+_TLS_CERT_PATH = flags.DEFINE_string(
+    'tls_cert_path',
+    '',
+    'Path to a PEM-encoded server TLS certificate. When set together with'
+    ' --tls_key_path, the gRPC server binds via add_secure_port and serves'
+    ' TLS instead of plaintext gRPC. Empty disables TLS.',
+)
+_TLS_KEY_PATH = flags.DEFINE_string(
+    'tls_key_path',
+    '',
+    'Path to a PEM-encoded server TLS private key. Must be set together with'
+    ' --tls_cert_path. Empty disables TLS.',
+)
 _THREADS = flags.DEFINE_integer('threads', 10,
                                 'number of worker threads in thread pool.')
 _OUTPUT = flags.DEFINE_string('log_output', '/tmp',
@@ -85,12 +105,12 @@ def main(unused_argv):
   )
   _import_py_plugins(plugin_pkg)
 
-  server_addr = f'{_HOST}:{_PORT.value}'
+  server_addr = f'{_HOST.value}:{_PORT.value}'
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=_THREADS.value))
 
   _configure_plugin_service(server)
   health_servicer = _register_health_service(server)
-  server.add_insecure_port(server_addr)
+  _bind_server_port(server, server_addr)
 
   server.start()
   logging.info('Server started at %s.', server_addr)
@@ -109,6 +129,49 @@ def main(unused_argv):
   logging.info('Stopped RPC server, Waiting for RPCs to complete...')
   server.stop(3).wait()
   logging.info('Done stopping server')
+
+
+def _bind_server_port(server: grpc.Server, server_addr: str) -> None:
+  """Bind the gRPC server's listening port, with TLS if configured.
+
+  Uses add_secure_port with grpc.ssl_server_credentials when both
+  --tls_cert_path and --tls_key_path are provided. Falls back to
+  add_insecure_port otherwise. If only one of the two TLS flags is set,
+  refuses to start so the operator does not silently get plaintext.
+
+  Logs a startup WARNING when binding to a non-loopback address without
+  TLS — that combination exposes the PluginService RPC surface as a
+  plaintext, unauthenticated remote-control API to anyone able to reach
+  the port (CWE-319).
+  """
+  cert_path = _TLS_CERT_PATH.value
+  key_path = _TLS_KEY_PATH.value
+  if bool(cert_path) != bool(key_path):
+    raise SystemExit(
+        'Refusing to start: --tls_cert_path and --tls_key_path must both be'
+        ' set or both empty.'
+    )
+  if cert_path and key_path:
+    with open(key_path, 'rb') as key_file:
+      private_key = key_file.read()
+    with open(cert_path, 'rb') as cert_file:
+      certificate_chain = cert_file.read()
+    server_credentials = grpc.ssl_server_credentials(
+        [(private_key, certificate_chain)]
+    )
+    server.add_secure_port(server_addr, server_credentials)
+    logging.info('Plugin server bound on %s with TLS.', server_addr)
+    return
+
+  server.add_insecure_port(server_addr)
+  if _HOST.value != '127.0.0.1':
+    logging.warning(
+        'Plugin server is bound to non-loopback address %s WITHOUT TLS. The'
+        ' PluginService RPC surface is plaintext on the wire and reachable'
+        ' to any caller able to connect. Set --tls_cert_path and'
+        ' --tls_key_path to enable TLS, or rebind to 127.0.0.1.',
+        server_addr,
+    )
 
 
 def _import_py_plugins(plugin_pkg: types.ModuleType):
