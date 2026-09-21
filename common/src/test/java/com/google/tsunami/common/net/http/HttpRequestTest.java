@@ -60,6 +60,14 @@ public class HttpRequestTest {
   }
 
   @Test
+  public void options_always_buildsHttpOptionsRequest() {
+    HttpRequest httpRequest = HttpRequest.options("http://localhost/url").withEmptyHeaders().build();
+
+    assertThat(httpRequest.method()).isEqualTo(HttpMethod.OPTIONS);
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
+  }
+
+  @Test
   public void build_whenGetRequestHasRequestBody_throwsIllegalStateException() {
     assertThrows(
         IllegalStateException.class,

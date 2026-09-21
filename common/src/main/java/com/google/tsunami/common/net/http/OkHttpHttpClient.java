@@ -113,7 +113,10 @@ final class OkHttpHttpClient extends HttpClient {
     connection.setRequestProperty(USER_AGENT, this.userAgent);
 
     if (ImmutableSet.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
-        .contains(httpRequest.method())) {
+            .contains(httpRequest.method())
+        || (httpRequest.method() == HttpMethod.OPTIONS
+            && httpRequest.requestBody().isPresent()
+            && !httpRequest.requestBody().get().isEmpty())) {
       connection.setDoOutput(true);
       ByteSource.wrap(httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray())
           .copyTo(connection.getOutputStream());
@@ -296,6 +299,13 @@ final class OkHttpHttpClient extends HttpClient {
         break;
       case DELETE:
         okRequestBuilder.delete(buildRequestBody(httpRequest));
+        break;
+      case OPTIONS:
+        if (httpRequest.requestBody().isPresent() && !httpRequest.requestBody().get().isEmpty()) {
+          okRequestBuilder.method("OPTIONS", buildRequestBody(httpRequest));
+        } else {
+          okRequestBuilder.method("OPTIONS", null);
+        }
         break;
     }
 
