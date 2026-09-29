@@ -113,7 +113,8 @@ final class OkHttpHttpClient extends HttpClient {
     connection.setRequestProperty(USER_AGENT, this.userAgent);
 
     if (ImmutableSet.of(HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
-        .contains(httpRequest.method())) {
+            .contains(httpRequest.method())
+        || (httpRequest.method() == HttpMethod.OPTIONS && hasNonEmptyRequestBody(httpRequest))) {
       connection.setDoOutput(true);
       ByteSource.wrap(httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray())
           .copyTo(connection.getOutputStream());
@@ -297,9 +298,18 @@ final class OkHttpHttpClient extends HttpClient {
       case DELETE:
         okRequestBuilder.delete(buildRequestBody(httpRequest));
         break;
+      case OPTIONS:
+        okRequestBuilder.method(
+            HttpMethod.OPTIONS.toString(),
+            hasNonEmptyRequestBody(httpRequest) ? buildRequestBody(httpRequest) : null);
+        break;
     }
 
     return okRequestBuilder.build();
+  }
+
+  private static boolean hasNonEmptyRequestBody(HttpRequest httpRequest) {
+    return !httpRequest.requestBody().orElse(ByteString.EMPTY).isEmpty();
   }
 
   private static RequestBody buildRequestBody(HttpRequest httpRequest) {

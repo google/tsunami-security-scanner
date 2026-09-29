@@ -158,6 +158,28 @@ public abstract class HttpRequest {
     return builder().setMethod(HttpMethod.DELETE).setUrl(uri);
   }
 
+  /**
+   * Create a new HTTP OPTIONS request with the given {@code url}.
+   *
+   * @param url the url of the OPTIONS request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder options(String url) {
+    checkArgument(!Strings.isNullOrEmpty(url));
+    return builder().setMethod(HttpMethod.OPTIONS).setUrl(url);
+  }
+
+  /**
+   * Create a new HTTP OPTIONS request with the given {@code uri}.
+   *
+   * @param uri the url of the OPTIONS request.
+   * @return a {@link Builder} object for configuring {@link HttpRequest}.
+   */
+  public static Builder options(HttpUrl uri) {
+    checkNotNull(uri);
+    return builder().setMethod(HttpMethod.OPTIONS).setUrl(uri);
+  }
+
   /** Builder for {@link HttpRequest}. */
   @AutoValue.Builder
   public abstract static class Builder {
@@ -190,6 +212,7 @@ public abstract class HttpRequest {
         case POST:
         case PUT:
         case DELETE:
+        case OPTIONS:
           break;
       }
 
