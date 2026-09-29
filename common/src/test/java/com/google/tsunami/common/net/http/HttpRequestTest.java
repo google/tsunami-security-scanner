@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.protobuf.ByteString;
+import okhttp3.HttpUrl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -62,6 +63,15 @@ public class HttpRequestTest {
   @Test
   public void options_always_buildsHttpOptionsRequest() {
     HttpRequest httpRequest = HttpRequest.options("http://localhost/url").withEmptyHeaders().build();
+
+    assertThat(httpRequest.method()).isEqualTo(HttpMethod.OPTIONS);
+    assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
+  }
+
+  @Test
+  public void options_withHttpUrl_buildsHttpOptionsRequest() {
+    HttpRequest httpRequest =
+        HttpRequest.options(HttpUrl.parse("http://localhost/url")).withEmptyHeaders().build();
 
     assertThat(httpRequest.method()).isEqualTo(HttpMethod.OPTIONS);
     assertThat(httpRequest.url()).isEqualTo("http://localhost/url");
