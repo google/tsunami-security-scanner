@@ -48,6 +48,10 @@ public class DefaultConnectionFactory implements ConnectionFactory {
   @Override
   public HttpURLConnection openConnection(String url) throws IOException {
     HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+
+    // Prevent blind SSRF by disabling automatic redirects
+    connection.setInstanceFollowRedirects(false);
+
     connection.setConnectTimeout((int) connectTimeout.toMillis());
     connection.setReadTimeout((int) readTimeout.toMillis());
 
