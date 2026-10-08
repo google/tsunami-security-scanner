@@ -82,30 +82,32 @@ class TcsClientTest(parameterized.TestCase):
   @requests_mock.mock()
   def test_has_oob_log_sends_polling_request(self, mock):
     body = '{ "has_dns_interaction":false, "has_http_interaction":true}'
-    mock.register_uri(
-        'GET', '%s/?secret=%s' % (URL, SECRET), content=body.encode('utf-8')
-    )
+    mock.register_uri('GET', '%s/' % URL, content=body.encode('utf-8'))
     client = TcsClient(DOMAIN, PORT, URL, self.http_client)
     self.assertTrue(client.has_oob_log(SECRET))
+    # Secret travels in a request header, not in the URL query string. The path is "/"
+    # with no query parameters; the X-Tsunami-TCS-Secret header carries the raw secret.
+    self.assertEqual(mock.last_request.qs, {})
+    self.assertEqual(
+        mock.last_request.headers.get('X-Tsunami-TCS-Secret'), SECRET
+    )
 
   @requests_mock.mock()
   def test_has_oob_log_with_no_logs_returns_false(self, mock):
     body = '{ "has_dns_interaction":false, "has_http_interaction":false}'
-    mock.register_uri(
-        'GET', '%s/?secret=%s' % (URL, SECRET), content=body.encode('utf-8')
-    )
+    mock.register_uri('GET', '%s/' % URL, content=body.encode('utf-8'))
     client = TcsClient(DOMAIN, PORT, URL, self.http_client)
     self.assertFalse(client.has_oob_log(SECRET))
 
   @requests_mock.mock()
   def test_has_oob_log_with_no_response_returns_false(self, mock):
-    mock.register_uri('GET', '%s/?secret=%s' % (URL, SECRET))
+    mock.register_uri('GET', '%s/' % URL)
     client = TcsClient(DOMAIN, PORT, URL, self.http_client)
     self.assertFalse(client.has_oob_log(SECRET))
 
   @requests_mock.mock()
   def test_has_oob_log_with_unsuccessful_response_returns_false(self, mock):
-    mock.register_uri('GET', '%s/?secret=%s' % (URL, SECRET), status_code=500)
+    mock.register_uri('GET', '%s/' % URL, status_code=500)
     client = TcsClient(DOMAIN, PORT, URL, self.http_client)
     self.assertFalse(client.has_oob_log(SECRET))
 

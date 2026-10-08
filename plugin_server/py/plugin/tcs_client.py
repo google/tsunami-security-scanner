@@ -11,6 +11,14 @@ import network_pb2
 import polling_pb2
 
 
+# Per-scan correlation secret used to be sent in the polling URL query string
+# ('/?secret=<raw>'), but URL query strings are routinely captured by web-server access
+# logs, cloud LB logs, browser history / Referer, ps-output of debugging curl invocations,
+# and CDN analytics — none of which are appropriate channels for a secret. The polling
+# server (callback-server) accepts the secret via this header instead.
+_SECRET_HEADER_NAME = 'X-Tsunami-TCS-Secret'
+
+
 class TcsClient:
   """Client use for communicating with Tsunami Callback Server."""
 
@@ -116,12 +124,13 @@ class TcsClient:
     return None
 
   def _build_polling_request(self, secret_string: str) -> HttpRequest:
-    url = '%s/?secret=%s' % (self.polling_base_url, secret_string)
+    url = '%s/' % self.polling_base_url
     return (
         HttpRequest.get(url)
         .set_headers(
             HttpHeaders.builder()
             .add_header('Cache-Control', 'no-cache')
+            .add_header(_SECRET_HEADER_NAME, secret_string)
             .build()
         )
         .build()
