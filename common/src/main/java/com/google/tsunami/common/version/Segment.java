@@ -99,8 +99,33 @@ abstract class Segment implements Comparable<Segment> {
     return Segment.fromTokenList(tokensBuilder.build());
   }
 
+  private boolean startsWithExplicitQualifier() {
+    Token first = tokens().get(0);
+    return first.isKnownQualifier() && !first.isEmptyToken();
+  }
+
   @Override
   public int compareTo(Segment other) {
+    /*
+     * A segment that starts with an explicit qualifier, like "alpha.beta", is a pre-release
+     * segment. There a missing trailing token just means fewer fields, and fewer fields has lower
+     * precedence than more, so "alpha" < "alpha.beta". Filling with ABSENT instead would rank the
+     * shorter segment above, which contradicts "alpha" < "alpha.1" < "alpha.beta".
+     *
+     * Segments that start with ABSENT are ordinary version segments, where a trailing qualifier
+     * lowers precedence ("1.1rc1" < "1.1"). Those keep the ABSENT fill value.
+     */
+    if (this.startsWithExplicitQualifier() && other.startsWithExplicitQualifier()) {
+      int shortest = Math.min(this.tokens().size(), other.tokens().size());
+      for (int i = 0; i < shortest; i++) {
+        int compareResult = this.tokens().get(i).compareTo(other.tokens().get(i));
+        if (compareResult != 0) {
+          return compareResult;
+        }
+      }
+      return Integer.compare(this.tokens().size(), other.tokens().size());
+    }
+
     return ComparisonUtility.compareListWithFillValue(this.tokens(), other.tokens(), Token.EMPTY);
   }
 }
