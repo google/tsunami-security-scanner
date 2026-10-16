@@ -35,8 +35,8 @@ COPY --from=plugins-facebook /usr/tsunami/plugins/ /usr/tsunami/plugins/
 COPY --from=plugins-python /usr/tsunami/py_plugins/ /usr/tsunami/py_plugins/
 
 # Install the linter
-RUN go install github.com/google/tsunami-security-scanner-plugins/templated/utils/linter@latest \
-    && ln -s /root/go/bin/linter /usr/bin/tsunami-linter
+RUN GOBIN=/usr/local/bin go install github.com/google/tsunami-security-scanner-plugins/templated/utils/linter@latest \
+    && ln -s /usr/local/bin/linter /usr/bin/tsunami-linter
 
 # Symlink the Python plugins so that they are discoverable by Python.
 RUN ln -s /usr/tsunami/py_plugins/ /usr/tsunami/py_server/py_plugins
