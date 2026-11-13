@@ -18,10 +18,14 @@ package com.google.tsunami.common.net.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.net.HttpHeaders.ACCEPT;
+import static com.google.common.net.HttpHeaders.CONNECTION;
 import static com.google.common.net.HttpHeaders.CONTENT_LENGTH;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static com.google.common.net.HttpHeaders.HOST;
 import static com.google.common.net.HttpHeaders.LOCATION;
+import static com.google.common.net.HttpHeaders.SEC_WEBSOCKET_KEY;
+import static com.google.common.net.HttpHeaders.SEC_WEBSOCKET_VERSION;
+import static com.google.common.net.HttpHeaders.UPGRADE;
 import static com.google.common.net.HttpHeaders.USER_AGENT;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.tsunami.common.net.http.HttpRequest.get;
@@ -959,6 +963,75 @@ public final class OkHttpHttpClientTest {
     httpClient.send(get(baseUrl.toString()).withEmptyHeaders().build());
 
     assertThat(mockWebServer.takeRequest().getHeader(USER_AGENT)).isEqualTo(userAgentOverride);
+  }
+
+  @Test
+  public void send_whenSwitchingProtocolsUpgrade_returnsResponseWithoutBodyAndClosesSocket()
+      throws IOException, InterruptedException {
+    enqueueSwitchingProtocolsUpgradeAndFollowUp();
+    mockWebServer.start();
+
+    String upgradeUrl = mockWebServer.url("/terminal/ws").toString();
+    HttpResponse upgradeResponse = httpClient.send(buildWebSocketUpgradeRequest(upgradeUrl));
+
+    assertThat(upgradeResponse.status()).isEqualTo(HttpStatus.SWITCHING_PROTOCOLS);
+    assertThat(upgradeResponse.headers().get(UPGRADE)).hasValue("websocket");
+    assertThat(upgradeResponse.bodyBytes()).isEmpty();
+    assertThat(upgradeResponse.responseUrl()).hasValue(HttpUrl.parse(upgradeUrl));
+
+    HttpResponse followUpResponse =
+        httpClient.send(get(mockWebServer.url("/health").toString()).withEmptyHeaders().build());
+    assertThat(followUpResponse.status()).isEqualTo(HttpStatus.OK);
+    assertThat(followUpResponse.bodyString()).hasValue("after upgrade");
+    assertThat(mockWebServer.takeRequest().getSequenceNumber()).isEqualTo(0);
+    assertThat(mockWebServer.takeRequest().getSequenceNumber()).isEqualTo(0);
+  }
+
+  @Test
+  public void sendAsync_whenSwitchingProtocolsUpgrade_returnsResponseWithoutBodyAndClosesSocket()
+      throws IOException, ExecutionException, InterruptedException {
+    enqueueSwitchingProtocolsUpgradeAndFollowUp();
+    mockWebServer.start();
+
+    String upgradeUrl = mockWebServer.url("/terminal/ws").toString();
+    HttpResponse upgradeResponse =
+        httpClient.sendAsync(buildWebSocketUpgradeRequest(upgradeUrl)).get();
+
+    assertThat(upgradeResponse.status()).isEqualTo(HttpStatus.SWITCHING_PROTOCOLS);
+    assertThat(upgradeResponse.headers().get(UPGRADE)).hasValue("websocket");
+    assertThat(upgradeResponse.bodyBytes()).isEmpty();
+    assertThat(upgradeResponse.responseUrl()).hasValue(HttpUrl.parse(upgradeUrl));
+
+    HttpResponse followUpResponse =
+        httpClient
+            .sendAsync(get(mockWebServer.url("/health").toString()).withEmptyHeaders().build())
+            .get();
+    assertThat(followUpResponse.status()).isEqualTo(HttpStatus.OK);
+    assertThat(followUpResponse.bodyString()).hasValue("after upgrade");
+    assertThat(mockWebServer.takeRequest().getSequenceNumber()).isEqualTo(0);
+    assertThat(mockWebServer.takeRequest().getSequenceNumber()).isEqualTo(0);
+  }
+
+  private void enqueueSwitchingProtocolsUpgradeAndFollowUp() {
+    mockWebServer.enqueue(
+        new MockResponse()
+            .setResponseCode(HttpStatus.SWITCHING_PROTOCOLS.code())
+            .setHeader(CONNECTION, UPGRADE)
+            .setHeader(UPGRADE, "websocket"));
+    mockWebServer.enqueue(
+        new MockResponse().setResponseCode(HttpStatus.OK.code()).setBody("after upgrade"));
+  }
+
+  private static HttpRequest buildWebSocketUpgradeRequest(String url) {
+    return get(url)
+        .setHeaders(
+            HttpHeaders.builder()
+                .addHeader(CONNECTION, UPGRADE)
+                .addHeader(UPGRADE, "websocket")
+                .addHeader(SEC_WEBSOCKET_VERSION, "13")
+                .addHeader(SEC_WEBSOCKET_KEY, "dGhlIHNhbXBsZSBub25jZQ==")
+                .build())
+        .build();
   }
 
   private MockWebServer startMockWebServerWithSsl(InetAddress serverAddress)

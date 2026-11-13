@@ -45,7 +45,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -168,10 +167,8 @@ final class OkHttpHttpClient extends HttpClient {
         "%sSending HTTP '%s' request to '%s'.", logId, httpRequest.method(), httpRequest.url());
 
     OkHttpClient callHttpClient = clientWithHostnameAsProxy(networkService);
-    try (Response okHttpResponse =
-        callHttpClient.newCall(buildOkHttpRequest(httpRequest, this.userAgent)).execute()) {
-      return parseResponse(okHttpResponse);
-    }
+    Call requestCall = callHttpClient.newCall(buildOkHttpRequest(httpRequest, this.userAgent));
+    return handleResponse(requestCall, requestCall.execute());
   }
 
   /**
@@ -214,8 +211,8 @@ final class OkHttpHttpClient extends HttpClient {
 
             @Override
             public void onResponse(Call call, Response response) {
-              try (ResponseBody unused = response.body()) {
-                responseFuture.set(parseResponse(response));
+              try {
+                responseFuture.set(handleResponse(call, response));
               } catch (Throwable t) {
                 responseFuture.setException(t);
               }
@@ -320,6 +317,19 @@ final class OkHttpHttpClient extends HttpClient {
         mediaType, httpRequest.requestBody().orElse(ByteString.EMPTY).toByteArray());
   }
 
+  private static HttpResponse handleResponse(Call call, Response okResponse) throws IOException {
+    try (okResponse) {
+      if (okResponse.code() == HttpStatus.SWITCHING_PROTOCOLS.code()) {
+        // HttpClient models discrete request/response exchanges and does not expose upgraded
+        // sockets. Cancel the call to close the underlying TCP socket immediately (using
+        // Call.cancel() rather than OkHttp 5's Response.socket() to preserve OSS OkHttp 3.12
+        // compatibility).
+        call.cancel();
+      }
+      return parseResponse(okResponse);
+    }
+  }
+
   private static HttpResponse parseResponse(Response okResponse) throws IOException {
     logger.atInfo().log(
         "Received HTTP response with code '%d' for request to '%s'.",
@@ -331,6 +341,7 @@ final class OkHttpHttpClient extends HttpClient {
             .setHeaders(convertHeaders(okResponse.headers()))
             .setResponseUrl(okResponse.request().url());
     if (!okResponse.request().method().equals(HttpMethod.HEAD.name())
+        && okResponse.code() != HttpStatus.SWITCHING_PROTOCOLS.code()
         && okResponse.body() != null) {
       httpResponseBuilder.setBodyBytes(ByteString.copyFrom(okResponse.body().bytes()));
     }
