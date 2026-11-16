@@ -5,7 +5,6 @@ For any utility update, please consider if Java's network service utils
 also needs the modification.
 """
 
-
 import socket
 from typing import Optional
 import urllib.parse
@@ -24,31 +23,50 @@ NetworkEndpoint = network_pb2.NetworkEndpoint
 Port = network_pb2.Port
 TransportProtocol = network_pb2.TransportProtocol
 
+# Known HTTP/HTTPS service names from IANA [RFC6335] and Nmap "ssl/*" tunnel
+# service labels, kept synchronized with NetworkServiceUtils.java.
 is_plain_http_by_known_web_service_name = {
     "http": True,
     "http-alt": True,
     "http-proxy": True,
     "https": False,
+    "https-alt": False,
     "radan-http": True,
     "ssl/http": False,
+    "ssl/http-alt": False,
     "ssl/https": False,
+    "ssl/https-alt": False,
+    "ssl/http-proxy": False,
+    "ssl/tungsten-https": False,
+    "ssl/wso2esb-console": False,
 }
 
 
 def is_web_service(network_service: NetworkService) -> bool:
-  return network_service.service_name.lower(
-  ) in is_plain_http_by_known_web_service_name
+  return bool(network_service.supported_http_methods) or (
+      network_service.service_name.lower()
+      in is_plain_http_by_known_web_service_name
+  )
 
 
 def is_plain_http_service(network_service: NetworkService) -> bool:
-  return is_web_service(
-      network_service) and is_plain_http_by_known_web_service_name.get(
-          network_service.service_name.lower(), False)
+  service_name = network_service.service_name.lower()
+  if service_name.startswith("ssl/"):
+    return False
+  does_not_support_any_ssl_version = not network_service.supported_ssl_versions
+  if service_name not in is_plain_http_by_known_web_service_name:
+    return is_web_service(network_service) and does_not_support_any_ssl_version
+  return (
+      is_plain_http_by_known_web_service_name.get(service_name, False)
+      and does_not_support_any_ssl_version
+  )
 
 
 def get_service_name(network_service: NetworkService) -> str:
-  return network_service.software.name.lower(
-  ) or network_service.service_name.lower()
+  return (
+      network_service.software.name.lower()
+      or network_service.service_name.lower()
+  )
 
 
 def build_uri_network_service(uri_string: str) -> NetworkService:
@@ -91,7 +109,7 @@ def build_uri_network_service(uri_string: str) -> NetworkService:
       service_name=scheme,
       service_context=ServiceContext(
           web_service_context=WebServiceContext(application_root=uri.path)
-      )
+      ),
   )
 
 
@@ -99,18 +117,22 @@ def build_web_application_root_url(network_service: NetworkService) -> str:
   """Build the root url for web application service.
 
   Args:
-    network_service: network service protobuf with a valid service defined
-    in the is_plain_http_by_known_web_service_name dict.
+    network_service: A web NetworkService satisfying `is_web_service()`.
 
   Returns:
     The root URL for the web service which always ends with a "/"
     (i.e., http://localhost:8080/, https://127.1.23.1/pathway/)
+
+  Raises:
+    ValueError: If `network_service` is not recognized as a web service.
   """
   if not is_web_service(network_service):
     raise ValueError("Invalid network service: %s" % network_service)
-  return build_web_protocol(
-      network_service) + build_web_uri_authority(
-          network_service) + build_web_app_root_path(network_service)
+  return (
+      build_web_protocol(network_service)
+      + build_web_uri_authority(network_service)
+      + build_web_app_root_path(network_service)
+  )
 
 
 def build_web_protocol(network_service: NetworkService) -> str:
@@ -130,7 +152,7 @@ def build_web_uri_authority(network_service: NetworkService) -> str:
 
   Args:
     network_service: contains the service name and network endpoint needed to
-    construct the URI authority.
+      construct the URI authority.
 
   Returns:
     The URI authority. For example, various combination of ip
@@ -144,7 +166,7 @@ def build_web_uri_authority(network_service: NetworkService) -> str:
         *  ip_v6 = "3ffe::1"   port = 8000 -> uri_athority = "[3ffe::1]:8000"
         *   host = "localhost" port = 8888 -> uri_athority = "localhost:8888"
 
-      With services 'https', 'ssl/http', and 'ssl/https':
+      With services 'https', 'https-alt', and 'ssl/*' web labels:
         *  ip_v4 = "1.2.3.4" port = 443 -> uri_athority = "1.2.3.4"
         *  ip_v6 = "3ffe::1" port = 443 -> uri_athority = "[3ffe::1]"
         *   host = "localhost" port = 443 -> uri_athority = "localhost"
@@ -153,19 +175,22 @@ def build_web_uri_authority(network_service: NetworkService) -> str:
         *   host = "localhost" port = 8888 -> uri_athority = "localhost:8888"
   """
   uri_authority = network_endpoint_utils.to_uri_authority(
-      network_service.network_endpoint)
-  if is_plain_http_service(network_service) and uri_authority.endswith(
-      ":80"):
-    return uri_authority.replace(":80", "")
-  if not is_plain_http_service(
-      network_service) and uri_authority.endswith(":443"):
-    return uri_authority.replace(":443", "")
+      network_service.network_endpoint
+  )
+  if is_plain_http_service(network_service) and uri_authority.endswith(":80"):
+    return uri_authority.removesuffix(":80")
+  if not is_plain_http_service(network_service) and uri_authority.endswith(
+      ":443"
+  ):
+    return uri_authority.removesuffix(":443")
   return uri_authority
 
 
 def build_web_app_root_path(network_service: NetworkService) -> str:
   if network_service.service_context:
-    root_path = network_service.service_context.web_service_context.application_root
+    root_path = (
+        network_service.service_context.web_service_context.application_root
+    )
   else:
     root_path = "/"
   if not root_path.startswith("/"):
@@ -201,4 +226,5 @@ def validate_scheme(scheme: str) -> None:
     pass
   else:
     raise ValueError(
-        "URI scheme should be one of the following: 'http', 'https'")
+        "URI scheme should be one of the following: 'http', 'https'"
+    )

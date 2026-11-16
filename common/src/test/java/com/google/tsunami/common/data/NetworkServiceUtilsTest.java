@@ -16,6 +16,7 @@
 package com.google.tsunami.common.data;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static com.google.tsunami.common.data.NetworkEndpointUtils.forIpAndPort;
 
@@ -32,7 +33,7 @@ import com.google.tsunami.proto.WebServiceContext;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.URL;
+import java.net.URI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -52,16 +53,16 @@ public final class NetworkServiceUtilsTest {
   @Test
   public void isWebService_whenHttpAltService_returnsTrue() {
     assertThat(
-        NetworkServiceUtils.isWebService(
-            NetworkService.newBuilder().setServiceName("http-alt").build()))
+            NetworkServiceUtils.isWebService(
+                NetworkService.newBuilder().setServiceName("http-alt").build()))
         .isTrue();
   }
 
   @Test
   public void isWebService_whenHttpProxyService_returnsTrue() {
     assertThat(
-        NetworkServiceUtils.isWebService(
-            NetworkService.newBuilder().setServiceName("http-proxy").build()))
+            NetworkServiceUtils.isWebService(
+                NetworkService.newBuilder().setServiceName("http-proxy").build()))
         .isTrue();
   }
 
@@ -74,10 +75,31 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isWebService_whenHttpsAltAndSslAltServices_returnsTrue() {
+    assertIsWebService("https-alt");
+    assertIsWebService("HTTPS-ALT");
+    assertIsWebService("ssl/https-alt");
+    assertIsWebService("SSL/HTTPS-ALT");
+    assertIsWebService("ssl/http-alt");
+    assertIsWebService("SSL/HTTP-ALT");
+    assertIsWebService("ssl/http-proxy");
+    assertIsWebService("ssl/tungsten-https");
+    assertIsWebService("ssl/wso2esb-console");
+  }
+
+  private static void assertIsWebService(String serviceName) {
+    assertWithMessage("serviceName=%s", serviceName)
+        .that(
+            NetworkServiceUtils.isWebService(
+                NetworkService.newBuilder().setServiceName(serviceName).build()))
+        .isTrue();
+  }
+
+  @Test
   public void isWebService_whenRadanHttpService_returnsTrue() {
     assertThat(
-        NetworkServiceUtils.isWebService(
-            NetworkService.newBuilder().setServiceName("radan-http").build()))
+            NetworkServiceUtils.isWebService(
+                NetworkService.newBuilder().setServiceName("radan-http").build()))
         .isTrue();
   }
 
@@ -135,8 +157,8 @@ public final class NetworkServiceUtilsTest {
   @Test
   public void isPlainHttp_whenHttpAltService_returnsTrue() {
     assertThat(
-        NetworkServiceUtils.isPlainHttp(
-            NetworkService.newBuilder().setServiceName("http-alt").build()))
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder().setServiceName("http-alt").build()))
         .isTrue();
   }
 
@@ -149,10 +171,50 @@ public final class NetworkServiceUtilsTest {
   }
 
   @Test
+  public void isPlainHttp_whenHttpsAltOrSslAltWithoutSslVersions_returnsFalse() {
+    assertIsNotPlainHttp("https-alt");
+    assertIsNotPlainHttp("HTTPS-ALT");
+    assertIsNotPlainHttp("ssl/https-alt");
+    assertIsNotPlainHttp("SSL/HTTPS-ALT");
+    assertIsNotPlainHttp("ssl/http-alt");
+    assertIsNotPlainHttp("SSL/HTTP-ALT");
+    assertIsNotPlainHttp("ssl/unknown");
+    assertIsNotPlainHttp("SSL/UNKNOWN");
+    assertIsNotPlainHttp("ssl/radan-http");
+  }
+
+  private static void assertIsNotPlainHttp(String serviceName) {
+    assertWithMessage("serviceName=%s", serviceName)
+        .that(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder().setServiceName(serviceName).build()))
+        .isFalse();
+    assertWithMessage("serviceName=%s (with GET)", serviceName)
+        .that(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName(serviceName)
+                    .addSupportedHttpMethods("GET")
+                    .build()))
+        .isFalse();
+  }
+
+  @Test
+  public void isPlainHttp_whenHttpAltWithSslVersions_returnsFalse() {
+    assertThat(
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder()
+                    .setServiceName("http-alt")
+                    .addSupportedSslVersions("TLSv1.3")
+                    .build()))
+        .isFalse();
+  }
+
+  @Test
   public void isPlainHttp_whenRadanHttpService_returnsTrue() {
     assertThat(
-        NetworkServiceUtils.isPlainHttp(
-            NetworkService.newBuilder().setServiceName("radan-http").build()))
+            NetworkServiceUtils.isPlainHttp(
+                NetworkService.newBuilder().setServiceName("radan-http").build()))
         .isTrue();
   }
 
@@ -222,11 +284,11 @@ public final class NetworkServiceUtilsTest {
   @Test
   public void getServiceName_whenWebServiceNoSoftware_returnsServiceName() {
     assertThat(
-        NetworkServiceUtils.getServiceName(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 22))
-                .setServiceName("http")
-                .build()))
+            NetworkServiceUtils.getServiceName(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 22))
+                    .setServiceName("http")
+                    .build()))
         .isEqualTo("http");
   }
 
@@ -284,15 +346,15 @@ public final class NetworkServiceUtilsTest {
   @Test
   public void buildWebApplicationRootUrl_whenHttpsWithoutRoot_buildsExpectedUrl() {
     assertThat(
-        NetworkServiceUtils.buildWebApplicationRootUrl(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
-                .setServiceName("ssl/https")
-                .setServiceContext(
-                    ServiceContext.newBuilder()
-                        .setWebServiceContext(
-                            WebServiceContext.newBuilder().setApplicationRoot("test_root")))
-                .build()))
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName("ssl/https")
+                    .setServiceContext(
+                        ServiceContext.newBuilder()
+                            .setWebServiceContext(
+                                WebServiceContext.newBuilder().setApplicationRoot("test_root")))
+                    .build()))
         .isEqualTo("https://127.0.0.1:8443/test_root/");
   }
 
@@ -314,66 +376,175 @@ public final class NetworkServiceUtilsTest {
   @Test
   public void buildWebApplicationRootUrl_whenRootPathNoLeadingSlash_appendsLeadingSlash() {
     assertThat(
-        NetworkServiceUtils.buildWebApplicationRootUrl(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8080))
-                .setServiceName("http")
-                .setServiceContext(
-                    ServiceContext.newBuilder()
-                        .setWebServiceContext(
-                            WebServiceContext.newBuilder().setApplicationRoot("test_root")))
-                .build()))
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8080))
+                    .setServiceName("http")
+                    .setServiceContext(
+                        ServiceContext.newBuilder()
+                            .setWebServiceContext(
+                                WebServiceContext.newBuilder().setApplicationRoot("test_root")))
+                    .build()))
         .isEqualTo("http://127.0.0.1:8080/test_root/");
   }
 
   @Test
   public void buildWebApplicationRootUrl_whenHttpServiceOnPort80_removesTrailingPortFromUrl() {
     assertThat(
-        NetworkServiceUtils.buildWebApplicationRootUrl(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 80))
-                .setServiceName("http")
-                .setServiceContext(
-                    ServiceContext.newBuilder()
-                        .setWebServiceContext(
-                            WebServiceContext.newBuilder().setApplicationRoot("test_root")))
-                .build()))
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 80))
+                    .setServiceName("http")
+                    .setServiceContext(
+                        ServiceContext.newBuilder()
+                            .setWebServiceContext(
+                                WebServiceContext.newBuilder().setApplicationRoot("test_root")))
+                    .build()))
         .isEqualTo("http://127.0.0.1/test_root/");
   }
 
   @Test
   public void buildWebApplicationRootUrl_whenHttpsServiceOnPort443_removesTrailingPortFromUrl() {
     assertThat(
-        NetworkServiceUtils.buildWebApplicationRootUrl(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 443))
-                .setServiceName("ssl/https")
-                .setServiceContext(
-                    ServiceContext.newBuilder()
-                        .setWebServiceContext(
-                            WebServiceContext.newBuilder().setApplicationRoot("test_root")))
-                .build()))
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 443))
+                    .setServiceName("ssl/https")
+                    .setServiceContext(
+                        ServiceContext.newBuilder()
+                            .setWebServiceContext(
+                                WebServiceContext.newBuilder().setApplicationRoot("test_root")))
+                    .build()))
         .isEqualTo("https://127.0.0.1/test_root/");
+  }
+
+  @Test
+  public void buildWebApplicationRootUrl_whenHttpsAltVariantsOn8443And443_buildsHttpsUrl() {
+    assertBuildsHttpsRootUrlOn8443And443("https-alt");
+    assertBuildsHttpsRootUrlOn8443And443("HTTPS-ALT");
+    assertBuildsHttpsRootUrlOn8443And443("ssl/https-alt");
+    assertBuildsHttpsRootUrlOn8443And443("SSL/HTTPS-ALT");
+    assertBuildsHttpsRootUrlOn8443And443("ssl/http-alt");
+    assertBuildsHttpsRootUrlOn8443And443("SSL/HTTP-ALT");
+  }
+
+  private static void assertBuildsHttpsRootUrlOn8443And443(String serviceName) {
+    assertWithMessage("serviceName=%s on 8443", serviceName)
+        .that(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName(serviceName)
+                    .build()))
+        .isEqualTo("https://127.0.0.1:8443/");
+    assertWithMessage("serviceName=%s on 8443 with POST", serviceName)
+        .that(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName(serviceName)
+                    .addSupportedHttpMethods("POST")
+                    .build()))
+        .isEqualTo("https://127.0.0.1:8443/");
+    assertWithMessage("serviceName=%s on 443", serviceName)
+        .that(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 443))
+                    .setServiceName(serviceName)
+                    .build()))
+        .isEqualTo("https://127.0.0.1/");
+  }
+
+  @Test
+  public void buildWebApplicationRootUrl_whenHttpAltPlainVsTlsOn8443_buildsExpectedScheme() {
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName("http-alt")
+                    .build()))
+        .isEqualTo("http://127.0.0.1:8443/");
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName("http-alt")
+                    .addSupportedSslVersions("TLSv1.2")
+                    .build()))
+        .isEqualTo("https://127.0.0.1:8443/");
+  }
+
+  @Test
+  public void buildWebApplicationRootUrl_whenUnlistedSslPrefixWithHttpMethods_buildsHttpsUrl() {
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 8443))
+                    .setServiceName("ssl/unknown")
+                    .addSupportedHttpMethods("GET")
+                    .build()))
+        .isEqualTo("https://127.0.0.1:8443/");
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 443))
+                    .setServiceName("SSL/UNKNOWN")
+                    .addSupportedHttpMethods("GET")
+                    .build()))
+        .isEqualTo("https://127.0.0.1/");
+  }
+
+  @Test
+  public void buildWebApplicationRootUrl_whenIpv6Contains80Or443Hextet_stripsOnlyTrailingPort() {
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("2001:db8:8000::1", 80))
+                    .setServiceName("http")
+                    .build()))
+        .isEqualTo("http://[2001:db8:8000::1]/");
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("2001:db8:80::1", 80))
+                    .setServiceName("http")
+                    .build()))
+        .isEqualTo("http://[2001:db8:80::1]/");
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("2001:db8:443::1", 443))
+                    .setServiceName("https-alt")
+                    .build()))
+        .isEqualTo("https://[2001:db8:443::1]/");
+    assertThat(
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("2001:db8:443::1", 8443))
+                    .setServiceName("https-alt")
+                    .build()))
+        .isEqualTo("https://[2001:db8:443::1]:8443/");
   }
 
   @Test
   public void buildWebApplicationRootUrl_whenNotWebService_returnsHttpUrl() {
     assertThat(
-        NetworkServiceUtils.buildWebApplicationRootUrl(
-            NetworkService.newBuilder()
-                .setNetworkEndpoint(forIpAndPort("127.0.0.1", 2121))
-                .setServiceName("unknown")
-                .build()))
+            NetworkServiceUtils.buildWebApplicationRootUrl(
+                NetworkService.newBuilder()
+                    .setNetworkEndpoint(forIpAndPort("127.0.0.1", 2121))
+                    .setServiceName("unknown")
+                    .build()))
         .isEqualTo("http://127.0.0.1:2121/");
   }
 
   @Test
   public void buildUriNetworkService_returnsNetworkService() throws IOException {
 
-    URL url = new URL("https://localhost/function1");
-    String hostname = url.getHost();
+    URI uri = URI.create("https://localhost/function1");
+    String hostname = uri.getHost();
     String ipaddress = InetAddress.getByName(hostname).getHostAddress();
-    InetAddress inetAddress = InetAddress.getByName(url.getHost());
+    InetAddress inetAddress = InetAddress.getByName(uri.getHost());
     AddressFamily addressFamily =
         inetAddress instanceof Inet4Address ? AddressFamily.IPV4 : AddressFamily.IPV6;
 

@@ -43,20 +43,23 @@ import java.util.Optional;
 
 /** Static utility methods pertaining to {@link NetworkService} proto buffer. */
 public final class NetworkServiceUtils {
-  // Service names are those described in [RFC6335].
+  // Known HTTP/HTTPS service names from IANA [RFC6335] and Nmap "ssl/*" tunnel service labels.
   private static final ImmutableMap<String, Boolean> IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME =
       ImmutableMap.<String, Boolean>builder()
           .put("http", true)
           .put("http-alt", true) // Some http server are identified as this rather than "http".
           .put("http-proxy", true)
           .put("https", false)
+          .put("https-alt", false) // Port 8443 HTTPS services without HTTP methods script output.
           .put("radan-http", true) // Port 8088, Hadoop Yarn web UI identified as this.
           .put("ssl/http", false)
+          .put("ssl/http-alt", false)
           .put("ssl/https", false)
+          .put("ssl/https-alt", false)
           .put("ssl/http-proxy", false)
           .put("ssl/tungsten-https", false) // Port 9443, WSO2 Identity Server & WSO2 API Manager.
           .put("ssl/wso2esb-console", false) // Port 9444, WSO2 Identity Server Analytics.
-          .build();
+          .buildOrThrow();
 
   private NetworkServiceUtils() {}
 
@@ -77,9 +80,13 @@ public final class NetworkServiceUtils {
   public static boolean isPlainHttp(NetworkService networkService) {
     checkNotNull(networkService);
 
+    var serviceName = Ascii.toLowerCase(networkService.getServiceName());
+    if (serviceName.startsWith("ssl/")) {
+      return false;
+    }
+
     var isWebService = isWebService(networkService);
-    var isKnownServiceName = IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.containsKey(
-            Ascii.toLowerCase(networkService.getServiceName()));
+    var isKnownServiceName = IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.containsKey(serviceName);
     var doesNotSupportAnySslVersion = networkService.getSupportedSslVersionsCount() == 0;
 
     if (!isKnownServiceName) {
@@ -87,8 +94,7 @@ public final class NetworkServiceUtils {
     }
 
     var isKnownPlainHttpService =
-        IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.getOrDefault(
-            Ascii.toLowerCase(networkService.getServiceName()), false);
+        IS_PLAIN_HTTP_BY_KNOWN_WEB_SERVICE_NAME.getOrDefault(serviceName, false);
 
     return isKnownPlainHttpService && doesNotSupportAnySslVersion;
   }
