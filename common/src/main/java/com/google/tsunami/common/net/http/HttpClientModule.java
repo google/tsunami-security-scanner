@@ -124,7 +124,8 @@ public final class HttpClientModule extends AbstractModule {
             .writeTimeout(Duration.ofSeconds(connectTimeoutSeconds))
             .connectionPool(connectionPool)
             .dispatcher(dispatcher)
-            .followRedirects(followRedirects);
+            .followRedirects(followRedirects)
+            .addNetworkInterceptor(new SsrfRedirectInterceptor());
     if (trustAllCertificates) {
       clientBuilder
           .sslSocketFactory(trustAllCertsSocketFactory, TRUST_ALL_CERTS_MANAGER)
