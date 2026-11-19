@@ -150,6 +150,10 @@ public final class VersionTest {
         LessThanTestCase.create(
             Version.fromString("1.0.0-alpha.1"), Version.fromString("1.0.0-alpha.beta")),
         LessThanTestCase.create(
+            Version.fromString("1.0.0-alpha"), Version.fromString("1.0.0-alpha.beta")),
+        LessThanTestCase.create(
+            Version.fromString("1.0.0-beta.2"), Version.fromString("1.0.0-beta.2.1")),
+        LessThanTestCase.create(
             Version.fromString("1.0.0-alpha.beta"), Version.fromString("1.0.0-beta")),
         LessThanTestCase.create(
             Version.fromString("1.0.0-beta"), Version.fromString("1.0.0-beta.2")),

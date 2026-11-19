@@ -131,7 +131,7 @@ public final class SegmentTest {
 
         // Known qualifiers.
         LessThanTestCase.create(Segment.fromString("alpha"), Segment.fromString("beta")),
-        LessThanTestCase.create(Segment.fromString("alpha.beta"), Segment.fromString("alpha")),
+        LessThanTestCase.create(Segment.fromString("alpha"), Segment.fromString("alpha.beta")),
         LessThanTestCase.create(Segment.fromString("alpha.beta"), Segment.fromString("alpha.rc")),
 
         // Text token.
